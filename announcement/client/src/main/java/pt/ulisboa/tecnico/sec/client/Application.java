@@ -10,6 +10,10 @@ import java.net.Socket;
 public class Application {
     public static void main(String[] args) {
         System.out.println("Hello world client");
+
+        ClientUI clientUi = new ClientUI();
+        clientUi.start();
+        /*
         try {
             System.out.println("before opening socket");
             Socket socket = new Socket("localhost", 8000);
@@ -30,6 +34,7 @@ public class Application {
         } catch(IOException e) {
             System.out.println("Error initiating socket");
         }
+        */
 
 
 
