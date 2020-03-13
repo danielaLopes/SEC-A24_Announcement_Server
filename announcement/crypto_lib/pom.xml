@@ -9,14 +9,6 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>client</artifactId>
-
-    <dependencies>
-        <dependency>
-            <groupId>pt.ulisboa.tecnico.sec</groupId>
-            <artifactId>crypto_lib</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-    </dependencies>
-
+    <artifactId>crypto_lib</artifactId>
+    
 </project>
