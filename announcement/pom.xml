@@ -13,6 +13,7 @@
         <module>server</module>
         <module>client_lib</module>
         <module>crypto_lib</module>
+        <module>communication_lib</module>
     </modules>
 
     <properties>
