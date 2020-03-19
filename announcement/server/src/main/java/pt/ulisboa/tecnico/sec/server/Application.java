@@ -9,6 +9,7 @@ public class Application {
 
         System.out.println("Hello world server");
         Server server = new Server(false, 8000);
+        server.start();
         // testing
         KeyGenerator keyGen = new KeyGenerator();
         KeyPair userKeys = keyGen.generateKeyPair("RSA", 1024);

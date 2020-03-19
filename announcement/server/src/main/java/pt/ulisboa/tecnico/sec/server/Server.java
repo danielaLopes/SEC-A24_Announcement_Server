@@ -1,7 +1,8 @@
 package pt.ulisboa.tecnico.sec.server;
 
+import pt.ulisboa.tecnico.sec.communication_lib.Communication;
+
 import java.io.*;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.KeyPair;
 import java.security.PublicKey;
@@ -13,13 +14,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Server {
 
     private final PublicKey _pubKey;
-    private static ServerSocket _serverSocket;
     private int _port;
     private ConcurrentHashMap<PublicKey, User> _users;
     private ConcurrentHashMap<Integer, PublicKey> _announcementMapper;
     // TODO: in General Board, posts should remain accountable, so should the value be a signature(post) + post = Announcement?
     private ConcurrentHashMap<Integer, Announcement> _generalBoard;
     private AtomicInteger _nAnnouncements; // each Announcement needs to have a unique id
+    private Communication _communication;
 
     public Server(boolean activateCC, int port) {
         _pubKey = generateKeyPair(activateCC);
@@ -28,6 +29,7 @@ public class Server {
         _announcementMapper = new ConcurrentHashMap<Integer, PublicKey>();
         _generalBoard = new ConcurrentHashMap<Integer, Announcement>();
         _nAnnouncements = new AtomicInteger(0);
+        _communication = new Communication();
     }
 
     public PublicKey generateKeyPair(boolean activateCC) {
@@ -51,26 +53,7 @@ public class Server {
      * a new Thread to handle each client connection.
      */
     public void start() {
-        try {
-            _serverSocket = new ServerSocket(_port);
-            while(true) {
-                Socket socket = _serverSocket.accept();
-                new ClientConnectionHandler(this, socket).start();
-            }
-        } catch(IOException e) {
-            System.out.println("Error starting server socket");
-        }
-    }
-
-    /**
-     * Closes socket listening to client connections.
-     */
-    public void stop() {
-        try {
-            _serverSocket.close();
-        } catch (IOException e) {
-            System.out.println("Error while closing server socket");
-        }
+        new ClientConnectionHandler(this).start();
     }
 
     /**

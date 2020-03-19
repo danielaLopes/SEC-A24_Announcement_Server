@@ -1,16 +1,23 @@
 package pt.ulisboa.tecnico.sec.client;
 
 import pt.ulisboa.tecnico.sec.crypto_lib.KeyGenerator;
+import pt.ulisboa.tecnico.sec.communication_lib.Communication;
 
 import java.security.KeyPair;
 import java.security.PublicKey;
 
+import java.io.*;
+import java.net.Socket;
+
 public class Client {
 
     private final PublicKey _pubKey;
+    private final Communication _communication;
+    private Socket _clientSocket;
 
     public Client() {
         _pubKey = generateKeyPair(false);
+        _communication = new Communication();
     }
 
     // TODO: move method to shared library "crypto_lib"
@@ -28,6 +35,25 @@ public class Client {
             // TODO
         }
         return pubKey;
+    }
+
+    public void startServerCommunication() {
+        try {
+            _clientSocket = new Socket("localhost", 8000);
+            _communication.sendMessage("OLA\n", _clientSocket);
+        }
+        catch(IOException e) {
+            System.out.println("Error starting client socket");
+        }
+    }
+
+    public void closeCommunication() {
+        try {
+            _communication.close(_clientSocket);
+        }
+        catch(IOException e) {
+            System.out.println("Error closing socket");
+        }   
     }
 
     /**
