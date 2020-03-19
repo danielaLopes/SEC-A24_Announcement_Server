@@ -3,7 +3,6 @@ package pt.ulisboa.tecnico.sec.server;
 import pt.ulisboa.tecnico.sec.communication_lib.Communication;
 
 import java.io.*;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.KeyPair;
 import java.security.PublicKey;
@@ -15,7 +14,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Server {
 
     private final PublicKey _pubKey;
-    private static ServerSocket _serverSocket;
     private int _port;
     private ConcurrentHashMap<PublicKey, User> _users;
     private ConcurrentHashMap<Integer, PublicKey> _announcementMapper;
@@ -55,26 +53,7 @@ public class Server {
      * a new Thread to handle each client connection.
      */
     public void start() {
-        try {
-            _serverSocket = _communication.createServerSocket(_port);
-            while(true) {
-                Socket socket = _communication.accept(_serverSocket);
-                new ClientConnectionHandler(this, socket).start();
-            }
-        } catch(IOException e) {
-            System.out.println("Error starting server socket");
-        }
-    }
-
-    /**
-     * Closes socket listening to client connections.
-     */
-    public void stop() {
-        try {
-            _serverSocket.close();
-        } catch (IOException e) {
-            System.out.println("Error while closing server socket");
-        }
+        new ClientConnectionHandler(this).start();
     }
 
     /**

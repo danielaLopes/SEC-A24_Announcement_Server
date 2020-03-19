@@ -16,6 +16,7 @@ public class ClientUI {
      * Starts Client UI for better interaction.
      */
     public void start() {
+        _client.startServerCommunication();
         int option = 1;
 
         while (option != 0) {
@@ -42,6 +43,7 @@ public class ClientUI {
                     break;
             }
         }
+        _client.closeCommunication();
     }
 
 
