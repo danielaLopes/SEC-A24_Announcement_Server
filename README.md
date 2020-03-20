@@ -16,3 +16,8 @@ mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application"
 cd client/
 mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application"
 ```
+
+## Interacting with the Client UI
+
+### Posting an announcement:
+* When posting an announcement, the announcements referenced must be in the format: id1,id2,id3,...

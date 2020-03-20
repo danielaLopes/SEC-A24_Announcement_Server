@@ -10,7 +10,7 @@ public enum Message {
     READ_GENERAL("Read announcements from General Board"),
 
     MESSAGE("Message: "),
-    REFERENCE("Announcements referenced: "),
+    REFERENCE("Announcements referenced (id1, id2, id3,...): "),
     USER_BOARD("Read announcements from user: "),
     READ_NUMBER("Number of posts to read: "),
 
