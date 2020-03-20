@@ -94,13 +94,13 @@ public class Server {
      * Can refer to previous announcements.
      * @param pubKey
      * @param message to be put in the announcement
-     * @param announcements are references to previous announcements
+     * @param announcements are the unique announcement ids of the references to previous announcements
      * @return PostStatus saying if the post was successful
      */
-    public PostStatus post(PublicKey pubKey, String message, List<Announcement> announcements) {
+    public PostStatus post(PublicKey pubKey, String message, List<Integer> announcements) {
         // TODO: decide how to reference announcements -> unique ids
         if (verifyMessage(message)) {
-            Announcement newAnnouncement = new Announcement(message, pubKey);
+            Announcement newAnnouncement = new Announcement(message, pubKey, announcements);
             int index =_users.get(pubKey).postAnnouncementBoard(newAnnouncement);
             // client's public key is used to indicate it's stored in that client's Announcement Board
             _announcementMapper.put(_nAnnouncements.getAndIncrement(), new AnnouncementLocation(pubKey, index));
@@ -116,12 +116,12 @@ public class Server {
      * Can refer to previous announcements.
      * @param pubKey
      * @param message to be put in the announcement
-     * @param announcements are references to previous announcements
+     * @param announcements are the unique announcement ids of the references to previous announcements
      */
-    public PostStatus postGeneral(PublicKey pubKey, String message, List<Announcement> announcements) {
+    public PostStatus postGeneral(PublicKey pubKey, String message, List<Integer> announcements) {
         // TODO: decide how to reference announcements -> unique id
         if (verifyMessage(message)) {
-            Announcement newAnnouncement = new Announcement(message, pubKey);
+            Announcement newAnnouncement = new Announcement(message, pubKey, announcements);
             int index;
             synchronized (_generalBoard) {
                 index = _generalBoard.size();
