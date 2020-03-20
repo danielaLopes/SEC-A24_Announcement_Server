@@ -14,6 +14,7 @@
         <module>client_lib</module>
         <module>crypto_lib</module>
         <module>communication_lib</module>
+        <module>database_lib</module>
     </modules>
 
     <properties>
