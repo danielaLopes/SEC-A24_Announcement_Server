@@ -63,9 +63,9 @@ public class Client {
      * Posts an announcement to the Client's Board. This announcement
      * can refer to previous announcements and has a UUID.
      * @param message to be announced
-     * @param reference to previous announcements
+     * @param references to previous announcements
      */
-    public void post(String message, String reference) {
+    public void post(String message, String[] references) {
         int uuid = _uuidGenerator.generateUUID();
         System.out.println("Posting announcement to user's Board with uuid: " + uuid);
         // TODO: client-server communication
@@ -75,11 +75,16 @@ public class Client {
      * Posts an announcement to the General Board. This announcement
      * can refer to previous announcements and has a UUID.
      * @param message to be announced
-     * @param reference to previous announcements
+     * @param references to previous announcements
      */
-    public void postGeneral(String message, String reference) {
+    public void postGeneral(String message, String[] references) {
         int uuid = _uuidGenerator.generateUUID();
-        System.out.println("Posting announcement to General Board with uuid: " + uuid);
+        System.out.println("Posting announcement to General Board:");
+        System.out.println("* UUID: " + uuid);
+        System.out.println("* Message: " + message);
+        System.out.println("* References: ");
+        for (String r : references)
+            System.out.println("  * " + r);
         // TODO: client-server communication
     }
 

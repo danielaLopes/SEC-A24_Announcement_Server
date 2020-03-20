@@ -43,7 +43,12 @@ public class ClientUI {
                     break;
             }
         }
-        _client.closeCommunication();
+        try {
+            _client.closeCommunication();
+        }
+        catch(Exception e) {
+            System.out.println("Error when closing Client's communications.");
+        }
     }
 
 
@@ -53,8 +58,9 @@ public class ClientUI {
      */
     public void post() {
         String message = promptMessage();
-        String reference = promptReference();
-        _client.post(message, reference);
+        String[] references = parseReferences(promptReference());
+
+        _client.postGeneral(message, references);
     }
 
     /**
@@ -63,8 +69,9 @@ public class ClientUI {
      */
     public void postGeneral() {
         String message = promptMessage();
-        String reference = promptReference();
-        _client.postGeneral(message, reference);
+        String[] references = parseReferences(promptReference());
+
+        _client.postGeneral(message, references);
     }
 
     /**
@@ -131,5 +138,15 @@ public class ClientUI {
     public int promptNumber() {
         System.out.print(Message.READ_NUMBER);
         return Integer.parseInt(_scanner.nextLine());
+    }
+
+    /**
+     *
+     * @param references describing the ids of the referenced announcements
+     *                   separated by commas
+     * @return an array of references (one entry for each id)
+     */
+    public String[] parseReferences(String references) {
+        return references.split(",");
     }
 }
