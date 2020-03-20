@@ -30,6 +30,14 @@ FLUSH PRIVILEGES;
 create database announcement;
 ```
 
+## Using MySQL in bash
+```bash
+mysql -u sec -p 1234
+use announcement;
+show tables;
+```
+
+
 ## Instructions
 Inside project root directory (announcement/):
 1. Build project:
