@@ -1,12 +1,15 @@
 package pt.ulisboa.tecnico.sec.server;
 
 import pt.ulisboa.tecnico.sec.communication_lib.Communication;
+import pt.ulisboa.tecnico.sec.crypto_lib.KeyGenerator;
 
 import java.io.*;
 import java.net.Socket;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -16,18 +19,25 @@ public class Server {
     private final PublicKey _pubKey;
     private int _port;
     private ConcurrentHashMap<PublicKey, User> _users;
-    private ConcurrentHashMap<Integer, PublicKey> _announcementMapper;
+    /**
+     * maps the announcement unique id to the public key of the entity
+     * where it's stored and the index on the Announcement Board,
+     * if it's the server's public key it's in the
+     * General Board, otherwise it's in the respective User's Announcement Board
+     */
+    private ConcurrentHashMap<Integer, AnnouncementLocation> _announcementMapper;
     // TODO: in General Board, posts should remain accountable, so should the value be a signature(post) + post = Announcement?
-    private ConcurrentHashMap<Integer, Announcement> _generalBoard;
+    private List<Announcement> _generalBoard;
     private AtomicInteger _nAnnouncements; // each Announcement needs to have a unique id
     private Communication _communication;
 
     public Server(boolean activateCC, int port) {
         _pubKey = generateKeyPair(activateCC);
         _port = port;
-        _users = new ConcurrentHashMap<PublicKey, User>();
-        _announcementMapper = new ConcurrentHashMap<Integer, PublicKey>();
-        _generalBoard = new ConcurrentHashMap<Integer, Announcement>();
+        _users = new ConcurrentHashMap<>();
+        _announcementMapper = new ConcurrentHashMap<>();
+        // TODO: see if a CopyOnWriteArrayList is more suitable (if very few writes and lots of reads)
+        _generalBoard = new ArrayList<>();
         _nAnnouncements = new AtomicInteger(0);
         _communication = new Communication();
     }
@@ -91,9 +101,9 @@ public class Server {
         // TODO: decide how to reference announcements -> unique ids
         if (verifyMessage(message)) {
             Announcement newAnnouncement = new Announcement(message, pubKey);
-            _users.get(pubKey).postAnnouncementBoard(newAnnouncement);
+            int index =_users.get(pubKey).postAnnouncementBoard(newAnnouncement);
             // client's public key is used to indicate it's stored in that client's Announcement Board
-            _announcementMapper.put(_nAnnouncements.getAndIncrement(), pubKey);
+            _announcementMapper.put(_nAnnouncements.getAndIncrement(), new AnnouncementLocation(pubKey, index));
             return new PostStatus("OK");
         }
         else {
@@ -112,9 +122,13 @@ public class Server {
         // TODO: decide how to reference announcements -> unique id
         if (verifyMessage(message)) {
             Announcement newAnnouncement = new Announcement(message, pubKey);
-            _generalBoard.put(_nAnnouncements.get(), newAnnouncement);
+            int index;
+            synchronized (_generalBoard) {
+                index = _generalBoard.size();
+                _generalBoard.add(newAnnouncement);
+            }
             // server's public key is used to indicate it's stored in the General Board
-            _announcementMapper.put(_nAnnouncements.getAndIncrement(), _pubKey);
+            _announcementMapper.put(_nAnnouncements.getAndIncrement(), new AnnouncementLocation(_pubKey, index));
             return new PostStatus("OK");
         }
         else {
@@ -151,17 +165,19 @@ public class Server {
      * @return a list of announcements
      */
     public List<Announcement> readGeneral(int number) {
-        List<Announcement> announcements = new ArrayList<Announcement>(_generalBoard.values());
-        int nAnnouncements = announcements.size();
-        if (number == 0) {
-            return announcements;
+        synchronized (_generalBoard) {
+            int nAnnouncements = _generalBoard.size();
+            if (number == 0) {
+                return _generalBoard;
+            }
+            else if (0 < number && number <= nAnnouncements) {
+                return _generalBoard.subList(nAnnouncements - number, nAnnouncements);
+            }
+            // invalid number of announcements
+            else {
+                return null; // TODO
+            }
         }
-        else if (0 < number && number <= nAnnouncements) {
-            return announcements.subList(nAnnouncements - number, nAnnouncements);
-        }
-        // invalid number of announcements
-        else {
-            return null; // TODO
-        }
+
     }
 }

@@ -2,6 +2,7 @@ package pt.ulisboa.tecnico.sec.server;
 
 import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class User {
@@ -12,11 +13,12 @@ public class User {
 
     public User(PublicKey pubKey) {
         _pubKey = pubKey;
-        _announcementBoard = new ArrayList<Announcement>();
+        _announcementBoard = new ArrayList<>();
     }
 
-    public void postAnnouncementBoard(Announcement announcement) {
+    public int postAnnouncementBoard(Announcement announcement) {
         _announcementBoard.add(announcement);
+        return getNumAnnouncements() - 1;
     }
 
     public List<Announcement> getAnnouncements(int number) {

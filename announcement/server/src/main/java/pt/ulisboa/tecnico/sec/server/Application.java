@@ -1,5 +1,7 @@
 package pt.ulisboa.tecnico.sec.server;
 
+import pt.ulisboa.tecnico.sec.crypto_lib.KeyGenerator;
+
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.List;
