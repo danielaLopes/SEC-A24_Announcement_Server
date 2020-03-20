@@ -30,10 +30,9 @@ FLUSH PRIVILEGES;
 create database announcement;
 ```
 
-## Using MySQL in bash
+## Using MySQL in bash (password is 1234)
 ```bash
-mysql -u sec -p 1234
-use announcement;
+mysql -u sec -p announcement
 show tables;
 ```
 
