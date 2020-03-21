@@ -5,23 +5,6 @@
 * Java version - openjdk 1.8.0_122
 * Mysql server 5.7.128
 
-## To install the mySQL dependencies in order to run the project:
-```console
-$ sudo apt-get install libmysql-java
-```
-
-## Setup MySQL
-1 - Install these 2 dependencies
-```console
-$ sudo apt-get install mysql-server
-$ sudo apt-get install libmysql-java
-
-sudo pkill mysql
-sudo pkill mysqld
-sudo service mysql restart
-
-sudo mysql
-```
 ## Configuring mySQL user and database:
 ```sql
 CREATE USER 'sec'@'localhost' IDENTIFIED BY '1234';
