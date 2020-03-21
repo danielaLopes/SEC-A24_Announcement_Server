@@ -1,5 +1,42 @@
 # SEC-A24_Announcement_Server
 
+## Developing Environment
+* Ubuntu 18.04 LTS
+* Java version - openjdk 1.8.0_122
+* Mysql server 5.7.128
+
+## To install the mySQL dependencies in order to run the project:
+```console
+$ sudo apt-get install libmysql-java
+```
+
+## Setup MySQL
+1 - Install these 2 dependencies
+```console
+$ sudo apt-get install mysql-server
+$ sudo apt-get install libmysql-java
+
+sudo pkill mysql
+sudo pkill mysqld
+sudo service mysql restart
+
+sudo mysql
+```
+## Configuring mySQL user and database:
+```sql
+CREATE USER 'sec'@'localhost' IDENTIFIED BY '1234';
+GRANT ALL PRIVILEGES ON * . * TO 'sec'@'localhost';
+FLUSH PRIVILEGES;
+create database announcement;
+```
+
+## Using MySQL in bash (password is 1234)
+```bash
+mysql -u sec -p announcement
+show tables;
+```
+
+
 ## Instructions
 Inside project root directory (announcement/):
 1. Build project:
