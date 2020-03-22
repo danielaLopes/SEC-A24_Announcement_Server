@@ -1,30 +1,41 @@
 package pt.ulisboa.tecnico.sec.client;
 
-import pt.ulisboa.tecnico.sec.crypto_lib.KeyGenerator;
+import pt.ulisboa.tecnico.sec.crypto_lib.KeyPairUtil;
 import pt.ulisboa.tecnico.sec.communication_lib.Communication;
 import pt.ulisboa.tecnico.sec.crypto_lib.UUIDGenerator;
 
 import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 
 import java.io.*;
 import java.net.Socket;
+import java.security.spec.InvalidKeySpecException;
 
 public class Client {
 
-    private final PublicKey _pubKey;
+    private PublicKey _pubKey; // TODO: final?
     private final Communication _communication;
     private Socket _clientSocket;
     private UUIDGenerator _uuidGenerator;
 
+    // TODO: make register method, maybe receive input to know which client key to retrieve
     public Client() {
-        _pubKey = generateKeyPair(false);
+        try {
+            _pubKey = KeyPairUtil.loadPublicKey("src/main/resources/crypto/public.key");
+        } catch (IOException e) {
+
+        } catch (NoSuchAlgorithmException e) {
+
+        } catch (InvalidKeySpecException e) {
+
+        }
         _communication = new Communication();
         _uuidGenerator = new UUIDGenerator();
     }
 
     // TODO: move method to shared library "crypto_lib"
-    public PublicKey generateKeyPair(boolean activateCC) {
+    /*public PublicKey generateKeyPair(boolean activateCC) {
         PublicKey pubKey = null;
         // OpenSSL
         if (activateCC == false) {
@@ -38,7 +49,7 @@ public class Client {
             // TODO
         }
         return pubKey;
-    }
+    }*/
 
     public void startServerCommunication() {
         try {
@@ -57,6 +68,12 @@ public class Client {
         catch(IOException e) {
             System.out.println("Error closing socket");
         }   
+    }
+
+    // TODO: make register method, see if _pubKey should be assigned here
+    public void register() {
+
+        // TODO: client-server communication
     }
 
     /**

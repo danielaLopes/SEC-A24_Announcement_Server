@@ -53,3 +53,7 @@ settings.gradle
 # Target #
 ############
 */target
+
+# Resources - Crypto #
+############
+*/crypto
