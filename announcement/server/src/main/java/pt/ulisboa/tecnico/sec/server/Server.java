@@ -1,23 +1,23 @@
 package pt.ulisboa.tecnico.sec.server;
 
 import pt.ulisboa.tecnico.sec.communication_lib.Communication;
-import pt.ulisboa.tecnico.sec.crypto_lib.KeyGenerator;
+import pt.ulisboa.tecnico.sec.crypto_lib.KeyPairUtil;
+import pt.ulisboa.tecnico.sec.crypto_lib.KeyStorage;
 
 import java.io.*;
-import java.net.Socket;
-import java.security.KeyPair;
-import java.security.PublicKey;
+import java.security.*;
+import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Server {
 
-    private final PublicKey _pubKey;
+    private PublicKey _pubKey;
     private int _port;
+    private String _pathToKeyStorePasswd;
+    private String _pathToEntryPasswd;
     private ConcurrentHashMap<PublicKey, User> _users;
     /**
      * maps the announcement unique id to the public key of the entity
@@ -31,9 +31,19 @@ public class Server {
     private AtomicInteger _nAnnouncements; // each Announcement needs to have a unique id
     private Communication _communication;
 
-    public Server(boolean activateCC, int port) {
-        _pubKey = generateKeyPair(activateCC);
+    public Server(boolean activateCC, int port, String pathToKeyStorePasswd, String pathToEntryPasswd) {
+        try {
+            _pubKey = KeyPairUtil.loadPublicKey("src/main/resources/crypto/public.key");
+        } catch (IOException e) {
+
+        } catch (NoSuchAlgorithmException e) {
+
+        } catch (InvalidKeySpecException e) {
+
+        }
         _port = port;
+        _pathToKeyStorePasswd = pathToKeyStorePasswd;
+        _pathToEntryPasswd = pathToEntryPasswd;
         _users = new ConcurrentHashMap<>();
         _announcementMapper = new ConcurrentHashMap<>();
         // TODO: see if a CopyOnWriteArrayList is more suitable (if very few writes and lots of reads)
@@ -42,7 +52,7 @@ public class Server {
         _communication = new Communication();
     }
 
-    public PublicKey generateKeyPair(boolean activateCC) {
+    /*public PublicKey generateKeyPair(boolean activateCC) {
         PublicKey pubKey = null;
         // OpenSSL
         if (activateCC == false) {
@@ -50,12 +60,45 @@ public class Server {
             KeyPair keys = keyGen.generateKeyPair("RSA", 1024);
             // TODO: store private key in a keystore
             pubKey = keys.getPublic();
+
+            // store private key in a keystore
+            KeyStorage keyStorage = new KeyStorage();
+            try {
+                System.out.println("Before Storing private key");
+                KeyStore keyStore = keyStorage.createKeyStore("1");
+                X509Certificate cert = loadCertificate();
+                // System.out.println("cert: " + cert);
+                keyStorage.storePrivateKey(keyStore, keys.getPrivate(), cert);
+                KeyStore loadedKeyStore = keyStorage.loadKeyStore();
+                PrivateKey privKey = keyStorage.loadPrivateKey(loadedKeyStore);
+                System.out.println("After Storing private key");
+            }catch (KeyStoreException e) {
+
+            } catch () {
+
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         // CC
         else {
             // TODO
         }
         return pubKey;
+    }*/
+
+    public PrivateKey loadPrivateKey() {
+        // load private key
+        PrivateKey privateKey = null;
+        try {
+            KeyStore keyStore = KeyStorage.loadKeyStore(_pathToKeyStorePasswd, "src/main/resources/crypto/server1_keystore.jks");
+            privateKey = KeyStorage.loadPrivateKey(_pathToEntryPasswd, "ola", keyStore);
+            System.out.println("assigning private key");
+        } catch (Exception e) {
+            System.out.println("Error: Not possible to load private key from keystore");
+        }
+        return privateKey;
     }
 
     /**
