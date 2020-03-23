@@ -1,5 +1,7 @@
 package pt.ulisboa.tecnico.sec.client;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class ClientUI {
@@ -58,7 +60,7 @@ public class ClientUI {
      */
     public void post() {
         String message = promptMessage();
-        String[] references = parseReferences(promptReference());
+        List<Integer> references = parseReferences(promptReference());
 
         _client.postGeneral(message, references);
     }
@@ -69,7 +71,7 @@ public class ClientUI {
      */
     public void postGeneral() {
         String message = promptMessage();
-        String[] references = parseReferences(promptReference());
+        List<Integer> references = parseReferences(promptReference());
 
         _client.postGeneral(message, references);
     }
@@ -146,7 +148,14 @@ public class ClientUI {
      *                   separated by commas
      * @return an array of references (one entry for each id)
      */
-    public String[] parseReferences(String references) {
-        return references.split(",");
+    public List<Integer> parseReferences(String references) {
+        String[] referencesArray = references.split(",");
+        List<Integer> referencesList = new ArrayList<Integer>();
+
+        for (String r : referencesArray) {
+            referencesList.add(Integer.parseInt(r));
+        }
+
+        return referencesList;
     }
 }
