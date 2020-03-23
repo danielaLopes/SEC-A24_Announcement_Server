@@ -2,11 +2,10 @@ package pt.ulisboa.tecnico.sec.client;
 
 import pt.ulisboa.tecnico.sec.crypto_lib.KeyPairUtil;
 import pt.ulisboa.tecnico.sec.communication_lib.Communication;
+import pt.ulisboa.tecnico.sec.crypto_lib.KeyStorage;
 import pt.ulisboa.tecnico.sec.crypto_lib.UUIDGenerator;
 
-import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
+import java.security.*;
 
 import java.io.*;
 import java.net.Socket;
@@ -16,41 +15,41 @@ import java.util.List;
 public class Client {
 
     private PublicKey _pubKey; // TODO: final?
+    private String _pathToKeyStorePasswd; //TODO: final?
+    private String _pathToEntryPasswd; //TODO: final?
+
     private final Communication _communication;
     private Socket _clientSocket;
     private UUIDGenerator _uuidGenerator;
 
     // TODO: make register method, maybe receive input to know which client key to retrieve
-    public Client() {
+    public Client(String pathToKeyStorePasswd, String pathToEntryPasswd) {
         try {
             _pubKey = KeyPairUtil.loadPublicKey("src/main/resources/crypto/public.key");
-        } catch (IOException e) {
-
-        } catch (NoSuchAlgorithmException e) {
-
-        } catch (InvalidKeySpecException e) {
-
+        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+            System.out.println("Error: it was not possible to load public key from file");
         }
+
+        _pathToKeyStorePasswd = pathToKeyStorePasswd;
+        _pathToEntryPasswd = pathToEntryPasswd;
+
         _communication = new Communication();
         _uuidGenerator = new UUIDGenerator();
     }
 
-    // TODO: move method to shared library "crypto_lib"
-    /*public PublicKey generateKeyPair(boolean activateCC) {
-        PublicKey pubKey = null;
-        // OpenSSL
-        if (activateCC == false) {
-            KeyGenerator keyGen = new KeyGenerator();
-            KeyPair keys = keyGen.generateKeyPair("RSA", 1024);
-            // TODO: store private key in a keystore
-            pubKey = keys.getPublic();
+    public PrivateKey loadPrivateKey(){
+        // load private key
+        PrivateKey privateKey = null;
+        try {
+            KeyStore keyStore = KeyStorage.loadKeyStore(_pathToKeyStorePasswd,
+                    "src/main/resources/crypto/client1_keystore.jks");
+            privateKey = KeyStorage.loadPrivateKey(_pathToEntryPasswd, "ola", keyStore);
+            System.out.println("assigning private key");
+        } catch (Exception e) {
+            System.out.println("Error: Not possible to load private key from keystore");
         }
-        // CC
-        else {
-            // TODO
-        }
-        return pubKey;
-    }*/
+        return privateKey;
+    }
 
     public void startServerCommunication() {
         try {

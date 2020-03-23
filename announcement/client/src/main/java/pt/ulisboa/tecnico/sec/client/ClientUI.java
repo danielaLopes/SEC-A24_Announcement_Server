@@ -9,8 +9,8 @@ public class ClientUI {
     private Client _client;
     private Scanner _scanner;
 
-    public ClientUI() {
-        _client = new Client();
+    public ClientUI(String pathToKeyStorePasswd, String pathToEntryPasswd) {
+        _client = new Client(pathToKeyStorePasswd, pathToEntryPasswd);
         _scanner = new Scanner(System.in);
     }
 

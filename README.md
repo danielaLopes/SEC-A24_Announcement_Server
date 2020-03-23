@@ -70,6 +70,11 @@ openssl rsa -in server/src/main/resources/crypto/server.key –pubout > server/s
     openssl x509 -req -days 365 -in server/src/main/resources/crypto/server.csr -signkey server/src/main/resources/crypto/server.key -out server/src/main/resources/crypto/server.crt
     ```
 
+    - In order for our certificate to sign other certificates, OpenSSL requires that a database exists (a .srl file):
+    ```
+    echo 01 > server/src/main/resources/crypto/server.srl
+    ```
+
 ## Generating keypairs and certificates (required for each client)
 1. Private key:
 ```
@@ -86,7 +91,7 @@ openssl rsa -in client/src/main/resources/crypto/client.key –pubout > client/s
     ```
     - Sign:
     ```
-    openssl x509 -req -days 365 -in client/src/main/resources/crypto/client.csr -CA server.crt -CAkey client/src/main/resources/crypto/server.key -out client/src/main/resources/crypto/client.crt
+    openssl x509 -req -days 365 -in client/src/main/resources/crypto/client.csr -CA server/src/main/resources/crypto/server.crt -CAkey server/src/main/resources/crypto/server.key -out client/src/main/resources/crypto/client.crt
     ```
 
 ## Create new keystore
