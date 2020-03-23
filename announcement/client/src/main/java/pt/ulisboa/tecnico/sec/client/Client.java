@@ -11,6 +11,7 @@ import java.security.PublicKey;
 import java.io.*;
 import java.net.Socket;
 import java.security.spec.InvalidKeySpecException;
+import java.util.List;
 
 public class Client {
 
@@ -82,7 +83,7 @@ public class Client {
      * @param message to be announced
      * @param references to previous announcements
      */
-    public void post(String message, String[] references) {
+    public void post(String message, List<Integer> references) {
         int uuid = _uuidGenerator.generateUUID();
         System.out.println("Posting announcement to user's Board with uuid: " + uuid);
         // TODO: client-server communication
@@ -94,13 +95,13 @@ public class Client {
      * @param message to be announced
      * @param references to previous announcements
      */
-    public void postGeneral(String message, String[] references) {
+    public void postGeneral(String message, List<Integer> references) {
         int uuid = _uuidGenerator.generateUUID();
         System.out.println("Posting announcement to General Board:");
         System.out.println("* UUID: " + uuid);
         System.out.println("* Message: " + message);
         System.out.println("* References: ");
-        for (String r : references)
+        for (int r : references)
             System.out.println("  * " + r);
         // TODO: client-server communication
     }
