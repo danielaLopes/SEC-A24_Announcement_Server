@@ -23,7 +23,7 @@ public class ClientUI {
 
         while (option != 0) {
             option = promptGeneralMenu();
-
+            System.out.println("OPTION:" + option);
             switch (option) {
                 // Post to Client's Board
                 case 1:

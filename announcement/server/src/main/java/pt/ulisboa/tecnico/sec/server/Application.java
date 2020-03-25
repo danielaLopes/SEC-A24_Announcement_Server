@@ -15,13 +15,14 @@ public class Application {
             throws NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, UnrecoverableKeyException {
 
         System.out.println("Hello world server");
-        Server server = new Server(false, 8000, args[0], args[1]);
+        Server server = new Server(8000);
+        //Server server = new Server(false, 8000, args[0], args[1]);
         server.start();
         //System.out.println(server.loadPrivateKey());
-        System.out.println(args[0]);
-        System.out.println(args[1]);
-        KeyStore keyStore = KeyStorage.loadKeyStore(args[0], "src/main/resources/crypto/server1_keystore.jks");
-        System.out.println("keystore: " + keyStore);
+        //System.out.println(args[0]);
+        //System.out.println(args[1]);
+        //KeyStore keyStore = KeyStorage.loadKeyStore(args[0], "src/main/resources/crypto/server1_keystore.jks");
+        //System.out.println("keystore: " + keyStore);
 
         /*PrivateKey privateKey;
         X509Certificate cert;
@@ -40,8 +41,8 @@ public class Application {
             return;
         }
         KeyStorage.storePrivateKey("ola", keyStore, privateKey, cert);*/
-        PrivateKey retrievePrivateKey = KeyStorage.loadPrivateKey(args[1], "ola", keyStore);
-        System.out.println("retrieved private key: " + retrievePrivateKey);
+        //PrivateKey retrievePrivateKey = KeyStorage.loadPrivateKey(args[1], "ola", keyStore);
+        //System.out.println("retrieved private key: " + retrievePrivateKey);
 
         // testing
         /*KeyGenerator keyGen = new KeyGenerator();

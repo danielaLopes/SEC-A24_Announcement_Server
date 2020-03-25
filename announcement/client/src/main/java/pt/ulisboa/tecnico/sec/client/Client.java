@@ -1,6 +1,6 @@
 package pt.ulisboa.tecnico.sec.client;
 
-import pt.ulisboa.tecnico.sec.communication_lib.Communication;
+import pt.ulisboa.tecnico.sec.communication_lib.*;
 import pt.ulisboa.tecnico.sec.crypto_lib.KeyPairUtil;
 
 import java.net.Socket;
@@ -11,7 +11,7 @@ import java.security.*;
 import java.io.*;
 import java.util.List;
 
-public class Client {
+public class Client{
 
     private PublicKey _pubKey; // TODO: final?
     private PrivateKey _privKey; // TODO: final?
@@ -34,7 +34,7 @@ public class Client {
     public void startServerCommunication() {
         try {
             _clientSocket = new Socket("localhost", 8000);
-            _communication.sendMessage("OLA\n", _clientSocket);
+            register();
         }
         catch(IOException e) {
             System.out.println("Error starting client socket");
@@ -50,9 +50,27 @@ public class Client {
         }   
     }
 
+
+    /**
+     * Padds a string with zeros on the left, so that it 
+     * becomes with fixed size.
+     * @param s string to be padded
+     * @param size final string size
+     */
+    public String paddingRightZeros(String s, int size) {
+        return String.format("%1$-" + size + "s", s).replace(' ', '0');
+    }
+
     // TODO: make register method, see if _pubKey should be assigned here
     public void register() {
-        // TODO: client-server communication
+        String message = paddingRightZeros("REGISTER", 30);
+        ProtocolMessage pm = new ProtocolMessage(message);
+        try {
+            _communication.sendMessage(pm, _clientSocket);
+        }
+        catch (IOException e) {
+            System.out.println(e);
+        }
     }
 
     /**

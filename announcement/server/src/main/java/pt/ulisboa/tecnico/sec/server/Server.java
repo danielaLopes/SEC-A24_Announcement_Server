@@ -1,10 +1,11 @@
 package pt.ulisboa.tecnico.sec.server;
 
-import pt.ulisboa.tecnico.sec.communication_lib.Communication;
+import pt.ulisboa.tecnico.sec.communication_lib.*;
 import pt.ulisboa.tecnico.sec.crypto_lib.KeyPairUtil;
 import pt.ulisboa.tecnico.sec.crypto_lib.KeyStorage;
 
 import java.io.*;
+import java.net.*;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
@@ -16,6 +17,8 @@ public class Server {
 
     private PublicKey _pubKey;
     private int _port;
+    private ServerSocket _serverSocket;
+    private Socket _socket;
     private String _pathToKeyStorePasswd;
     private String _pathToEntryPasswd;
     private ConcurrentHashMap<PublicKey, User> _users;
@@ -30,6 +33,11 @@ public class Server {
     private List<Announcement> _generalBoard;
     private AtomicInteger _nAnnouncements; // each Announcement needs to have a unique id
     private Communication _communication;
+
+    public Server(int port) {
+        _port = port;
+        _communication = new Communication();
+    }
 
     public Server(boolean activateCC, int port, String pathToKeyStorePasswd, String pathToEntryPasswd) {
         try {
@@ -101,12 +109,33 @@ public class Server {
         return privateKey;
     }
 
+    public void startClientCommunication() {
+        try {
+            _serverSocket = _communication.createServerSocket(8000);
+            _socket = _communication.accept(_serverSocket);
+        }
+        catch(IOException e) {
+            System.out.println("Error starting server socket");
+        }
+    }
+
     /**
      * Opens new socket to listen for client communications and creates
      * a new Thread to handle each client connection.
      */
     public void start() {
-        new ClientConnectionHandler(this).start();
+        startClientCommunication();
+        while(true) {
+            try {
+                ProtocolMessage pm = (ProtocolMessage) _communication.receiveMessage(_socket);
+                String command = pm.getCommand();
+                System.out.println(command); 
+                new ClientMessageHandler(this, command).start();
+            }
+            catch (IOException | ClassNotFoundException e) {
+                System.out.println(e);
+            }       
+        }
     }
 
     /**
