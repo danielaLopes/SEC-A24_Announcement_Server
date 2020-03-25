@@ -2,11 +2,12 @@ package pt.ulisboa.tecnico.sec.client;
 
 import pt.ulisboa.tecnico.sec.communication_lib.Communication;
 import pt.ulisboa.tecnico.sec.crypto_lib.KeyPairUtil;
+import pt.ulisboa.tecnico.sec.crypto_lib.KeyStorage;
 
 import java.net.Socket;
-import java.util.UUID;
-
-import java.security.*;
+import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 
 import java.io.*;
 import java.util.List;
@@ -14,21 +15,44 @@ import java.util.List;
 public class Client {
 
     private PublicKey _pubKey; // TODO: final?
-    private PrivateKey _privKey; // TODO: final?
+    private PrivateKey _privateKey; // TODO: final?
 
     private final Communication _communication;
     private Socket _clientSocket;
 
-    public Client() {
-        _communication = new Communication();
+    public Client(String pubKeyPath, String keyStorePath,
+                  String keyStorePasswd, String entryPasswd, String alias) {
+        this.loadPublicKey(pubKeyPath);
+        System.out.println("Public key: " + _pubKey);
+        this.loadPrivateKey(keyStorePath, keyStorePasswd, entryPasswd, alias);
+        System.out.println("Private key: " + _privateKey);
 
-        this.setKeyPair();
+        _communication = new Communication();
     }
 
-    public void setKeyPair() {
-        KeyPair keys = KeyPairUtil.generateKeyPair("RSA", 1024);
-        _pubKey = keys.getPublic();
-        _privKey = keys.getPrivate();
+    public void loadPublicKey(String pubKeyPath) {
+        try {
+            _pubKey = KeyPairUtil.loadPublicKey(pubKeyPath);
+        } catch (Exception e) {
+            System.out.println("Error: Not possible to initialize client because it was not possible to load public key.\n" + e);
+            System.exit(-1);
+        }
+    }
+
+    public void loadPrivateKey(String keyStorePath, String keyStorePasswd, String entryPasswd, String alias) {
+        KeyStore keyStore = null;
+        try {
+            keyStore = KeyStorage.loadKeyStore(keyStorePasswd.toCharArray(), keyStorePath);
+        } catch(Exception e) {
+            System.out.println("Error: Not possible to initialize client because it was not possible to load keystore.\n" + e);
+            System.exit(-1);
+        }
+        try {
+            _privateKey = KeyStorage.loadPrivateKey(entryPasswd.toCharArray(), alias, keyStore);
+        } catch (Exception e) {
+            System.out.println("Error: Not possible to initialize client because it was not possible to load private key.\n" + e);
+            System.exit(-1);
+        }
     }
 
     public void startServerCommunication() {
