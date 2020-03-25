@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public class UUIDGenerator {
 
-    public int generateUUID() {
+    public static int generateUUID() {
         String uuid = UUID.randomUUID().toString();
         String time = Instant.now().toString();
         String announcementId = uuid + "-" + time;
