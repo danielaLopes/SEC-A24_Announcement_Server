@@ -29,7 +29,7 @@ mvn clean install
 2. Run server:
 ```
 cd server/
-mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="src/main/resources/crypto/keyStorePassword.txt src/main/resources/crypto/entryPassword.txt"
+mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="<keyStorePassword> <entryPassword> <alias>"
 ```
 2. Run client:
 ```
@@ -97,11 +97,11 @@ openssl rsa -in client/src/main/resources/crypto/client.key –pubout > client/s
 ## Create new keystore
 ```
 cd crypto_lib/
-mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.crypto_lib.CreateKeyStorage" -Dexec.args="keyStorePassword keystore_entity_name"
+mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.crypto_lib.CreateKeyStorage" -Dexec.args="keyStorePassword pathToKeyStore"
 ```
 Server example:
 ```
-mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.crypto_lib.CreateKeyStorage" -Dexec.args="password ../server/src/main/resources/crypto/server1_keystore.jks"
+mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.crypto_lib.CreateKeyStorage" -Dexec.args="password ../server/src/main/resources/crypto/server_keystore.jks"
 ```
 
 ## Store private keys in keystore (NOT WORKING)
@@ -120,11 +120,11 @@ rm ../server/src/main/resources/crypto/server.key
 - Import private key (in Windows, requires Administrator)
     1. Create PKCS12 keystore from private key and public certificate.
     ```
-    openssl pkcs12 -export -name ola -in server/src/main/resources/crypto/server.crt -inkey server/src/main/resources/crypto/server.key -out server/src/main/resources/crypto/keystore.p12
+    openssl pkcs12 -export -name alias -in server/src/main/resources/crypto/server.crt -inkey server/src/main/resources/crypto/server.key -out server/src/main/resources/crypto/keystore.p12
     ```
     2. Convert PKCS12 keystore into a JKS keystore
     ```
-    keytool -importkeystore -destkeystore server/src/main/resources/crypto/server1_keystore.jks -srckeystore server/src/main/resources/crypto/keystore.p12 -srcstoretype pkcs12 -alias ola
+    keytool -importkeystore -destkeystore server/src/main/resources/crypto/server_keystore.jks -srckeystore server/src/main/resources/crypto/keystore.p12 -srcstoretype pkcs12 -alias alias
     ```
     3. Remove keys
     ```
