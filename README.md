@@ -148,5 +148,5 @@ keytool -list -v -keystore [enter keystore name] -storepass [password]
 ```
 Server example:
 ```
-keytool -list -v -keystore server/src/main/resources/crypto/server1_keystore.jks -storepass password
+keytool -list -v -keystore server/src/main/resources/crypto/server_keystore.jks -storepass password
 ```
