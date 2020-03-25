@@ -1,8 +1,10 @@
 package pt.ulisboa.tecnico.sec.server;
 
 import pt.ulisboa.tecnico.sec.communication_lib.Communication;
+import pt.ulisboa.tecnico.sec.communication_lib.StatusCode;
 import pt.ulisboa.tecnico.sec.crypto_lib.KeyPairUtil;
 import pt.ulisboa.tecnico.sec.crypto_lib.KeyStorage;
+import pt.ulisboa.tecnico.sec.crypto_lib.SignatureUtil;
 import pt.ulisboa.tecnico.sec.crypto_lib.UUIDGenerator;
 
 import java.security.*;
@@ -15,22 +17,28 @@ public class Server {
     private int _port;
     private PublicKey _pubKey;
     private PrivateKey _privateKey;
+    /** Maps the unique id of an operation to the status it received so that
+     * we can know if  a message was replayed or if it's fresh and to not repeat
+     * operations in case a client resends it due to loss of message.
+     */
+    private ConcurrentHashMap<Integer, StatusCode> _operations;
     private ConcurrentHashMap<PublicKey, User> _users;
     /**
      * maps the announcement unique id to the public key of the entity
-     * where it's stored and the index on the Announcement Board,
+     * where it's stored and the index on the PostOperation Board,
      * if it's the server's public key it's in the
-     * General Board, otherwise it's in the respective User's Announcement Board
+     * General Board, otherwise it's in the respective User's PostOperation Board
      */
     private ConcurrentHashMap<Integer, AnnouncementLocation> _announcementMapper;
-    // TODO: in General Board, posts should remain accountable, so should the value be a signature(post) + post = Announcement?
-    private List<Announcement> _generalBoard;
+    // TODO: in General Board, posts should remain accountable, so should the value be a signature(post) + post = PostOperation?
+    private List<PostOperation> _generalBoard;
     private Communication _communication;
 
     public Server(boolean activateCC, int port, char[] keyStorePasswd, char[] entryPasswd, String alias) {
         loadPublicKey();
         loadPrivateKey(keyStorePasswd, entryPasswd, alias);
         _port = port;
+        _operations = new ConcurrentHashMap<>();
         _users = new ConcurrentHashMap<>();
         _announcementMapper = new ConcurrentHashMap<>();
         // TODO: see if a CopyOnWriteArrayList is more suitable (if very few writes and lots of reads)
@@ -82,39 +90,82 @@ public class Server {
     }
 
     /**
-     * Verifies if a message is valid to be posted.
-     * @param message to be verified
-     * @return a boolean to decide whether the message is valid or not
+     * Verifies if an operation request is valid, which means having a unique id and signature
+     * to ensure the message was not tampered with or replayed.
+     * @param operation
+     * @param signature
+     * @return StatusCode
      */
-    public boolean verifyMessage(String message) {
-        if (message.length() < 255) {
-            return true;
+    public StatusCode verifyOperation(Operation operation, byte[] signature) {
+        try {
+            boolean verified = SignatureUtil.verifySignature(signature, operation.getPubKey(), operation.getBytes());
+            if (verified == false) {
+                System.out.println(StatusCode.INVALID_SIGNATURE);
+                return StatusCode.INVALID_SIGNATURE;
+            }
+        } catch (NoSuchAlgorithmException e) {
+            System.out.println("Error: Algorithm used to verify signature is not valid.\n" + e);
+            // TODO: return statusCode?
         }
-        // TODO: make more verifications
-        return false;
+        catch (InvalidKeyException e) {
+            System.out.println(StatusCode.INVALID_KEY + "\n" + e);
+            return StatusCode.INVALID_KEY;
+        } catch (SignatureException e) {
+            System.out.println(StatusCode.INVALID_SIGNATURE + "\n" + e);
+            return StatusCode.INVALID_SIGNATURE;
+        }
+        return StatusCode.OK;
+    }
+
+    public StatusCode verifyPostSignature() {
+        // TODO
+        return null;
+    }
+
+    public StatusCode verifyReadSignature() {
+        // TODO
+        return null;
     }
 
     /**
-     * Posts an announcement of up to 255 characters to the user's Announcement Board.
+     * Verifies if a message is valid to be posted.
+     * @param message to be verified
+     * @return StatusCode
+     */
+    public StatusCode verifyMessage(String message) {
+        // TODO: 255 or 256?
+        if (message.length() >= 255) {
+            return StatusCode.INVALID_MESSAGE_LENGTH;
+        }
+        // TODO: make more verifications
+        return StatusCode.OK;
+    }
+
+    /**
+     * Posts an announcement of up to 255 characters to the user's PostOperation Board.
      * Can refer to previous announcements.
      * @param pubKey
      * @param message to be put in the announcement
+     * @param opUuid uuid of the operation (assigned by the client to guarantee freshness)
+     *               different from the uuid assigned by the server, which is uniquely references an announcement
      * @param announcements are the unique announcement ids of the references to previous announcements
      * @return StatusCode saying if the post was successful
      */
-    public StatusCode post(PublicKey pubKey, String message, List<Integer> announcements) {
-        // TODO: decide how to reference announcements -> unique ids
-        if (verifyMessage(message)) {
+    public StatusCode post(PublicKey pubKey, String message, int opUuid, List<Integer> announcements, byte[] signature) {
+        StatusCode status = verifyMessage(message);
+        if (status.equals(StatusCode.OK)) {
             int uuid = UUIDGenerator.generateUUID();
-            Announcement newAnnouncement = new Announcement(uuid, message, pubKey, announcements);
-            int index =_users.get(pubKey).postAnnouncementBoard(newAnnouncement);
-            // client's public key is used to indicate it's stored in that client's Announcement Board
-            _announcementMapper.put(uuid, new AnnouncementLocation(pubKey, index));
-            return new StatusCode("OK");
+            PostOperation newAnnouncement = new PostOperation(opUuid, message, pubKey, announcements, signature);
+            StatusCode signStatus = verifyOperation(newAnnouncement, signature);
+            if (signStatus.equals(StatusCode.OK)) {
+                int index =_users.get(pubKey).postAnnouncementBoard(newAnnouncement);
+                // client's public key is used to indicate it's stored in that client's PostOperation Board
+                _announcementMapper.put(uuid, new AnnouncementLocation(pubKey, index));
+                return StatusCode.OK;
+            }
+            else return signStatus;
         }
-        else {
-            return new StatusCode("Invalid Message");
-        }
+        else return status;
     }
 
     /**
@@ -122,36 +173,45 @@ public class Server {
      * Can refer to previous announcements.
      * @param pubKey
      * @param message to be put in the announcement
+     * @param opUuid uuid of the operation (assigned by the client to guarantee freshness)
+     *               different from the uuid assigned by the server, which is uniquely references an announcement
      * @param announcements are the unique announcement ids of the references to previous announcements
+     * @param signature
+     * @return StatusCode saying if the post was successful
      */
-    public StatusCode postGeneral(PublicKey pubKey, String message, List<Integer> announcements) {
-        // TODO: decide how to reference announcements -> unique id
-        if (verifyMessage(message)) {
+    public StatusCode postGeneral(PublicKey pubKey, String message, int opUuid, List<Integer> announcements, byte[] signature) {
+        StatusCode status = verifyMessage(message);
+        System.out.println("status code: " + status);
+        if (status.equals(StatusCode.OK)) {
             int uuid = UUIDGenerator.generateUUID();
-            Announcement newAnnouncement = new Announcement(uuid, message, pubKey, announcements);
-            int index;
-            synchronized (_generalBoard) {
-                index = _generalBoard.size();
-                _generalBoard.add(newAnnouncement);
+            PostOperation newAnnouncement = new PostOperation(opUuid, message, pubKey, announcements, signature);
+            StatusCode signStatus = verifyOperation(newAnnouncement, signature);
+            System.out.println("Signature status code: " + signStatus);
+            if (signStatus.equals(StatusCode.OK)) {
+                int index;
+                synchronized (_generalBoard) {
+                    index = _generalBoard.size();
+                    _generalBoard.add(newAnnouncement);
+                }
+                // server's public key is used to indicate it's stored in the General Board
+                _announcementMapper.put(uuid, new AnnouncementLocation(_pubKey, index));
+                return StatusCode.OK;
             }
-            // server's public key is used to indicate it's stored in the General Board
-            _announcementMapper.put(uuid, new AnnouncementLocation(_pubKey, index));
-            return new StatusCode("OK");
+            else return signStatus;
         }
-        else {
-            return new StatusCode("Invalid Message");
-        }
+        else return status;
     }
 
     /**
      * Obtains the most recent number announcements posted by the user with associated key
-     * (from the user's Announcement Board).
+     * (from the user's PostOperation Board).
      * If number == 0, all announcements should be returned.
      * @param pubKey
      * @param number of announcements to be returned
      * @return a list of announcements
      */
-    public List<Announcement> read(PublicKey pubKey, int number) {
+    public List<PostOperation> read(PublicKey pubKey, int number) {
+        // TODO : signature
         User user =_users.get(pubKey);
         if (number == 0) {
             return user.getAllAnnouncements();
@@ -171,7 +231,8 @@ public class Server {
      * @param number
      * @return a list of announcements
      */
-    public List<Announcement> readGeneral(int number) {
+    public List<PostOperation> readGeneral(int number) {
+        // TODO : signature
         synchronized (_generalBoard) {
             int nAnnouncements = _generalBoard.size();
             if (number == 0) {
@@ -182,6 +243,7 @@ public class Server {
             }
             // invalid number of announcements
             else {
+                System.out.println("nAnnouncements: " + nAnnouncements);
                 return null; // TODO
             }
         }
