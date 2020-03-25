@@ -15,7 +15,7 @@ public class Application {
     public static void main(String[] args) {
         System.out.println("Hello world client");
 
-        ClientUI clientUi = new ClientUI();
+        ClientUI clientUi = new ClientUI(args[0], args[1], args[2], args[3], args[4]);
         clientUi.start();
 
         try {
