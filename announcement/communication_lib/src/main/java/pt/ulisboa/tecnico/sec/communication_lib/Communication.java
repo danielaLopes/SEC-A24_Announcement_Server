@@ -27,14 +27,21 @@ public class Communication {
         out.writeBytes(message);
     }*/
 
-    public void sendMessage(Object object, Socket socket) throws IOException {
-        System.out.println("ola");
+    public void sendMessage(Object pm, Socket socket) throws IOException {
         ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-        out.writeObject(object);
+        out.writeObject(pm);
+    }
+
+    public void sendMessage(Object pm, ObjectOutputStream out) throws IOException {
+        out.writeObject(pm);
     }
 
     public Object receiveMessage(Socket socket) throws IOException, ClassNotFoundException {
         ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+        return in.readObject();
+    }
+
+    public Object receiveMessage(ObjectInputStream in) throws IOException, ClassNotFoundException {
         return in.readObject();
     }
 }

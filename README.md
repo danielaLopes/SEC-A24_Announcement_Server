@@ -29,12 +29,12 @@ mvn clean install
 2. Run server:
 ```
 cd server/
-mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="src/main/resources/crypto/keyStorePassword.txt src/main/resources/crypto/entryPassword.txt"
+mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="<keyStorePassword> <entryPassword> <alias>"
 ```
 2. Run client:
 ```
 cd client/
-mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application"
+mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="src/main/resources/crypto/public.key src/main/resources/crypto/client1_keystore.jks password password ola"
 ```
 
 ## Interacting with the Client UI
@@ -82,7 +82,7 @@ openssl genrsa -out client/src/main/resources/crypto/client.key
 ```
 2. Public key:
 ```
-openssl rsa -in client/src/main/resources/crypto/client.key –pubout > client/src/main/resources/crypto/public.key
+openssl rsa -in client/src/main/resources/crypto/client.key -out client/src/main/resources/crypto/public.key -pubout
 ```
 3. Signing the client certificate:
     - Certificate signing request:

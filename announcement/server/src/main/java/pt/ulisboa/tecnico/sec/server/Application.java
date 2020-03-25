@@ -11,43 +11,23 @@ import java.security.cert.X509Certificate;
 import java.util.List;
 
 public class Application {
-    public static void main(String[] args) //{
-            throws NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, UnrecoverableKeyException {
+    public static void main(String[] args) throws NoSuchAlgorithmException {
+
+        if(args.length != 3) {
+            System.out.println("Args: <keyStorePassword> <entryPassword> <alias>");
+            return;
+        }
 
         System.out.println("Hello world server");
-        Server server = new Server(8000);
-        //Server server = new Server(false, 8000, args[0], args[1]);
+        Server server = new Server(false, 8000, args[0].toCharArray(), args[1].toCharArray(), args[2]);
         server.start();
-        //System.out.println(server.loadPrivateKey());
-        //System.out.println(args[0]);
-        //System.out.println(args[1]);
-        //KeyStore keyStore = KeyStorage.loadKeyStore(args[0], "src/main/resources/crypto/server1_keystore.jks");
-        //System.out.println("keystore: " + keyStore);
-
-        /*PrivateKey privateKey;
-        X509Certificate cert;
-        try {
-            privateKey = KeyPairUtil.loadPrivateKey("src/main/resources/crypto/server_pkcs8");
-        } catch (Exception e) {
-            System.out.println("Error: Not possible to load private key from file!");
-            e.printStackTrace();
-            return;
-        }
-        try {
-            cert = KeyPairUtil.loadCertificate("src/main/resources/crypto/server.crt");
-        } catch (Exception e) {
-            System.out.println("Error: Not possible to load certificate!");
-            e.printStackTrace();
-            return;
-        }
-        KeyStorage.storePrivateKey("ola", keyStore, privateKey, cert);*/
-        //PrivateKey retrievePrivateKey = KeyStorage.loadPrivateKey(args[1], "ola", keyStore);
-        //System.out.println("retrieved private key: " + retrievePrivateKey);
 
         // testing
-        /*KeyGenerator keyGen = new KeyGenerator();
-        KeyPair userKeys = keyGen.generateKeyPair("RSA", 1024);
-        PublicKey userPubKey = userKeys.getPublic();
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+        kpg.initialize(2048);
+        KeyPair kp = kpg.generateKeyPair();
+        PublicKey userPubKey = kp.getPublic();
+
         server.registerUser(userPubKey);
         server.postGeneral(userPubKey, "message1",null);
         List<Announcement> announcements1 = server.readGeneral(1);
@@ -58,8 +38,7 @@ public class Application {
         List<Announcement> announcements2 = server.readGeneral(2);
         for (Announcement announcement: announcements2) {
             System.out.println(announcement.getMessage());
-        }*/
-        //server.start();
+        }
 
         /*catch (FileNotFoundException e) {
             System.out.println("Error: File " + file.getAbsolutePath() + " was not found!");

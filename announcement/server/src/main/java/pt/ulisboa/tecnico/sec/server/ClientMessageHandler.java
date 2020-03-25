@@ -1,40 +1,73 @@
 package pt.ulisboa.tecnico.sec.server;
 
 import java.io.*;
+import java.net.*;
+
+import pt.ulisboa.tecnico.sec.communication_lib.*;
 
 public class ClientMessageHandler extends Thread {
     private Server _server;
-    private String _command;
+    private Socket _socket;
+    private ObjectInputStream _ois;
+    private ObjectOutputStream _oos;
+    private Communication _communication;
 
-    public ClientMessageHandler(Server server, String command) {
+    public ClientMessageHandler(Server server, Socket socket) throws IOException {
         _server = server;
-        _command = command;
+        _socket = socket;
+        _communication = new Communication();
+        _ois = new ObjectInputStream(_socket.getInputStream());
+        _oos = new ObjectOutputStream(_socket.getOutputStream());
     }
 
     @Override
     public void run() {
-        int message = 1;
+        String command = "";
 
-        switch (message) {
-            // Post to Client's Board
-            case 1:
-                //post();
-                break;
-            // Post to General Board
-            case 2:
-                //postGeneral();
-                break;
-            // Read from specific user
-            case 3:
-                //read();
-                break;
-            // Read from General Board
-            case 4:
-                //readGeneral();
-                break;
-            default:
-                break;
+        while(!command.equals("LOGOUT")) {
+            try {
+                
+                ProtocolMessage pm = (ProtocolMessage) _communication.receiveMessage(_ois);
+                System.out.println("Received [" + pm.getCommand() + "] messages from: " + _socket);
+                command = pm.getCommand();
+
+                switch (command) {
+                    // Post to Client's Board
+                    case "POST":
+                        //post();
+                        break;
+                    // Post to General Board
+                    case "POSTGENERAL":
+                        //postGeneral();
+                        break;
+                    // Read from specific user
+                    case "READ":
+                        //read();
+                        break;
+                    // Read from General Board
+                    case "READGENERAL":
+                        //readGeneral();
+                        break;
+                    case "LOGOUT":
+                        closeCommunication();
+                        break;
+                    default:
+                        break;
+                }
+            }
+            catch (IOException | ClassNotFoundException e) {
+                System.out.println(e);
+            }
         }
+    }
+
+    public void closeCommunication() {
+        try {
+            _communication.close(_socket);
+        }
+        catch(IOException e) {
+            System.out.println("Error closing socket");
+        } 
     }
 
 }

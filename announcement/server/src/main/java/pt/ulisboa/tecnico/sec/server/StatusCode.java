@@ -1,10 +1,10 @@
 package pt.ulisboa.tecnico.sec.server;
 
-public class PostStatus {
+public class StatusCode {
 
     private String _description;
 
-    public PostStatus(String description) {
+    public StatusCode(String description) {
         _description = description;
     }
 

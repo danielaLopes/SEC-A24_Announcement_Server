@@ -1,9 +1,9 @@
 package pt.ulisboa.tecnico.sec.crypto_lib;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import org.bouncycastle.util.io.pem.PemObject;
+import org.bouncycastle.util.io.pem.PemReader;
+
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.*;
@@ -43,12 +43,15 @@ public class KeyPairUtil {
     public static PublicKey loadPublicKey(String filename) throws IOException,
             NoSuchAlgorithmException, InvalidKeySpecException {
 
-        byte[] keyBytes = Files.readAllBytes(Paths.get(filename));
+        String keyStr = new String(Files.readAllBytes(Paths.get(filename)));
 
-        X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
+        PemObject pem = new PemReader(new StringReader(keyStr)).readPemObject();
+        byte[] pubKeyBytes = pem.getContent();
+
+        X509EncodedKeySpec spec = new X509EncodedKeySpec(pubKeyBytes);
         KeyFactory kf = KeyFactory.getInstance("RSA");
 
-        return kf.generatePublic(spec);
+        return (PublicKey)kf.generatePublic(spec);
     }
 
     public static X509Certificate loadCertificate(String filename) throws  CertificateException, IOException {
