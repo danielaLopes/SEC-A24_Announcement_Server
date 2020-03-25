@@ -2,31 +2,30 @@ package pt.ulisboa.tecnico.sec.server;
 
 import java.security.PublicKey;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 public class User {
 
     private PublicKey _pubKey;
     // has to be a list because latest announcements can be requested
-    private List<Announcement> _announcementBoard;
+    private List<PostOperation> _announcementBoard;
 
     public User(PublicKey pubKey) {
         _pubKey = pubKey;
         _announcementBoard = new ArrayList<>();
     }
 
-    public int postAnnouncementBoard(Announcement announcement) {
+    public int postAnnouncementBoard(PostOperation announcement) {
         _announcementBoard.add(announcement);
         return getNumAnnouncements() - 1;
     }
 
-    public List<Announcement> getAnnouncements(int number) {
+    public List<PostOperation> getAnnouncements(int number) {
         int nAnnouncements = _announcementBoard.size();
         return _announcementBoard.subList(nAnnouncements - number, nAnnouncements);
     }
 
-    public List<Announcement> getAllAnnouncements() {
+    public List<PostOperation> getAllAnnouncements() {
         return _announcementBoard;
     }
 

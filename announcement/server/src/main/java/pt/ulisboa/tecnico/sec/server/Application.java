@@ -1,17 +1,13 @@
 package pt.ulisboa.tecnico.sec.server;
 
-import pt.ulisboa.tecnico.sec.crypto_lib.KeyPairUtil;
-import pt.ulisboa.tecnico.sec.crypto_lib.KeyStorage;
+import pt.ulisboa.tecnico.sec.crypto_lib.SignatureUtil;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.security.*;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Application {
-    public static void main(String[] args) throws NoSuchAlgorithmException {
+    public static void main(String[] args) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
 
         if(args.length != 3) {
             System.out.println("Args: <keyStorePassword> <entryPassword> <alias>");
@@ -27,18 +23,29 @@ public class Application {
         kpg.initialize(2048);
         KeyPair kp = kpg.generateKeyPair();
         PublicKey userPubKey = kp.getPublic();
+        PrivateKey userPrivateKey = kp.getPrivate();
 
         server.registerUser(userPubKey);
-        server.postGeneral(userPubKey, "message1",null);
-        List<Announcement> announcements1 = server.readGeneral(1);
-        for (Announcement announcement: announcements1) {
+
+        // generate signature
+        // message + references
+        String toSign = "1" + "|" + "message1" + "|" + "1";
+        byte[] signature = SignatureUtil.sign(toSign.getBytes(), userPrivateKey);
+
+        List<Integer> references = new ArrayList<>();
+        references.add(1);
+        server.postGeneral(userPubKey, "message1", 1, references, signature);
+        List<PostOperation> announcements1 = server.readGeneral(1);
+        for (PostOperation announcement: announcements1) {
             System.out.println(announcement.getMessage());
         }
-        server.postGeneral(userPubKey, "message2",null);
-        List<Announcement> announcements2 = server.readGeneral(2);
-        for (Announcement announcement: announcements2) {
+        /*List<Integer> references2 = new ArrayList<>();
+        references2.add(2);
+        server.postGeneral(userPubKey, "message2", references2, signature);
+        List<PostOperation> announcements2 = server.readGeneral(2);
+        for (PostOperation announcement: announcements2) {
             System.out.println(announcement.getMessage());
-        }
+        }*/
 
         /*catch (FileNotFoundException e) {
             System.out.println("Error: File " + file.getAbsolutePath() + " was not found!");
