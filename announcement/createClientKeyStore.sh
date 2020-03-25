@@ -1,0 +1,2 @@
+openssl pkcs12 -export -name ola -in client/src/main/resources/crypto/client.crt -inkey client/src/main/resources/crypto/client.key -out client/src/main/resources/crypto/keystore.p12
+keytool -importkeystore -destkeystore client/src/main/resources/crypto/client1_keystore.jks -srckeystore client/src/main/resources/crypto/keystore.p12 -srcstoretype pkcs12 -alias ola

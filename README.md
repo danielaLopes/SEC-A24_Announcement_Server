@@ -34,7 +34,7 @@ mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexe
 2. Run client:
 ```
 cd client/
-mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application"
+mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="src/main/resources/crypto/public.key src/main/resources/crypto/client1_keystore.jks password password ola"
 ```
 
 ## Interacting with the Client UI
@@ -57,9 +57,14 @@ set OPENSSL_CONF=C:\Program Files\OpenSSL-Win64\bin\openssl.cfg
 openssl pkcs8 -topk8 -inform PEM -outform DER -in server/src/main/resources/crypto/server.key  -nocrypt > server/src/main/resources/crypto/server_pkcs8.key
 ```
 3. Public key:
-```
-openssl rsa -in server/src/main/resources/crypto/server.key –pubout > server/src/main/resources/crypto/public.key
-```
+    - Ubuntu:
+        ```
+        openssl rsa -in server/src/main/resources/crypto/server.key -out server/src/main/resources/crypto/public.key -pubout
+        ```
+    - Windows:
+        ```
+        openssl rsa -in server/src/main/resources/crypto/server.key –pubout > server/src/main/resources/crypto/public.key
+        ```
 4. Self-signed certificate:
     - Certificate signing request:
     ```
@@ -81,9 +86,15 @@ openssl rsa -in server/src/main/resources/crypto/server.key –pubout > server/s
 openssl genrsa -out client/src/main/resources/crypto/client.key
 ```
 2. Public key:
-```
-openssl rsa -in client/src/main/resources/crypto/client.key –pubout > client/src/main/resources/crypto/public.key
-```
+    - Ubuntu:
+        ```
+        openssl rsa -in client/src/main/resources/crypto/client.key -out client/src/main/resources/crypto/public.key -pubout
+        ```
+    - Windows:
+        ```
+        openssl rsa -in client/src/main/resources/crypto/client.key –pubout > client/src/main/resources/crypto/public.key
+        ```
+        
 3. Signing the client certificate:
     - Certificate signing request:
     ```
@@ -97,11 +108,11 @@ openssl rsa -in client/src/main/resources/crypto/client.key –pubout > client/s
 ## Create new keystore
 ```
 cd crypto_lib/
-mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.crypto_lib.CreateKeyStorage" -Dexec.args="keyStorePassword pathToKeyStore"
+mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.crypto_lib.CreateKeyStorage" -Dexec.args="keyStorePassword keystore_entity_name"
 ```
 Server example:
 ```
-mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.crypto_lib.CreateKeyStorage" -Dexec.args="password ../server/src/main/resources/crypto/server_keystore.jks"
+mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.crypto_lib.CreateKeyStorage" -Dexec.args="password ../server/src/main/resources/crypto/server1_keystore.jks"
 ```
 
 ## Store private keys in keystore (NOT WORKING)
@@ -120,11 +131,11 @@ rm ../server/src/main/resources/crypto/server.key
 - Import private key (in Windows, requires Administrator)
     1. Create PKCS12 keystore from private key and public certificate.
     ```
-    openssl pkcs12 -export -name alias -in server/src/main/resources/crypto/server.crt -inkey server/src/main/resources/crypto/server.key -out server/src/main/resources/crypto/keystore.p12
+    openssl pkcs12 -export -name ola -in server/src/main/resources/crypto/server.crt -inkey server/src/main/resources/crypto/server.key -out server/src/main/resources/crypto/keystore.p12
     ```
     2. Convert PKCS12 keystore into a JKS keystore
     ```
-    keytool -importkeystore -destkeystore server/src/main/resources/crypto/server_keystore.jks -srckeystore server/src/main/resources/crypto/keystore.p12 -srcstoretype pkcs12 -alias alias
+    keytool -importkeystore -destkeystore server/src/main/resources/crypto/server1_keystore.jks -srckeystore server/src/main/resources/crypto/keystore.p12 -srcstoretype pkcs12 -alias ola
     ```
     3. Remove keys
     ```
@@ -137,5 +148,5 @@ keytool -list -v -keystore [enter keystore name] -storepass [password]
 ```
 Server example:
 ```
-keytool -list -v -keystore server/src/main/resources/crypto/server1_keystore.jks -storepass password
+keytool -list -v -keystore server/src/main/resources/crypto/server_keystore.jks -storepass password
 ```

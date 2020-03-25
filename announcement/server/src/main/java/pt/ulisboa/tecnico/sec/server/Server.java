@@ -1,12 +1,13 @@
 package pt.ulisboa.tecnico.sec.server;
 
-import pt.ulisboa.tecnico.sec.communication_lib.Communication;
-import pt.ulisboa.tecnico.sec.communication_lib.StatusCode;
+import pt.ulisboa.tecnico.sec.communication_lib.*;
 import pt.ulisboa.tecnico.sec.crypto_lib.KeyPairUtil;
 import pt.ulisboa.tecnico.sec.crypto_lib.KeyStorage;
 import pt.ulisboa.tecnico.sec.crypto_lib.SignatureUtil;
 import pt.ulisboa.tecnico.sec.crypto_lib.UUIDGenerator;
 
+import java.io.*;
+import java.net.*;
 import java.security.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,10 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Server {
 
     private int _port;
+    private ServerSocket _serverSocket;
+    private Socket _socket;
+    private String _pathToKeyStorePasswd;
+    private String _pathToEntryPasswd;
     private PublicKey _pubKey;
     private PrivateKey _privateKey;
     /** Maps the unique id of an operation to the status it received so that
@@ -71,12 +76,30 @@ public class Server {
         }
     }
 
+    public void startClientCommunication() {
+        try {
+            _serverSocket = _communication.createServerSocket(8888);
+        }
+        catch(IOException e) {
+            System.out.println("Error starting server socket");
+        }
+    }
+
     /**
      * Opens new socket to listen for client communications and creates
      * a new Thread to handle each client connection.
      */
     public void start() {
-        new ClientConnectionHandler(this).start();
+        startClientCommunication();
+        while(true) {
+            try{
+                _socket = _communication.accept(_serverSocket);
+                new ClientMessageHandler(this, _socket).start();
+            }
+            catch (IOException e) {
+                System.out.println(e);
+            }
+        }
     }
 
     /**

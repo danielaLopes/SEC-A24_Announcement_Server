@@ -1,60 +1,70 @@
 package pt.ulisboa.tecnico.sec.client;
 
+import pt.ulisboa.tecnico.sec.communication_lib.*;
 import pt.ulisboa.tecnico.sec.crypto_lib.KeyPairUtil;
-import pt.ulisboa.tecnico.sec.communication_lib.Communication;
 import pt.ulisboa.tecnico.sec.crypto_lib.KeyStorage;
-import pt.ulisboa.tecnico.sec.crypto_lib.UUIDGenerator;
 
-import java.security.*;
+import java.net.Socket;
+import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 
 import java.io.*;
-import java.net.Socket;
-import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 
-public class Client {
+public class Client{
 
     private PublicKey _pubKey; // TODO: final?
-    private String _pathToKeyStorePasswd; //TODO: final?
-    private String _pathToEntryPasswd; //TODO: final?
+    private PrivateKey _privateKey; // TODO: final?
 
     private final Communication _communication;
+    private ObjectOutputStream _oos;
+    private ObjectInputStream _ois;
     private Socket _clientSocket;
-    private UUIDGenerator _uuidGenerator;
 
-    // TODO: make register method, maybe receive input to know which client key to retrieve
-    public Client(String pathToKeyStorePasswd, String pathToEntryPasswd) {
-        try {
-            _pubKey = KeyPairUtil.loadPublicKey("src/main/resources/crypto/public.key");
-        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
-            System.out.println("Error: it was not possible to load public key from file");
-        }
-
-        _pathToKeyStorePasswd = pathToKeyStorePasswd;
-        _pathToEntryPasswd = pathToEntryPasswd;
+    public Client(String pubKeyPath, String keyStorePath,
+                  String keyStorePasswd, String entryPasswd, String alias) {
+        this.loadPublicKey(pubKeyPath);
+        System.out.println("Public key: " + _pubKey);
+        this.loadPrivateKey(keyStorePath, keyStorePasswd, entryPasswd, alias);
+        System.out.println("Private key: " + _privateKey);
 
         _communication = new Communication();
-        _uuidGenerator = new UUIDGenerator();
     }
 
-    public PrivateKey loadPrivateKey(){
-        // load private key
-        PrivateKey privateKey = null;
+    public void loadPublicKey(String pubKeyPath) {
         try {
-            KeyStore keyStore = KeyStorage.loadKeyStore(_pathToKeyStorePasswd,
-                    "src/main/resources/crypto/client1_keystore.jks");
-            privateKey = KeyStorage.loadPrivateKey(_pathToEntryPasswd, "ola", keyStore);
-            System.out.println("assigning private key");
+            _pubKey = KeyPairUtil.loadPublicKey(pubKeyPath);
         } catch (Exception e) {
-            System.out.println("Error: Not possible to load private key from keystore");
+            System.out.println("Error: Not possible to initialize client because it was not possible to load public key.\n" + e);
+            System.exit(-1);
         }
-        return privateKey;
+    }
+
+    public void loadPrivateKey(String keyStorePath, String keyStorePasswd, String entryPasswd, String alias) {
+        KeyStore keyStore = null;
+        try {
+            keyStore = KeyStorage.loadKeyStore(keyStorePasswd.toCharArray(), keyStorePath);
+        } catch(Exception e) {
+            System.out.println("Error: Not possible to initialize client because it was not possible to load keystore.\n" + e);
+            System.exit(-1);
+        }
+        try {
+            _privateKey = KeyStorage.loadPrivateKey(entryPasswd.toCharArray(), alias, keyStore);
+        } catch (Exception e) {
+            System.out.println("Error: Not possible to initialize client because it was not possible to load private key.\n" + e);
+            System.exit(-1);
+        }
     }
 
     public void startServerCommunication() {
         try {
-            _clientSocket = new Socket("localhost", 8000);
-            _communication.sendMessage("OLA\n", _clientSocket);
+            _clientSocket = new Socket("localhost", 8888);
+
+            _oos = new ObjectOutputStream(_clientSocket.getOutputStream());
+            _ois = new ObjectInputStream(_clientSocket.getInputStream());
+
+            register();
         }
         catch(IOException e) {
             System.out.println("Error starting client socket");
@@ -63,6 +73,8 @@ public class Client {
 
     public void closeCommunication() {
         try {
+            ProtocolMessage pm = new ProtocolMessage("LOGOUT");
+            _communication.sendMessage(pm, _oos);
             _communication.close(_clientSocket);
         }
         catch(IOException e) {
@@ -72,8 +84,14 @@ public class Client {
 
     // TODO: make register method, see if _pubKey should be assigned here
     public void register() {
-
-        // TODO: client-server communication
+        String message = "REGISTER";
+        ProtocolMessage pm = new ProtocolMessage(message);
+        try {
+            _communication.sendMessage(pm, _oos);
+        }
+        catch (IOException e) {
+            System.out.println(e);
+        }
     }
 
     /**
@@ -83,8 +101,7 @@ public class Client {
      * @param references to previous announcements
      */
     public void post(String message, List<Integer> references) {
-        int uuid = _uuidGenerator.generateUUID();
-        System.out.println("Posting announcement to user's Board with uuid: " + uuid);
+        // TODO: verify parameters
         // TODO: client-server communication
     }
 
@@ -95,13 +112,7 @@ public class Client {
      * @param references to previous announcements
      */
     public void postGeneral(String message, List<Integer> references) {
-        int uuid = _uuidGenerator.generateUUID();
-        System.out.println("Posting announcement to General Board:");
-        System.out.println("* UUID: " + uuid);
-        System.out.println("* Message: " + message);
-        System.out.println("* References: ");
-        for (int r : references)
-            System.out.println("  * " + r);
+        // TODO: verify parameters
         // TODO: client-server communication
     }
 
@@ -112,6 +123,7 @@ public class Client {
      * @param number of announcements to be retrieved
      */
     public void read(String user, int number) {
+        // TODO: verify parameters
         // TODO: client-server communication
     }
 
@@ -121,6 +133,7 @@ public class Client {
      * @param number of announcements to be retrieved
      */
     public void readGeneral(int number) {
+        // TODO: verify parameters
         // TODO: client-server communication
     }
 
