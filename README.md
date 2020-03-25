@@ -57,9 +57,14 @@ set OPENSSL_CONF=C:\Program Files\OpenSSL-Win64\bin\openssl.cfg
 openssl pkcs8 -topk8 -inform PEM -outform DER -in server/src/main/resources/crypto/server.key  -nocrypt > server/src/main/resources/crypto/server_pkcs8.key
 ```
 3. Public key:
-```
-openssl rsa -in server/src/main/resources/crypto/server.key –pubout > server/src/main/resources/crypto/public.key
-```
+    - Ubuntu:
+        ```
+        openssl rsa -in server/src/main/resources/crypto/server.key -out server/src/main/resources/crypto/public.key -pubout
+        ```
+    - Windows:
+        ```
+        openssl rsa -in server/src/main/resources/crypto/server.key –pubout > server/src/main/resources/crypto/public.key
+        ```
 4. Self-signed certificate:
     - Certificate signing request:
     ```
@@ -81,9 +86,15 @@ openssl rsa -in server/src/main/resources/crypto/server.key –pubout > server/s
 openssl genrsa -out client/src/main/resources/crypto/client.key
 ```
 2. Public key:
-```
-openssl rsa -in client/src/main/resources/crypto/client.key -out client/src/main/resources/crypto/public.key -pubout
-```
+    - Ubuntu:
+        ```
+        openssl rsa -in client/src/main/resources/crypto/client.key -out client/src/main/resources/crypto/public.key -pubout
+        ```
+    - Windows:
+        ```
+        openssl rsa -in client/src/main/resources/crypto/client.key –pubout > client/src/main/resources/crypto/public.key
+        ```
+        
 3. Signing the client certificate:
     - Certificate signing request:
     ```
