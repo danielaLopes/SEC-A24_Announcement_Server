@@ -22,13 +22,26 @@ public class Communication {
         socket.close();
     }
 
-    public void sendMessage(String message, Socket socket) throws IOException {
+    /*    public void sendMessage(String message, Socket socket) throws IOException {
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
         out.writeBytes(message);
+    }*/
+
+    public void sendMessage(Object pm, Socket socket) throws IOException {
+        ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+        out.writeObject(pm);
     }
 
-    public String receiveMessage(Socket socket) throws IOException {
-        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        return in.readLine();
+    public void sendMessage(Object pm, ObjectOutputStream out) throws IOException {
+        out.writeObject(pm);
+    }
+
+    public Object receiveMessage(Socket socket) throws IOException, ClassNotFoundException {
+        ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+        return in.readObject();
+    }
+
+    public Object receiveMessage(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        return in.readObject();
     }
 }

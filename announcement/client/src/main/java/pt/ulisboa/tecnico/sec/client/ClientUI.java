@@ -24,9 +24,8 @@ public class ClientUI {
 
         while (option != 0) {
             option = promptGeneralMenu();
-
+            System.out.println("OPTION:" + option);
             switch (option) {
-                // Post to Client's Board
                 case 1:
                     post();
                     break;
@@ -42,10 +41,21 @@ public class ClientUI {
                 case 4:
                     readGeneral();
                     break;
+                // Exit and close communication
+                case 0:
+                    closeCommunication();
+                    break;
                 default:
                     break;
             }
         }
+    }
+
+    /**
+     * Prompts the user for the message and reference(s) needed to post
+     * to his Board.
+     */
+    public void closeCommunication() {
         try {
             _client.closeCommunication();
         }
@@ -53,7 +63,6 @@ public class ClientUI {
             System.out.println("Error when closing Client's communications.");
         }
     }
-
 
     /**
      * Prompts the user for the message and reference(s) needed to post

@@ -1,6 +1,6 @@
 package pt.ulisboa.tecnico.sec.client;
 
-import pt.ulisboa.tecnico.sec.communication_lib.Communication;
+import pt.ulisboa.tecnico.sec.communication_lib.*;
 import pt.ulisboa.tecnico.sec.crypto_lib.KeyPairUtil;
 import pt.ulisboa.tecnico.sec.crypto_lib.KeyStorage;
 
@@ -12,12 +12,14 @@ import java.security.PublicKey;
 import java.io.*;
 import java.util.List;
 
-public class Client {
+public class Client{
 
     private PublicKey _pubKey; // TODO: final?
     private PrivateKey _privateKey; // TODO: final?
 
     private final Communication _communication;
+    private ObjectOutputStream _oos;
+    private ObjectInputStream _ois;
     private Socket _clientSocket;
 
     public Client(String pubKeyPath, String keyStorePath,
@@ -57,8 +59,12 @@ public class Client {
 
     public void startServerCommunication() {
         try {
-            _clientSocket = new Socket("localhost", 8000);
-            _communication.sendMessage("OLA\n", _clientSocket);
+            _clientSocket = new Socket("localhost", 8888);
+
+            _oos = new ObjectOutputStream(_clientSocket.getOutputStream());
+            _ois = new ObjectInputStream(_clientSocket.getInputStream());
+
+            register();
         }
         catch(IOException e) {
             System.out.println("Error starting client socket");
@@ -67,6 +73,8 @@ public class Client {
 
     public void closeCommunication() {
         try {
+            ProtocolMessage pm = new ProtocolMessage("LOGOUT");
+            _communication.sendMessage(pm, _oos);
             _communication.close(_clientSocket);
         }
         catch(IOException e) {
@@ -76,7 +84,14 @@ public class Client {
 
     // TODO: make register method, see if _pubKey should be assigned here
     public void register() {
-        // TODO: client-server communication
+        String message = "REGISTER";
+        ProtocolMessage pm = new ProtocolMessage(message);
+        try {
+            _communication.sendMessage(pm, _oos);
+        }
+        catch (IOException e) {
+            System.out.println(e);
+        }
     }
 
     /**
