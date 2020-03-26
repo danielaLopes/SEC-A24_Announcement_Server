@@ -15,14 +15,11 @@ class ReadTest extends BaseTest {
     public ReadTest() {
         _otherUsersPubKeyPaths = new ArrayList<String>();
         _otherUsersPubKeyPaths.add(PUBLICKEY_PATH2);
-
-        _client1 = new Client(PUBLICKEY_PATH1, KEYSTORE_PATH1, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, _otherUsersPubKeyPaths);
-
+        _client1 = new Client(PUBLICKEY_PATH1, KEYSTORE_PATH1, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH, _otherUsersPubKeyPaths);
+        
         _otherUsersPubKeyPaths = new ArrayList<String>();
         _otherUsersPubKeyPaths.add(PUBLICKEY_PATH1);
-
-        _client2 = new Client(PUBLICKEY_PATH2, KEYSTORE_PATH2, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, _otherUsersPubKeyPaths);
-    }
+        _client2 = new Client(PUBLICKEY_PATH2, KEYSTORE_PATH2, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH, _otherUsersPubKeyPaths);    }
 
     @Test
     void success() {

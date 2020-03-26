@@ -19,6 +19,7 @@ public class Client{
     private PrivateKey _privateKey;
 
     private List<PublicKey> _otherUsersPubKeys;
+    private PublicKey _serverPubKey;
 
     private final Communication _communication;
     private ObjectOutputStream _oos;
@@ -27,10 +28,12 @@ public class Client{
 
     public Client(String pubKeyPath, String keyStorePath,
                   String keyStorePasswd, String entryPasswd, String alias,
-                  List<String> otherUsersPubKeyPaths) {
+                  String serverPubKeyPath, List<String> otherUsersPubKeyPaths) {
         loadPublicKey(pubKeyPath);
         loadPrivateKey(keyStorePath, keyStorePasswd, entryPasswd, alias);
         
+        loadServerPublicKey(serverPubKeyPath);
+
         _otherUsersPubKeys = new ArrayList<PublicKey>();
         loadOtherUsersPubKeys(otherUsersPubKeyPaths);
 
@@ -69,6 +72,18 @@ public class Client{
     }
 
     /**
+     * Loads server's public key to _serverPubKey.
+     */
+    public void loadServerPublicKey(String path) {
+        try {
+            _serverPubKey = KeyPairUtil.loadPublicKey(path);
+        } catch (Exception e) {
+            System.out.println("Error: Not possible to initialize client because it was not possible to load server's public key.\n" + e);
+            System.exit(-1);
+        }
+    }
+
+    /**
      * Loads other user's public keys to _otherUsersPubKeys.
      */
     public void loadOtherUsersPubKeys(List<String> paths) {
@@ -76,7 +91,7 @@ public class Client{
             try {
                 _otherUsersPubKeys.add(KeyPairUtil.loadPublicKey(path));
             } catch (Exception e) {
-                System.out.println("Error: Not possible to initialize client because it was not possible to load public key.\n" + e);
+                System.out.println("Error: Not possible to initialize client because it was not possible to load other users public keys.\n" + e);
                 System.exit(-1);
             }
         }
