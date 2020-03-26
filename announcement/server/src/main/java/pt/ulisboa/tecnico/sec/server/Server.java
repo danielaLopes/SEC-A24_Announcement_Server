@@ -171,7 +171,7 @@ public class Server {
         if (_usersPubKeys.contains(clientPubKey)) {
         
             if (verifySignature(vpm)) {
-                System.out.println("Client Signature verified successful.");
+                System.out.println("Client Signature verified successfully.");
             }
             else {
                 System.out.println("Could not verify client signature");

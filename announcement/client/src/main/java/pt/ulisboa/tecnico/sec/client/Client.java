@@ -190,6 +190,7 @@ public class Client{
             VerifiableProtocolMessage rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
 
             if (verifySignature(rvpm)) {
+                System.out.println("Server signature verified successfully");
                 printStatusCodeDescription(rvpm.getProtocolMessage().getStatusCode());
             }
             else {

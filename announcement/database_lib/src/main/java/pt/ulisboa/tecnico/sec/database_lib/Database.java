@@ -27,7 +27,7 @@ public class Database {
 
     public void createUserTable(String uuid) {
         try {
-            String userTable = "CREATE TABLE IF NOT EXISTS" + uuid + " (Message VARCHAR(256) NOT NULL, Reference VARCHAR(256), Id INT(8) NOT NULL, PRIMARY KEY(Id)) CHARACTER SET utf8";
+            String userTable = "CREATE TABLE IF NOT EXISTS " + uuid + " (Message VARCHAR(256) NOT NULL, Reference VARCHAR(256), Id INT(8) NOT NULL, PRIMARY KEY(Id)) CHARACTER SET utf8";
             PreparedStatement statement = _con.prepareStatement(userTable);
             statement.executeUpdate();
         }
