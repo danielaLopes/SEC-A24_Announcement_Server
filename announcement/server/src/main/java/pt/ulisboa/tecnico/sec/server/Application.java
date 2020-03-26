@@ -9,13 +9,19 @@ import java.util.List;
 public class Application {
     public static void main(String[] args) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
 
-        if(args.length != 3) {
+        if(args.length < 4) {
             System.out.println("Args: <keyStorePassword> <entryPassword> <alias>");
             return;
         }
 
         System.out.println("Hello world server");
-        Server server = new Server(false, 8000, args[0].toCharArray(), args[1].toCharArray(), args[2]);
+
+        List<String> usersPubKeys = new ArrayList<String>();
+        for (int i = 1; i <= Integer.parseInt(args[3]); i++) {
+            usersPubKeys.add(args[3+i]);
+        }
+
+        Server server = new Server(false, 8000, args[0].toCharArray(), args[1].toCharArray(), args[2], usersPubKeys);
         server.start();
 
         // testing
@@ -25,7 +31,7 @@ public class Application {
         PublicKey userPubKey = kp.getPublic();
         PrivateKey userPrivateKey = kp.getPrivate();
 
-        server.registerUser(userPubKey);
+        //server.registerUser(userPubKey);
 
         // generate signature
         // message + references

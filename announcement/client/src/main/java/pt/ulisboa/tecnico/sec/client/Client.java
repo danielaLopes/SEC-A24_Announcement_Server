@@ -3,12 +3,16 @@ package pt.ulisboa.tecnico.sec.client;
 import pt.ulisboa.tecnico.sec.communication_lib.*;
 import pt.ulisboa.tecnico.sec.crypto_lib.KeyPairUtil;
 import pt.ulisboa.tecnico.sec.crypto_lib.KeyStorage;
+import pt.ulisboa.tecnico.sec.crypto_lib.ProtocolMessageConverter;
+import pt.ulisboa.tecnico.sec.crypto_lib.SignatureUtil;
 
 import java.net.Socket;
+import java.security.InvalidKeyException;
 import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-
+import java.security.SignatureException;
 import java.io.*;
 import java.util.List;
 
@@ -86,14 +90,37 @@ public class Client{
         System.out.println("======" + sc.getDescription() + "======");
     }
 
+    public VerifiableProtocolMessage createVerifiableMessage(ProtocolMessage pm) {
+        try {
+            byte[] bpm = ProtocolMessageConverter.pmToByteArray(pm);
+            byte[] signedpm = SignatureUtil.sign(bpm, _privateKey);
+            return new VerifiableProtocolMessage(pm, signedpm);
+        }
+        catch(NoSuchAlgorithmException | InvalidKeyException | SignatureException e) { 
+            System.out.println(e);
+        }
+        return null;
+    }
+
+    public boolean verifySignature(VerifiableProtocolMessage vpm) {
+        try {
+            byte[] bpm = ProtocolMessageConverter.pmToByteArray(vpm.getProtocolMessage());
+            return SignatureUtil.verifySignature(vpm.getSignedProtocolMessage(), _serverPubKey, bpm);
+        }
+        catch(NoSuchAlgorithmException | InvalidKeyException | SignatureException e) { 
+            System.out.println(e);
+        }
+        return false;
+    }
+
     // TODO: make register method, see if _pubKey should be assigned here
     public void register() {
-        String message = "REGISTER";
-        ProtocolMessage pm = new ProtocolMessage(message, _pubKey);
+        ProtocolMessage pm = new ProtocolMessage("REGISTER", _pubKey);
+        VerifiableProtocolMessage vpm = createVerifiableMessage(pm);
         try {
-            _communication.sendMessage(pm, _oos);
-            ProtocolMessage rpm = (ProtocolMessage) _communication.receiveMessage(_ois);
-            printStatusCodeDescription(rpm.getStatusCode());
+            _communication.sendMessage(vpm, _oos);
+            VerifiableProtocolMessage rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
+            printStatusCodeDescription(rvpm.getProtocolMessage().getStatusCode());
         }
         catch (IOException | ClassNotFoundException e) {
             System.out.println(e);

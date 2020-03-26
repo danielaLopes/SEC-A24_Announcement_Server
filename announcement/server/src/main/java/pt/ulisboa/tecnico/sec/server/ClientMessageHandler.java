@@ -68,11 +68,7 @@ public class ClientMessageHandler extends Thread {
 
     public void registerUser(ProtocolMessage pm) {
         try {
-            boolean successful = _server.registerUser(pm.getPublicKey());
-            StatusCode sc = StatusCode.OK;
-            if (!successful)
-                sc = StatusCode.DUPLICATE_USER;
-            ProtocolMessage spm = new ProtocolMessage(sc);
+            ProtocolMessage spm = _server.registerUser(pm.getPublicKey(), pm.getOpUuid(), pm.getSignature());
             _communication.sendMessage(spm, _oos);
         }
         catch (IOException e) {
