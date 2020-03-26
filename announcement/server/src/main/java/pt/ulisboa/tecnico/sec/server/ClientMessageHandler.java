@@ -35,7 +35,7 @@ public class ClientMessageHandler extends Thread {
                 switch (command) {
                     // Register a Client
                     case "REGISTER":
-                        registerUser();
+                        registerUser(pm);
                         break;
                     // Post to Client's Board
                     case "POST":
@@ -66,13 +66,18 @@ public class ClientMessageHandler extends Thread {
         }
     }
 
-    public void registerUser() {
-        boolean successful = _server.registerUser(pm.getPublicKey());
-        StatusCode sc = StatusCode.OK;
-        if (!successful)
-            sc = StatusCode.DUPLICATE_USER;
-        ProtocolMessage pm = new ProtocolMessage(sc);
-        _communication.sendMessage(pm, _oos);
+    public void registerUser(ProtocolMessage pm) {
+        try {
+            boolean successful = _server.registerUser(pm.getPublicKey());
+            StatusCode sc = StatusCode.OK;
+            if (!successful)
+                sc = StatusCode.DUPLICATE_USER;
+            ProtocolMessage spm = new ProtocolMessage(sc);
+            _communication.sendMessage(spm, _oos);
+        }
+        catch (IOException e) {
+            System.out.println(e);
+        }
     }
 
     public void closeCommunication() {

@@ -28,4 +28,8 @@ public class ProtocolMessage implements Serializable {
     public PublicKey getPublicKey() {
         return _publicKey;
     }
+
+    public StatusCode getStatusCode() {
+        return _statusCode;
+    }
 }

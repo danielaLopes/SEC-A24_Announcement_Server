@@ -84,7 +84,6 @@ public class Server {
             System.out.println("Error starting server socket");
         }
     }
-
     /**
      * Opens new socket to listen for client communications and creates
      * a new Thread to handle each client connection.
