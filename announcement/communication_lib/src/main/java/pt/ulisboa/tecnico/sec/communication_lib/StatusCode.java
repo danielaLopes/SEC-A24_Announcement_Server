@@ -7,6 +7,7 @@ public enum StatusCode {
     INVALID_SIGNATURE(3, "Signature is invalid."),
     DUPLICATE_OPERATION(4, "Operation with given UUID was already processed."),
     INVALID_MESSAGE_LENGTH(5, "Maximum message length to post announcement is 255.");
+    //INVALID_NUMBER_OF_ANNOUNCEMENTS(6, ".");
 
     private final int code;
     private final String description;

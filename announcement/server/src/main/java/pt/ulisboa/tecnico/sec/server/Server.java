@@ -106,22 +106,43 @@ public class Server {
      * Registers the user and associated public key in the system before first use.
      * Makes necessary initializations to enable first use of DPAS
      * @param pubKey
+     * @param opUuid
+     * @param clientSignature
+     * @return ProtocolMessage
      */
-    public void registerUser(PublicKey pubKey) {
+    public ProtocolMessage registerUser(PublicKey pubKey, int opUuid, byte[] clientSignature) {
         User user = new User(pubKey);
+        byte[] signature = null; // TODO: make tests with null signature
+        if (_users.containsKey(pubKey)) {
+            StatusCode signStatus = verifyOperation(new Operation(opUuid, pubKey, clientSignature));
+            byte[] toSign = (opUuid + "" + signStatus).getBytes();
+            try {
+                signature = SignatureUtil.sign(toSign, _privateKey);
+                // TODO: how to make signature in case of error?
+            } catch (InvalidKeyException e) {
+                System.out.println(StatusCode.INVALID_KEY + "\n" + e);
+                return null;
+            } catch (SignatureException e) {
+                System.out.println(StatusCode.INVALID_SIGNATURE + "\n" + e);
+                return null;
+            } catch (NoSuchAlgorithmException e) {
+                System.out.println(StatusCode.INVALID_SIGNATURE + "\n" + e);
+                return null;
+            }
+        }
         _users.put(pubKey, user);
+        return new ProtocolMessage("REGISTER", StatusCode.OK, opUuid, signature);
     }
 
     /**
      * Verifies if an operation request is valid, which means having a unique id and signature
      * to ensure the message was not tampered with or replayed.
      * @param operation
-     * @param signature
      * @return StatusCode
      */
-    public StatusCode verifyOperation(Operation operation, byte[] signature) {
+    public StatusCode verifyOperation(Operation operation) {
         try {
-            boolean verified = SignatureUtil.verifySignature(signature, operation.getPubKey(), operation.getBytes());
+            boolean verified = SignatureUtil.verifySignature(operation.getSignature(), operation.getPubKey(), operation.getBytes());
             if (verified == false) {
                 System.out.println(StatusCode.INVALID_SIGNATURE);
                 return StatusCode.INVALID_SIGNATURE;
@@ -172,23 +193,26 @@ public class Server {
      * @param opUuid uuid of the operation (assigned by the client to guarantee freshness)
      *               different from the uuid assigned by the server, which is uniquely references an announcement
      * @param announcements are the unique announcement ids of the references to previous announcements
-     * @return StatusCode saying if the post was successful
+     * @param clientSignature
+     * @return ProtocolMessage
      */
-    public StatusCode post(PublicKey pubKey, String message, int opUuid, List<Integer> announcements, byte[] signature) {
+    public ProtocolMessage post(PublicKey pubKey, String message, int opUuid, List<Integer> announcements, byte[] clientSignature) {
         StatusCode status = verifyMessage(message);
         if (status.equals(StatusCode.OK)) {
             int uuid = UUIDGenerator.generateUUID();
-            PostOperation newAnnouncement = new PostOperation(opUuid, message, pubKey, announcements, signature);
-            StatusCode signStatus = verifyOperation(newAnnouncement, signature);
+            PostOperation newAnnouncement = new PostOperation(opUuid, message, pubKey, announcements, clientSignature);
+            StatusCode signStatus = verifyOperation(newAnnouncement);
             if (signStatus.equals(StatusCode.OK)) {
+                status = signStatus;
                 int index =_users.get(pubKey).postAnnouncementBoard(newAnnouncement);
                 // client's public key is used to indicate it's stored in that client's PostOperation Board
                 _announcementMapper.put(uuid, new AnnouncementLocation(pubKey, index));
-                return StatusCode.OK;
             }
-            else return signStatus;
         }
-        else return status;
+        byte[] toSign = (opUuid + "" + status).getBytes();
+        byte[] signature = SignatureUtil.sign(toSign, _privateKey);
+
+        return new ProtocolMessage("POST", status, opUuid, signature);
     }
 
     /**
@@ -199,18 +223,19 @@ public class Server {
      * @param opUuid uuid of the operation (assigned by the client to guarantee freshness)
      *               different from the uuid assigned by the server, which is uniquely references an announcement
      * @param announcements are the unique announcement ids of the references to previous announcements
-     * @param signature
-     * @return StatusCode saying if the post was successful
+     * @param clientSignature
+     * @return ProtocolMessage
      */
-    public StatusCode postGeneral(PublicKey pubKey, String message, int opUuid, List<Integer> announcements, byte[] signature) {
+    public ProtocolMessage postGeneral(PublicKey pubKey, String message, int opUuid, List<Integer> announcements, byte[] clientSignature) {
         StatusCode status = verifyMessage(message);
         System.out.println("status code: " + status);
         if (status.equals(StatusCode.OK)) {
             int uuid = UUIDGenerator.generateUUID();
-            PostOperation newAnnouncement = new PostOperation(opUuid, message, pubKey, announcements, signature);
-            StatusCode signStatus = verifyOperation(newAnnouncement, signature);
+            PostOperation newAnnouncement = new PostOperation(opUuid, message, pubKey, announcements, clientSignature);
+            StatusCode signStatus = verifyOperation(newAnnouncement);
             System.out.println("Signature status code: " + signStatus);
             if (signStatus.equals(StatusCode.OK)) {
+                status = signStatus;
                 int index;
                 synchronized (_generalBoard) {
                     index = _generalBoard.size();
@@ -218,11 +243,12 @@ public class Server {
                 }
                 // server's public key is used to indicate it's stored in the General Board
                 _announcementMapper.put(uuid, new AnnouncementLocation(_pubKey, index));
-                return StatusCode.OK;
             }
-            else return signStatus;
         }
-        else return status;
+        byte[] toSign = (opUuid + "" + status).getBytes();
+        byte[] signature = SignatureUtil.sign(toSign, _privateKey);
+
+        return new ProtocolMessage("POST", status, opUuid, signature);
     }
 
     /**
@@ -236,15 +262,11 @@ public class Server {
     public List<PostOperation> read(PublicKey pubKey, int number) {
         // TODO : signature
         User user =_users.get(pubKey);
-        if (number == 0) {
-            return user.getAllAnnouncements();
-        }
-        else if (0 < number && number <= user.getNumAnnouncements()) {
+        if (0 < number && number <= user.getNumAnnouncements()) {
             return user.getAnnouncements(number);
         }
-        // invalid number of announcements
         else {
-            return null; // TODO
+            return user.getAllAnnouncements(); // TODO: even if it's an invalid number, like -1
         }
     }
 
@@ -258,16 +280,11 @@ public class Server {
         // TODO : signature
         synchronized (_generalBoard) {
             int nAnnouncements = _generalBoard.size();
-            if (number == 0) {
-                return _generalBoard;
-            }
-            else if (0 < number && number <= nAnnouncements) {
+            if (0 < number && number <= nAnnouncements) {
                 return _generalBoard.subList(nAnnouncements - number, nAnnouncements);
             }
-            // invalid number of announcements
             else {
-                System.out.println("nAnnouncements: " + nAnnouncements);
-                return null; // TODO
+                return _generalBoard;
             }
         }
 

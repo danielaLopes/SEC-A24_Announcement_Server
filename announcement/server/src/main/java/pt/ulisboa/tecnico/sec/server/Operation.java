@@ -2,7 +2,7 @@ package pt.ulisboa.tecnico.sec.server;
 
 import java.security.PublicKey;
 
-public abstract class Operation {
+public class Operation {
 
     private int _uuid;
     private PublicKey _pubKey;
@@ -33,5 +33,7 @@ public abstract class Operation {
                 && _signature.equals(otherAnn.getSignature());
     }
 
-    public abstract byte[] getBytes();
+    public byte[] getBytes()  {
+        return Integer.toString(getUUID()).getBytes();
+    }
 }
