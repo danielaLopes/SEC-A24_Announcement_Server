@@ -10,12 +10,15 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Client{
 
-    private PublicKey _pubKey; // TODO: final?
-    private PrivateKey _privateKey; // TODO: final?
+    private PublicKey _pubKey;
+    private PrivateKey _privateKey;
+
+    private List<PublicKey> _otherUsersPubKeys;
 
     private final Communication _communication;
     private ObjectOutputStream _oos;
@@ -23,15 +26,20 @@ public class Client{
     private Socket _clientSocket;
 
     public Client(String pubKeyPath, String keyStorePath,
-                  String keyStorePasswd, String entryPasswd, String alias) {
-        this.loadPublicKey(pubKeyPath);
-        System.out.println("Public key: " + _pubKey);
-        this.loadPrivateKey(keyStorePath, keyStorePasswd, entryPasswd, alias);
-        System.out.println("Private key: " + _privateKey);
+                  String keyStorePasswd, String entryPasswd, String alias,
+                  List<String> otherUsersPubKeyPaths) {
+        loadPublicKey(pubKeyPath);
+        loadPrivateKey(keyStorePath, keyStorePasswd, entryPasswd, alias);
+        
+        _otherUsersPubKeys = new ArrayList<PublicKey>();
+        loadOtherUsersPubKeys(otherUsersPubKeyPaths);
 
         _communication = new Communication();
     }
 
+    /**
+     * Loads this Client's public key to _privateKey.
+     */
     public void loadPublicKey(String pubKeyPath) {
         try {
             _pubKey = KeyPairUtil.loadPublicKey(pubKeyPath);
@@ -41,6 +49,9 @@ public class Client{
         }
     }
 
+    /**
+     * Loads this Client's private key to _privateKey.
+     */
     public void loadPrivateKey(String keyStorePath, String keyStorePasswd, String entryPasswd, String alias) {
         KeyStore keyStore = null;
         try {
@@ -55,6 +66,37 @@ public class Client{
             System.out.println("Error: Not possible to initialize client because it was not possible to load private key.\n" + e);
             System.exit(-1);
         }
+    }
+
+    /**
+     * Loads other user's public keys to _otherUsersPubKeys.
+     */
+    public void loadOtherUsersPubKeys(List<String> paths) {
+        for (String path : paths) {
+            try {
+                _otherUsersPubKeys.add(KeyPairUtil.loadPublicKey(path));
+            } catch (Exception e) {
+                System.out.println("Error: Not possible to initialize client because it was not possible to load public key.\n" + e);
+                System.exit(-1);
+            }
+        }
+    }
+
+    /**
+     * Prints other user's public keys.
+     */
+    public void printOtherUsersPubKeys() {
+        for (int i = 0; i < _otherUsersPubKeys.size(); i++) {
+            System.out.println("* " + i + ": " + _otherUsersPubKeys.get(i));
+        }
+    }
+
+    /**
+     * Retrieves public key from a specific user.
+     * @param userIndex
+     */
+    public PublicKey getPublicKeyFromUser(int userIndex) {
+        return _otherUsersPubKeys.get(userIndex);
     }
 
     public void startServerCommunication() {
@@ -82,7 +124,6 @@ public class Client{
         }   
     }
 
-    // TODO: make register method, see if _pubKey should be assigned here
     public void register() {
         String message = "REGISTER";
         ProtocolMessage pm = new ProtocolMessage(message);
@@ -100,9 +141,15 @@ public class Client{
      * @param message to be announced
      * @param references to previous announcements
      */
-    public void post(String message, List<Integer> references) {
-        // TODO: verify parameters
+    public boolean post(String message, List<Integer> references) {
+        if (invalidMessageLength(message)) {
+            System.out.println("Maximum message length to post announcement is 255.");
+            return false;
+        }
+
         // TODO: client-server communication
+
+        return true;
     }
 
     /**
@@ -111,9 +158,15 @@ public class Client{
      * @param message to be announced
      * @param references to previous announcements
      */
-    public void postGeneral(String message, List<Integer> references) {
-        // TODO: verify parameters
+    public boolean postGeneral(String message, List<Integer> references) {
+        if (invalidMessageLength(message)) {
+            System.out.println("Maximum message length to post announcement is 255.");
+            return false;
+        }
+
         // TODO: client-server communication
+
+        return true;
     }
 
     /**
@@ -122,9 +175,19 @@ public class Client{
      * @param user whose Board is to be read
      * @param number of announcements to be retrieved
      */
-    public void read(String user, int number) {
-        // TODO: verify parameters
+    public boolean read(int user, int number) {
+        if (invalidNumberOfAnnouncements(number)) {
+            System.out.println("Minimum number of announcements to read is 1.");
+            return false;
+        }
+        if (invalidUser(user)) {
+            System.out.println("User does not exist.");
+            return false;
+        }
+
         // TODO: client-server communication
+
+        return true;
     }
 
     /**
@@ -132,9 +195,39 @@ public class Client{
      * from the General Board.
      * @param number of announcements to be retrieved
      */
-    public void readGeneral(int number) {
-        // TODO: verify parameters
+    public boolean readGeneral(int number) {
+        if (invalidNumberOfAnnouncements(number)) {
+            System.out.println("Minimum number of announcements to read is 1.");
+            return false;
+        }
+
         // TODO: client-server communication
+
+        return true;
+    }
+
+    /**
+     * Verifies if a message has valid length.
+     * @param message
+     */
+    public boolean invalidMessageLength(String message) {
+        return message.length() >= 255;
+    }
+
+    /**
+     * Verifies if a number of announcements to be retrieved is valid.
+     * @param number
+     */
+    public boolean invalidNumberOfAnnouncements(int number) {
+        return number <= 0;
+    }
+
+    /**
+     * Verifies if a user exists.
+     * @param user
+     */
+    public boolean invalidUser(int user) {
+        return user < 0 || user >= _otherUsersPubKeys.size();
     }
 
 }
