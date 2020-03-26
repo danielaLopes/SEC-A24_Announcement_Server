@@ -16,7 +16,7 @@ public class Database {
 
     public void createGeneralBoardTable() {
         try {
-            String generalBoardTable = "CREATE TABLE GeneralBoard (Message VARCHAR(256) NOT NULL, Reference VARCHAR(256), Id INT(8) NOT NULL, PRIMARY KEY(Id)) CHARACTER SET utf8";
+            String generalBoardTable = "CREATE TABLE IF NOT EXISTS GeneralBoard (Message VARCHAR(256) NOT NULL, Reference VARCHAR(256), Id INT(8) NOT NULL, PRIMARY KEY(Id)) CHARACTER SET utf8";
             PreparedStatement statement = _con.prepareStatement(generalBoardTable);
             statement.executeUpdate();
         }
@@ -27,7 +27,7 @@ public class Database {
 
     public void createUserTable(String uuid) {
         try {
-            String userTable = "CREATE TABLE " + uuid + " (Message VARCHAR(256) NOT NULL, Reference VARCHAR(256), Id INT(8) NOT NULL, PRIMARY KEY(Id)) CHARACTER SET utf8";
+            String userTable = "CREATE TABLE IF NOT EXISTS" + uuid + " (Message VARCHAR(256) NOT NULL, Reference VARCHAR(256), Id INT(8) NOT NULL, PRIMARY KEY(Id)) CHARACTER SET utf8";
             PreparedStatement statement = _con.prepareStatement(userTable);
             statement.executeUpdate();
         }
@@ -51,6 +51,20 @@ public class Database {
         try {
             String userTable = "DROP TABLE " + uuid;
             PreparedStatement statement = _con.prepareStatement(userTable);
+            statement.executeUpdate();
+        }
+        catch(Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    public void resetDatabase() {
+        try {
+            String dropDatabase = "DROP DATABASE IF EXISTS announcement";
+            String createDatabase = "CREATE DATABASE IF NOT EXISTS announcement";
+            PreparedStatement statement = _con.prepareStatement(dropDatabase);
+            statement.executeUpdate();
+            statement = _con.prepareStatement(createDatabase);
             statement.executeUpdate();
         }
         catch(Exception e) {

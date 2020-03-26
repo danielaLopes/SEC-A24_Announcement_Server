@@ -27,15 +27,16 @@ public class ClientMessageHandler extends Thread {
         while(!command.equals("LOGOUT")) {
             try {
                 
-                ProtocolMessage pm = (ProtocolMessage) _communication.receiveMessage(_ois);
-                System.out.println("Received [" + pm.getCommand() + "] from: " + _socket);
-                System.out.println("Received [" + pm.getPublicKey() + "] from: " + _socket);
-                command = pm.getCommand();
+                VerifiableProtocolMessage vpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
+                System.out.println("Received [" + vpm.getProtocolMessage().getCommand() + "] from: " + _socket);
+                System.out.println("Received [" + vpm.getProtocolMessage().getPublicKey() + "] from: " + _socket);
+                System.out.println(command);
+                command = vpm.getProtocolMessage().getCommand();
 
                 switch (command) {
                     // Register a Client
                     case "REGISTER":
-                        registerUser(pm);
+                        registerUser(vpm);
                         break;
                     // Post to Client's Board
                     case "POST":
@@ -61,18 +62,18 @@ public class ClientMessageHandler extends Thread {
                 }
             }
             catch (IOException | ClassNotFoundException e) {
-                System.out.println(e);
+                System.out.println("lala");
             }
         }
     }
 
-    public void registerUser(ProtocolMessage pm) {
+    public void registerUser(VerifiableProtocolMessage vpm) {
         try {
-            ProtocolMessage spm = _server.registerUser(pm.getPublicKey(), pm.getOpUuid(), pm.getSignature());
-            _communication.sendMessage(spm, _oos);
+            VerifiableProtocolMessage svpm = _server.registerUser(vpm);
+            _communication.sendMessage(svpm, _oos);
         }
         catch (IOException e) {
-            System.out.println(e);
+          System.out.println(e);
         }
     }
 

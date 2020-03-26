@@ -1,33 +1,24 @@
 package pt.ulisboa.tecnico.sec.client;
 
-
-import pt.ulisboa.tecnico.sec.crypto_lib.KeyStorage;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.Socket;
-import java.security.KeyStore;
-import java.security.PrivateKey;
+import java.util.List;
+import java.util.ArrayList;
 
 public class Application {
     public static void main(String[] args) {
         System.out.println("Hello world client");
 
-        ClientUI clientUi = new ClientUI(args[0], args[1], args[2], args[3], args[4]);
-        clientUi.start();
+        if (args.length < 6) {
+            System.out.println("Usage: <pubKeyPath> <keyStorePath> <keyStorePassword>" + 
+            " <entryPassword> <alias> <serverPubKeyPath> <numberOfOtherClients> <otherClientsPubKeyPaths>*");
+        }
 
-        try {
-            //String pathToKeyStorePasswd = "src/main/resources/crypto/keyStorePassword.txt";
-            //String pathToEntryPasswd = "src/main/resources/crypto/entryPassword.txt";
-            //KeyStore keyStore = KeyStorage.loadKeyStore(pathToKeyStorePasswd, "src/main/resources/crypto/client1_keystore.jks");
-            //PrivateKey privateKey = KeyStorage.loadPrivateKey(pathToEntryPasswd, "ola", keyStore);
-            //System.out.println(privateKey);
+        List<String> otherUsersPubKeys = new ArrayList<String>();
+        for (int i = 1; i <= Integer.parseInt(args[6]); i++) {
+            otherUsersPubKeys.add(args[6+i]);
         }
-        catch(Exception e) {
-            e.printStackTrace();
-        }
+
+        ClientUI clientUi = new ClientUI(args[0], args[1], args[2], args[3], args[4], args[5], otherUsersPubKeys);
+        clientUi.start();
 
         /*
         try {

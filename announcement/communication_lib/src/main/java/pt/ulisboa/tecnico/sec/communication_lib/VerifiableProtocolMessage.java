@@ -1,6 +1,8 @@
 package pt.ulisboa.tecnico.sec.communication_lib;
 
-public class VerifiableProtocolMessage {
+import java.io.Serializable;
+
+public class VerifiableProtocolMessage implements Serializable{
     private ProtocolMessage _pm;
     private byte[] _signedpm;
 

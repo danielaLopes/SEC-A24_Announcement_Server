@@ -121,6 +121,40 @@ public class Server {
         }
     }
 
+    public boolean verifySignature(VerifiableProtocolMessage vpm) {
+        try {
+            byte[] bpm = ProtocolMessageConverter.pmToByteArray(vpm.getProtocolMessage());
+            return SignatureUtil.verifySignature(vpm.getSignedProtocolMessage(), vpm.getProtocolMessage().getPublicKey(), bpm);
+        }
+        catch (NoSuchAlgorithmException e) {
+            System.out.println("Error: Algorithm used to verify signature is not valid.\n" + e);
+            // TODO: return statusCode?
+        }
+        catch (InvalidKeyException e) {
+            System.out.println(StatusCode.INVALID_KEY + "\n" + e);
+        } 
+        catch (SignatureException e) {
+            System.out.println(StatusCode.INVALID_SIGNATURE + "\n" + e);
+        }
+        return false;
+    }
+
+    public VerifiableProtocolMessage createVerifiableMessage(ProtocolMessage pm) {
+        try {
+            byte[] bpm = ProtocolMessageConverter.pmToByteArray(pm);
+            byte[] signedpm = SignatureUtil.sign(bpm, _privateKey);
+            return new VerifiableProtocolMessage(pm, signedpm);
+        }
+        catch(NoSuchAlgorithmException | InvalidKeyException | SignatureException e) { 
+            System.out.println(e);
+        }
+        return null;
+    }
+
+    public void printStatusCodeDescription(StatusCode sc) {
+        System.out.println("======" + sc.getDescription() + "======");
+    }
+
     /**
      * Registers the user and associated public key in the system before first use.
      * Makes necessary initializations to enable first use of DPAS
@@ -130,31 +164,25 @@ public class Server {
      * @return ProtocolMessage
      */
 
-    public ProtocolMessage registerUser(PublicKey pubKey, int opUuid, byte[] clientSignature) {
+    public VerifiableProtocolMessage registerUser(VerifiableProtocolMessage vpm) {
         byte[] signature = null; // TODO: make tests with null signature
         StatusCode sc;
-        if (_usersPubKeys.contains(pubKey)) {
-            StatusCode signStatus = verifyOperation(new Operation(opUuid, pubKey, clientSignature));
-            byte[] toSign = (opUuid + "" + signStatus).getBytes();
-            try {
-                signature = SignatureUtil.sign(toSign, _privateKey);
-                // TODO: how to make signature in case of error?
-            } catch (InvalidKeyException e) {
-                System.out.println(StatusCode.INVALID_KEY + "\n" + e);
-                return null;
-            } catch (SignatureException e) {
-                System.out.println(StatusCode.INVALID_SIGNATURE + "\n" + e);
-                return null;
-            } catch (NoSuchAlgorithmException e) {
-                System.out.println(StatusCode.INVALID_SIGNATURE + "\n" + e);
-                return null;
+        PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
+        if (_usersPubKeys.contains(clientPubKey)) {
+        
+            if (verifySignature(vpm)) {
+                System.out.println("Client Signature verified successful.");
+            }
+            else {
+                System.out.println("Could not verify client signature");
+                System.exit(-1);
             }
 
-            if (!_users.containsKey(pubKey)) {
+            if (!_users.containsKey(clientPubKey)) {
                 int i = UUIDGenerator.generateUUID();
                 String uuid = "T" + Integer.toString(i);
-                User user = new User(pubKey, uuid);
-                _users.put(pubKey, user);
+                User user = new User(clientPubKey, uuid);
+                _users.put(clientPubKey, user);
                 _db.createUserTable(uuid);
                 sc = StatusCode.OK;
             }
@@ -165,7 +193,7 @@ public class Server {
         else
             sc = StatusCode.UNKNOWN_PUBKEY;
 
-        return new ProtocolMessage("REGISTER", sc, opUuid, signature);
+        return createVerifiableMessage(new ProtocolMessage("REGISTER", sc, _pubKey, vpm.getProtocolMessage().getOpUuid()));
     }
 
     /**
@@ -175,24 +203,8 @@ public class Server {
      * @return StatusCode
      */
     public StatusCode verifyOperation(Operation operation) {
-        try {
-            boolean verified = SignatureUtil.verifySignature(operation.getSignature(), operation.getPubKey(), operation.getBytes());
-            if (verified == false) {
-                System.out.println(StatusCode.INVALID_SIGNATURE);
-                return StatusCode.INVALID_SIGNATURE;
-            }
-        } catch (NoSuchAlgorithmException e) {
-            System.out.println("Error: Algorithm used to verify signature is not valid.\n" + e);
-            // TODO: return statusCode?
-        }
-        catch (InvalidKeyException e) {
-            System.out.println(StatusCode.INVALID_KEY + "\n" + e);
-            return StatusCode.INVALID_KEY;
-        } catch (SignatureException e) {
-            System.out.println(StatusCode.INVALID_SIGNATURE + "\n" + e);
-            return StatusCode.INVALID_SIGNATURE;
-        }
-        return StatusCode.OK;
+        //TODO
+        return null;
     }
 
     public StatusCode verifyPostSignature() {

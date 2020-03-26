@@ -11,7 +11,6 @@ public class ProtocolMessage implements Serializable {
     
     // Post response
     private int _opUuid;
-    private byte[] _signature;
     // Read response
 
     List<Integer> _announcements; // TODO: what to show of the announcements
@@ -24,27 +23,32 @@ public class ProtocolMessage implements Serializable {
         _statusCode = statusCode;
     }
 
-    public ProtocolMessage(String command, PublicKey publicKey) {
+    public ProtocolMessage(String command, PublicKey publicKey, int opUuid) {
+        _opUuid = opUuid;
         _command = command;
         _publicKey = publicKey;
     }
-    
-    // Post Response or Register Response
-    public ProtocolMessage(String command, StatusCode statusCode, int opUuid, byte[] signature) {
 
+    // Post Response or Register Response
+    public ProtocolMessage(String command, StatusCode statusCode, int opUuid) {
         _command = command;
         _statusCode = statusCode;
         _opUuid = opUuid;
-        _signature = signature;
+    }
+
+    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, int opUuid) {
+        _command = command;
+        _statusCode = statusCode;
+        _opUuid = opUuid;
+        _publicKey = publicKey;
     }
 
     // Read Response
-    public ProtocolMessage(String command, StatusCode statusCode, int opUuid, byte[] signature, List<Integer> announcements) {
+    public ProtocolMessage(String command, StatusCode statusCode, int opUuid, List<Integer> announcements) {
 
         _command = command;
         _statusCode = statusCode;
         _opUuid = opUuid;
-        _signature = signature;
         _announcements = announcements;
     }
 
@@ -55,8 +59,6 @@ public class ProtocolMessage implements Serializable {
     public StatusCode getStatusCode() { return _statusCode; }
 
     public int getOpUuid() { return _opUuid; }
-
-    public byte[] getSignature() { return _signature; }
 
     public List<Integer> getAnnouncements() { return _announcements; }
 }
