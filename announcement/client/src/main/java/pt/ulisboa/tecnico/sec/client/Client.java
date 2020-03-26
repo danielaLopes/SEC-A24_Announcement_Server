@@ -85,7 +85,7 @@ public class Client{
     // TODO: make register method, see if _pubKey should be assigned here
     public void register() {
         String message = "REGISTER";
-        ProtocolMessage pm = new ProtocolMessage(message);
+        ProtocolMessage pm = new ProtocolMessage(message, _pubKey);
         try {
             _communication.sendMessage(pm, _oos);
         }

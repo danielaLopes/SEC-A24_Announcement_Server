@@ -1,10 +1,8 @@
 package pt.ulisboa.tecnico.sec.server;
 
 import pt.ulisboa.tecnico.sec.communication_lib.*;
-import pt.ulisboa.tecnico.sec.crypto_lib.KeyPairUtil;
-import pt.ulisboa.tecnico.sec.crypto_lib.KeyStorage;
-import pt.ulisboa.tecnico.sec.crypto_lib.SignatureUtil;
-import pt.ulisboa.tecnico.sec.crypto_lib.UUIDGenerator;
+import pt.ulisboa.tecnico.sec.crypto_lib.*;
+import pt.ulisboa.tecnico.sec.database_lib.*;
 
 import java.io.*;
 import java.net.*;
@@ -22,6 +20,7 @@ public class Server {
     private String _pathToEntryPasswd;
     private PublicKey _pubKey;
     private PrivateKey _privateKey;
+    private Database _db;
     /** Maps the unique id of an operation to the status it received so that
      * we can know if  a message was replayed or if it's fresh and to not repeat
      * operations in case a client resends it due to loss of message.
@@ -49,6 +48,7 @@ public class Server {
         // TODO: see if a CopyOnWriteArrayList is more suitable (if very few writes and lots of reads)
         _generalBoard = new ArrayList<>();
         _communication = new Communication();
+        _db = new Database();
     }
 
     public void loadPublicKey() {
@@ -107,9 +107,16 @@ public class Server {
      * Makes necessary initializations to enable first use of DPAS
      * @param pubKey
      */
-    public void registerUser(PublicKey pubKey) {
-        User user = new User(pubKey);
-        _users.put(pubKey, user);
+    public boolean registerUser(PublicKey pubKey) {
+        if (!_users.containsKey(pubKey)) {
+            int i = UUIDGenerator.generateUUID();
+            String uuid = "T" + Integer.toString(i);
+            User user = new User(pubKey, uuid);
+            _users.put(pubKey, user);
+            _db.createUserTable(uuid);
+            return true;
+        }
+        return false;
     }
 
     /**

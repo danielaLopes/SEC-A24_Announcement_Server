@@ -28,10 +28,15 @@ public class ClientMessageHandler extends Thread {
             try {
                 
                 ProtocolMessage pm = (ProtocolMessage) _communication.receiveMessage(_ois);
-                System.out.println("Received [" + pm.getCommand() + "] messages from: " + _socket);
+                System.out.println("Received [" + pm.getCommand() + "] from: " + _socket);
+                System.out.println("Received [" + pm.getPublicKey() + "] from: " + _socket);
                 command = pm.getCommand();
 
                 switch (command) {
+                    // Register a Client
+                    case "REGISTER":
+                        registerUser();
+                        break;
                     // Post to Client's Board
                     case "POST":
                         //post();
@@ -59,6 +64,15 @@ public class ClientMessageHandler extends Thread {
                 System.out.println(e);
             }
         }
+    }
+
+    public void registerUser() {
+        boolean successful = _server.registerUser(pm.getPublicKey());
+        StatusCode sc = StatusCode.OK;
+        if (!successful)
+            sc = StatusCode.DUPLICATE_USER;
+        ProtocolMessage pm = new ProtocolMessage(sc);
+        _communication.sendMessage(pm, _oos);
     }
 
     public void closeCommunication() {

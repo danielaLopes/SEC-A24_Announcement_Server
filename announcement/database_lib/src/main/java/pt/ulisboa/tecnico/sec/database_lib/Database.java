@@ -16,8 +16,19 @@ public class Database {
 
     public void createGeneralBoardTable() {
         try {
-            String generalBoardTable = "CREATE TABLE GeneralBoard (PublicKey INT(20) NOT NULL, Message VARCHAR(256) NOT NULL, Reference VARCHAR(256), Id INT(8), PRIMARY KEY(PublicKey)) CHARACTER SET utf8";
+            String generalBoardTable = "CREATE TABLE GeneralBoard (Message VARCHAR(256) NOT NULL, Reference VARCHAR(256), Id INT(8) NOT NULL, PRIMARY KEY(Id)) CHARACTER SET utf8";
             PreparedStatement statement = _con.prepareStatement(generalBoardTable);
+            statement.executeUpdate();
+        }
+        catch(Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    public void createUserTable(String uuid) {
+        try {
+            String userTable = "CREATE TABLE " + uuid + " (Message VARCHAR(256) NOT NULL, Reference VARCHAR(256), Id INT(8) NOT NULL, PRIMARY KEY(Id)) CHARACTER SET utf8";
+            PreparedStatement statement = _con.prepareStatement(userTable);
             statement.executeUpdate();
         }
         catch(Exception e) {
@@ -29,6 +40,17 @@ public class Database {
         try {
             String generalBoardTable = "DROP TABLE GeneralBoard";
             PreparedStatement statement = _con.prepareStatement(generalBoardTable);
+            statement.executeUpdate();
+        }
+        catch(Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    public void dropUserTable(String uuid) {
+        try {
+            String userTable = "DROP TABLE " + uuid;
+            PreparedStatement statement = _con.prepareStatement(userTable);
             statement.executeUpdate();
         }
         catch(Exception e) {
