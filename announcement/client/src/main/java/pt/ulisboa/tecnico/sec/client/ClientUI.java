@@ -10,8 +10,9 @@ public class ClientUI {
     private Scanner _scanner;
 
     public ClientUI(String pubKeyPath, String keyStorePath,
-                    String keyStorePasswd, String entryPasswd, String alias) {
-        _client = new Client(pubKeyPath, keyStorePath, keyStorePasswd, entryPasswd, alias);
+                    String keyStorePasswd, String entryPasswd, String alias,
+                    String serverPubKeyPath, List<String> otherUsersPubKeyPaths) {
+        _client = new Client(pubKeyPath, keyStorePath, keyStorePasswd, entryPasswd, alias, serverPubKeyPath, otherUsersPubKeyPaths);
         _scanner = new Scanner(System.in);
     }
 
@@ -91,7 +92,7 @@ public class ClientUI {
      * in order to retrieve the n latest announcements.
      */
     public void read() {
-        String user = promptUser();
+        int user = promptUser();
         int number = promptNumber();
         _client.read(user, number);
     }
@@ -117,14 +118,14 @@ public class ClientUI {
         System.out.println("4 - " + Message.READ_GENERAL);
         System.out.println("0 - " + Message.EXIT);
 
-        return Integer.parseInt(_scanner.nextLine());
+        return _scanner.nextInt();
     }
 
     /**
      * Prompts the user for a message.
      */
     public String promptMessage() {
-        System.out.print(Message.MESSAGE);
+        System.out.println(Message.MESSAGE);
         return _scanner.nextLine();
     }
 
@@ -132,24 +133,26 @@ public class ClientUI {
      * Prompts the user for references.
      */
     public String promptReference() {
-        System.out.print(Message.REFERENCE);
+        System.out.println(Message.REFERENCE);
         return _scanner.nextLine();
     }
 
     /**
      * Prompts the user for another user's ID.
      */
-    public String promptUser() {
-        System.out.print(Message.USER_BOARD);
-        return _scanner.nextLine();
+    public int promptUser() {
+        _client.printOtherUsersPubKeys();
+        System.out.println(Message.USER_BOARD);
+
+        return _scanner.nextInt();
     }
 
     /**
      * Prompts the user for a number.
      */
     public int promptNumber() {
-        System.out.print(Message.READ_NUMBER);
-        return Integer.parseInt(_scanner.nextLine());
+        System.out.println(Message.READ_NUMBER);
+        return _scanner.nextInt();
     }
 
     /**

@@ -1,16 +1,16 @@
 package pt.ulisboa.tecnico.sec.communication_lib;
 
 import java.io.Serializable;
+import java.security.PublicKey;
 import java.util.List;
 
 public class ProtocolMessage implements Serializable {
-    private final String _command;
-
-    StatusCode _status;
-
+    private String _command;
+    private PublicKey _publicKey;
+    private StatusCode _statusCode;
+    
     // Post response
     private int _opUuid;
-    private byte[] _signature;
     // Read response
 
     List<Integer> _announcements; // TODO: what to show of the announcements
@@ -19,34 +19,46 @@ public class ProtocolMessage implements Serializable {
         _command = command;
     }
 
-    // Post Response or Register Response
-    public ProtocolMessage(String command, StatusCode status, int opUuid, byte[] signature) {
+    public ProtocolMessage(StatusCode statusCode) {
+        _statusCode = statusCode;
+    }
 
-        _command = command;
-        _status = status;
+    public ProtocolMessage(String command, PublicKey publicKey, int opUuid) {
         _opUuid = opUuid;
-        _signature = signature;
+        _command = command;
+        _publicKey = publicKey;
+    }
+
+    // Post Response or Register Response
+    public ProtocolMessage(String command, StatusCode statusCode, int opUuid) {
+        _command = command;
+        _statusCode = statusCode;
+        _opUuid = opUuid;
+    }
+
+    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, int opUuid) {
+        _command = command;
+        _statusCode = statusCode;
+        _opUuid = opUuid;
+        _publicKey = publicKey;
     }
 
     // Read Response
-    public ProtocolMessage(String command, StatusCode status, int opUuid, byte[] signature, List<Integer> announcements) {
+    public ProtocolMessage(String command, StatusCode statusCode, int opUuid, List<Integer> announcements) {
 
         _command = command;
-        _status = status;
+        _statusCode = statusCode;
         _opUuid = opUuid;
-        _signature = signature;
         _announcements = announcements;
     }
 
-    public String getCommand() {
-        return _command;
-    }
+    public String getCommand() { return _command; }
 
-    public StatusCode getStatus() { return _status; }
+    public PublicKey getPublicKey() { return _publicKey; }
+
+    public StatusCode getStatusCode() { return _statusCode; }
 
     public int getOpUuid() { return _opUuid; }
-
-    public byte[] getSignature() { return _signature; }
 
     public List<Integer> getAnnouncements() { return _announcements; }
 }

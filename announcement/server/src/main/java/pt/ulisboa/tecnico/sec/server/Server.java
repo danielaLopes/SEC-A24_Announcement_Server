@@ -1,10 +1,8 @@
 package pt.ulisboa.tecnico.sec.server;
 
 import pt.ulisboa.tecnico.sec.communication_lib.*;
-import pt.ulisboa.tecnico.sec.crypto_lib.KeyPairUtil;
-import pt.ulisboa.tecnico.sec.crypto_lib.KeyStorage;
-import pt.ulisboa.tecnico.sec.crypto_lib.SignatureUtil;
-import pt.ulisboa.tecnico.sec.crypto_lib.UUIDGenerator;
+import pt.ulisboa.tecnico.sec.crypto_lib.*;
+import pt.ulisboa.tecnico.sec.database_lib.*;
 
 import java.io.*;
 import java.net.*;
@@ -12,6 +10,8 @@ import java.security.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javax.net.ssl.SSLEngineResult.Status;
 
 public class Server {
 
@@ -22,12 +22,14 @@ public class Server {
     private String _pathToEntryPasswd;
     private PublicKey _pubKey;
     private PrivateKey _privateKey;
+    private Database _db;
     /** Maps the unique id of an operation to the status it received so that
      * we can know if  a message was replayed or if it's fresh and to not repeat
      * operations in case a client resends it due to loss of message.
      */
     private ConcurrentHashMap<Integer, StatusCode> _operations;
     private ConcurrentHashMap<PublicKey, User> _users;
+    private List<PublicKey> _usersPubKeys;
     /**
      * maps the announcement unique id to the public key of the entity
      * where it's stored and the index on the PostOperation Board,
@@ -39,7 +41,7 @@ public class Server {
     private List<PostOperation> _generalBoard;
     private Communication _communication;
 
-    public Server(boolean activateCC, int port, char[] keyStorePasswd, char[] entryPasswd, String alias) {
+    public Server(boolean activateCC, int port, char[] keyStorePasswd, char[] entryPasswd, String alias, List<String> usersPubKeyPaths) {
         loadPublicKey();
         loadPrivateKey(keyStorePasswd, entryPasswd, alias);
         _port = port;
@@ -49,6 +51,10 @@ public class Server {
         // TODO: see if a CopyOnWriteArrayList is more suitable (if very few writes and lots of reads)
         _generalBoard = new ArrayList<>();
         _communication = new Communication();
+        _db = new Database();
+
+        _usersPubKeys = new ArrayList<PublicKey>();
+        loadOtherUsersPubKeys(usersPubKeyPaths);
     }
 
     public void loadPublicKey() {
@@ -76,6 +82,20 @@ public class Server {
         }
     }
 
+    /**
+     * Loads other user's public keys to _otherUsersPubKeys.
+     */
+    public void loadOtherUsersPubKeys(List<String> paths) {
+        for (String path : paths) {
+            try {
+                _usersPubKeys.add(KeyPairUtil.loadPublicKey(path));
+            } catch (Exception e) {
+                System.out.println("Error: Not possible to initialize client because it was not possible to load public key.\n" + e);
+                System.exit(-1);
+            }
+        }
+    }
+
     public void startClientCommunication() {
         try {
             _serverSocket = _communication.createServerSocket(8888);
@@ -84,7 +104,6 @@ public class Server {
             System.out.println("Error starting server socket");
         }
     }
-
     /**
      * Opens new socket to listen for client communications and creates
      * a new Thread to handle each client connection.
@@ -102,6 +121,40 @@ public class Server {
         }
     }
 
+    public boolean verifySignature(VerifiableProtocolMessage vpm) {
+        try {
+            byte[] bpm = ProtocolMessageConverter.pmToByteArray(vpm.getProtocolMessage());
+            return SignatureUtil.verifySignature(vpm.getSignedProtocolMessage(), vpm.getProtocolMessage().getPublicKey(), bpm);
+        }
+        catch (NoSuchAlgorithmException e) {
+            System.out.println("Error: Algorithm used to verify signature is not valid.\n" + e);
+            // TODO: return statusCode?
+        }
+        catch (InvalidKeyException e) {
+            System.out.println(StatusCode.INVALID_KEY + "\n" + e);
+        } 
+        catch (SignatureException e) {
+            System.out.println(StatusCode.INVALID_SIGNATURE + "\n" + e);
+        }
+        return false;
+    }
+
+    public VerifiableProtocolMessage createVerifiableMessage(ProtocolMessage pm) {
+        try {
+            byte[] bpm = ProtocolMessageConverter.pmToByteArray(pm);
+            byte[] signedpm = SignatureUtil.sign(bpm, _privateKey);
+            return new VerifiableProtocolMessage(pm, signedpm);
+        }
+        catch(NoSuchAlgorithmException | InvalidKeyException | SignatureException e) { 
+            System.out.println(e);
+        }
+        return null;
+    }
+
+    public void printStatusCodeDescription(StatusCode sc) {
+        System.out.println("======" + sc.getDescription() + "======");
+    }
+
     /**
      * Registers the user and associated public key in the system before first use.
      * Makes necessary initializations to enable first use of DPAS
@@ -110,28 +163,37 @@ public class Server {
      * @param clientSignature
      * @return ProtocolMessage
      */
-    public ProtocolMessage registerUser(PublicKey pubKey, int opUuid, byte[] clientSignature) {
-        User user = new User(pubKey);
+
+    public VerifiableProtocolMessage registerUser(VerifiableProtocolMessage vpm) {
         byte[] signature = null; // TODO: make tests with null signature
-        if (_users.containsKey(pubKey)) {
-            StatusCode signStatus = verifyOperation(new Operation(opUuid, pubKey, clientSignature));
-            byte[] toSign = (opUuid + "" + signStatus).getBytes();
-            try {
-                signature = SignatureUtil.sign(toSign, _privateKey);
-                // TODO: how to make signature in case of error?
-            } catch (InvalidKeyException e) {
-                System.out.println(StatusCode.INVALID_KEY + "\n" + e);
-                return null;
-            } catch (SignatureException e) {
-                System.out.println(StatusCode.INVALID_SIGNATURE + "\n" + e);
-                return null;
-            } catch (NoSuchAlgorithmException e) {
-                System.out.println(StatusCode.INVALID_SIGNATURE + "\n" + e);
-                return null;
+        StatusCode sc;
+        PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
+        if (_usersPubKeys.contains(clientPubKey)) {
+        
+            if (verifySignature(vpm)) {
+                System.out.println("Client Signature verified successfully.");
             }
+            else {
+                System.out.println("Could not verify client signature");
+                System.exit(-1);
+            }
+
+            if (!_users.containsKey(clientPubKey)) {
+                int i = UUIDGenerator.generateUUID();
+                String uuid = "T" + Integer.toString(i);
+                User user = new User(clientPubKey, uuid);
+                _users.put(clientPubKey, user);
+                _db.createUserTable(uuid);
+                sc = StatusCode.OK;
+            }
+            else
+                sc = StatusCode.DUPLICATE_USER;
         }
-        _users.put(pubKey, user);
-        return new ProtocolMessage("REGISTER", StatusCode.OK, opUuid, signature);
+
+        else
+            sc = StatusCode.UNKNOWN_PUBKEY;
+
+        return createVerifiableMessage(new ProtocolMessage("REGISTER", sc, _pubKey, vpm.getProtocolMessage().getOpUuid()));
     }
 
     /**
@@ -141,24 +203,8 @@ public class Server {
      * @return StatusCode
      */
     public StatusCode verifyOperation(Operation operation) {
-        try {
-            boolean verified = SignatureUtil.verifySignature(operation.getSignature(), operation.getPubKey(), operation.getBytes());
-            if (verified == false) {
-                System.out.println(StatusCode.INVALID_SIGNATURE);
-                return StatusCode.INVALID_SIGNATURE;
-            }
-        } catch (NoSuchAlgorithmException e) {
-            System.out.println("Error: Algorithm used to verify signature is not valid.\n" + e);
-            // TODO: return statusCode?
-        }
-        catch (InvalidKeyException e) {
-            System.out.println(StatusCode.INVALID_KEY + "\n" + e);
-            return StatusCode.INVALID_KEY;
-        } catch (SignatureException e) {
-            System.out.println(StatusCode.INVALID_SIGNATURE + "\n" + e);
-            return StatusCode.INVALID_SIGNATURE;
-        }
-        return StatusCode.OK;
+        //TODO
+        return null;
     }
 
     public StatusCode verifyPostSignature() {
@@ -197,7 +243,7 @@ public class Server {
      * @return ProtocolMessage
      */
     public ProtocolMessage post(PublicKey pubKey, String message, int opUuid, List<Integer> announcements, byte[] clientSignature) {
-        StatusCode status = verifyMessage(message);
+        /*StatusCode status = verifyMessage(message);
         if (status.equals(StatusCode.OK)) {
             int uuid = UUIDGenerator.generateUUID();
             PostOperation newAnnouncement = new PostOperation(opUuid, message, pubKey, announcements, clientSignature);
@@ -212,7 +258,8 @@ public class Server {
         byte[] toSign = (opUuid + "" + status).getBytes();
         byte[] signature = SignatureUtil.sign(toSign, _privateKey);
 
-        return new ProtocolMessage("POST", status, opUuid, signature);
+        return new ProtocolMessage("POST", status, opUuid, signature);*/
+        return new ProtocolMessage("POST"); 
     }
 
     /**
@@ -227,7 +274,7 @@ public class Server {
      * @return ProtocolMessage
      */
     public ProtocolMessage postGeneral(PublicKey pubKey, String message, int opUuid, List<Integer> announcements, byte[] clientSignature) {
-        StatusCode status = verifyMessage(message);
+        /*StatusCode status = verifyMessage(message);
         System.out.println("status code: " + status);
         if (status.equals(StatusCode.OK)) {
             int uuid = UUIDGenerator.generateUUID();
@@ -248,7 +295,8 @@ public class Server {
         byte[] toSign = (opUuid + "" + status).getBytes();
         byte[] signature = SignatureUtil.sign(toSign, _privateKey);
 
-        return new ProtocolMessage("POST", status, opUuid, signature);
+        return new ProtocolMessage("POST", status, opUuid, signature);*/
+        return new ProtocolMessage("POST");
     }
 
     /**

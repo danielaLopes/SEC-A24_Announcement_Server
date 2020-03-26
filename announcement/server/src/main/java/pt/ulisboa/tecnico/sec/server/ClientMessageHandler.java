@@ -27,11 +27,17 @@ public class ClientMessageHandler extends Thread {
         while(!command.equals("LOGOUT")) {
             try {
                 
-                ProtocolMessage pm = (ProtocolMessage) _communication.receiveMessage(_ois);
-                System.out.println("Received [" + pm.getCommand() + "] messages from: " + _socket);
-                command = pm.getCommand();
+                VerifiableProtocolMessage vpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
+                System.out.println("Received [" + vpm.getProtocolMessage().getCommand() + "] from: " + _socket);
+                System.out.println("Received [" + vpm.getProtocolMessage().getPublicKey() + "] from: " + _socket);
+                System.out.println(command);
+                command = vpm.getProtocolMessage().getCommand();
 
                 switch (command) {
+                    // Register a Client
+                    case "REGISTER":
+                        registerUser(vpm);
+                        break;
                     // Post to Client's Board
                     case "POST":
                         //post();
@@ -56,8 +62,18 @@ public class ClientMessageHandler extends Thread {
                 }
             }
             catch (IOException | ClassNotFoundException e) {
-                System.out.println(e);
+                System.out.println("lala");
             }
+        }
+    }
+
+    public void registerUser(VerifiableProtocolMessage vpm) {
+        try {
+            VerifiableProtocolMessage svpm = _server.registerUser(vpm);
+            _communication.sendMessage(svpm, _oos);
+        }
+        catch (IOException e) {
+          System.out.println(e);
         }
     }
 
