@@ -30,7 +30,6 @@ public class ClientMessageHandler extends Thread {
                 VerifiableProtocolMessage vpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
                 System.out.println("Received [" + vpm.getProtocolMessage().getCommand() + "] from: " + _socket);
                 System.out.println("Received [" + vpm.getProtocolMessage().getPublicKey() + "] from: " + _socket);
-                System.out.println(command);
                 command = vpm.getProtocolMessage().getCommand();
 
                 switch (command) {
@@ -40,11 +39,11 @@ public class ClientMessageHandler extends Thread {
                         break;
                     // Post to Client's Board
                     case "POST":
-                        //post();
+                        post(vpm);
                         break;
                     // Post to General Board
                     case "POSTGENERAL":
-                        //postGeneral();
+                        postGeneral(vpm);
                         break;
                     // Read from specific user
                     case "READ":
@@ -70,6 +69,26 @@ public class ClientMessageHandler extends Thread {
     public void registerUser(VerifiableProtocolMessage vpm) {
         try {
             VerifiableProtocolMessage svpm = _server.registerUser(vpm);
+            _communication.sendMessage(svpm, _oos);
+        }
+        catch (IOException e) {
+          System.out.println(e);
+        }
+    }
+
+    public void postGeneral(VerifiableProtocolMessage vpm) {
+        try {
+            VerifiableProtocolMessage svpm = _server.postGeneral(vpm);
+            _communication.sendMessage(svpm, _oos);
+        }
+        catch (IOException e) {
+          System.out.println(e);
+        }
+    }
+
+    public void post(VerifiableProtocolMessage vpm) {
+        try {
+            VerifiableProtocolMessage svpm = _server.post(vpm);
             _communication.sendMessage(svpm, _oos);
         }
         catch (IOException e) {

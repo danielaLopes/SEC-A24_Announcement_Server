@@ -40,7 +40,7 @@ public class Application {
 
         List<Integer> references = new ArrayList<>();
         references.add(1);
-        server.postGeneral(userPubKey, "message1", 1, references, signature);
+        //server.postGeneral(userPubKey, "message1", 1, references, signature);
         List<PostOperation> announcements1 = server.readGeneral(1);
         for (PostOperation announcement: announcements1) {
             System.out.println(announcement.getMessage());
