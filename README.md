@@ -30,6 +30,7 @@ mvn clean install
 ```
 cd server/
 mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="<keyStorePassword> <entryPassword> <alias>"
+mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="password password ola"
 ```
 2. Run client:
 ```
