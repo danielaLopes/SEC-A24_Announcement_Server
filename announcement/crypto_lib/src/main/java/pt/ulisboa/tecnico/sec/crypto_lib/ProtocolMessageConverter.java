@@ -10,12 +10,12 @@ import java.io.ObjectOutputStream;
 
 public class ProtocolMessageConverter {
 
-    public static byte[] pmToByteArray(ProtocolMessage pm) {
+    public static byte[] objToByteArray(Object obj) {
         ByteArrayOutputStream out = null;
         try {
             out = new ByteArrayOutputStream();
             ObjectOutputStream os = new ObjectOutputStream(out);
-            os.writeObject(pm);
+            os.writeObject(obj);
         }
         catch(IOException e) {
             System.out.println(e);
@@ -23,12 +23,12 @@ public class ProtocolMessageConverter {
         return out.toByteArray();
     }
 
-    public static ProtocolMessage byteArrayToPm(byte[] b) {
+    public static Object byteArrayToObj(byte[] b) {
         ObjectInputStream is = null;
         try {
             ByteArrayInputStream in = new ByteArrayInputStream(b);
             is = new ObjectInputStream(in);
-            return (ProtocolMessage) is.readObject();
+            return is.readObject();
         }
         catch(IOException | ClassNotFoundException e) {
             System.out.println(e);

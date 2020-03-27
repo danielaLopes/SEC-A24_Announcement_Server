@@ -18,6 +18,8 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.lang.model.element.AnnotationValueVisitor;
+
 public class Client{
 
     private PublicKey _pubKey;
@@ -138,7 +140,8 @@ public class Client{
     public void closeCommunication() {
         try {
             ProtocolMessage pm = new ProtocolMessage("LOGOUT");
-            _communication.sendMessage(pm, _oos);
+            VerifiableProtocolMessage vpm = createVerifiableMessage(pm);
+            _communication.sendMessage(vpm, _oos);
             _communication.close(_clientSocket);
         }
         catch(IOException e) {
@@ -152,7 +155,7 @@ public class Client{
 
     public VerifiableProtocolMessage createVerifiableMessage(ProtocolMessage pm) {
         try {
-            byte[] bpm = ProtocolMessageConverter.pmToByteArray(pm);
+            byte[] bpm = ProtocolMessageConverter.objToByteArray(pm);
             byte[] signedpm = SignatureUtil.sign(bpm, _privateKey);
             return new VerifiableProtocolMessage(pm, signedpm);
         }
@@ -164,7 +167,7 @@ public class Client{
 
     public boolean verifySignature(VerifiableProtocolMessage vpm) {
         try {
-            byte[] bpm = ProtocolMessageConverter.pmToByteArray(vpm.getProtocolMessage());
+            byte[] bpm = ProtocolMessageConverter.objToByteArray(vpm.getProtocolMessage());
             return SignatureUtil.verifySignature(vpm.getSignedProtocolMessage(), _serverPubKey, bpm);
         }
         catch (NoSuchAlgorithmException e) {
@@ -215,8 +218,27 @@ public class Client{
             System.out.println("Maximum message length to post announcement is 255.");
             return false;
         }
+        Announcement a = new Announcement(message, references);
+        int uuid = UUIDGenerator.generateUUID();
+        ProtocolMessage pm = new ProtocolMessage("POST", _pubKey, uuid, a);
+        VerifiableProtocolMessage vpm = createVerifiableMessage(pm);
+        try {
+            _communication.sendMessage(vpm, _oos);
+            VerifiableProtocolMessage rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
 
-        // TODO: client-server communication
+            if (verifySignature(rvpm)) {
+                System.out.println("Server signature verified successfully");
+                printStatusCodeDescription(rvpm.getProtocolMessage().getStatusCode());
+            }
+            else {
+                System.out.println("Could not verify server signature");
+                closeCommunication();
+                System.exit(-1);  
+            }
+        }
+        catch (IOException | ClassNotFoundException e) {
+            System.out.println(e);
+        }
 
         return true;
     }
@@ -232,8 +254,27 @@ public class Client{
             System.out.println("Maximum message length to post announcement is 255.");
             return false;
         }
+        Announcement a = new Announcement(message, references);
+        int uuid = UUIDGenerator.generateUUID();
+        ProtocolMessage pm = new ProtocolMessage("POSTGENERAL", _pubKey, uuid, a);
+        VerifiableProtocolMessage vpm = createVerifiableMessage(pm);
+        try {
+            _communication.sendMessage(vpm, _oos);
+            VerifiableProtocolMessage rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
 
-        // TODO: client-server communication
+            if (verifySignature(rvpm)) {
+                System.out.println("Server signature verified successfully");
+                printStatusCodeDescription(rvpm.getProtocolMessage().getStatusCode());
+            }
+            else {
+                System.out.println("Could not verify server signature");
+                closeCommunication();
+                System.exit(-1);  
+            }
+        }
+        catch (IOException | ClassNotFoundException e) {
+            System.out.println(e);
+        }
 
         return true;
     }

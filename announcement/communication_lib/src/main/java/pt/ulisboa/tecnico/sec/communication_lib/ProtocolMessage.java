@@ -8,13 +8,12 @@ public class ProtocolMessage implements Serializable {
     private String _command;
     private PublicKey _publicKey;
     private StatusCode _statusCode;
-    
+
+    private List<Announcement> _announcements;
+    private Announcement _postAnnouncement;
     // Post response
     private int _opUuid;
-    // Read response
-
-    List<Integer> _announcements; // TODO: what to show of the announcements
-    
+      
     public ProtocolMessage(String command) {
         _command = command;
     }
@@ -23,10 +22,25 @@ public class ProtocolMessage implements Serializable {
         _statusCode = statusCode;
     }
 
+    public ProtocolMessage(List<Announcement> announcements) {
+        _announcements = announcements;
+    }
+
+    public ProtocolMessage(Announcement announcement) {
+        _postAnnouncement = announcement;
+    }
+
     public ProtocolMessage(String command, PublicKey publicKey, int opUuid) {
         _opUuid = opUuid;
         _command = command;
         _publicKey = publicKey;
+    }
+
+    public ProtocolMessage(String command, PublicKey publicKey, int opUuid, Announcement announcement) {
+        _opUuid = opUuid;
+        _command = command;
+        _publicKey = publicKey;
+        _postAnnouncement = announcement;
     }
 
     // Post Response or Register Response
@@ -44,13 +58,6 @@ public class ProtocolMessage implements Serializable {
     }
 
     // Read Response
-    public ProtocolMessage(String command, StatusCode statusCode, int opUuid, List<Integer> announcements) {
-
-        _command = command;
-        _statusCode = statusCode;
-        _opUuid = opUuid;
-        _announcements = announcements;
-    }
 
     public String getCommand() { return _command; }
 
@@ -60,5 +67,8 @@ public class ProtocolMessage implements Serializable {
 
     public int getOpUuid() { return _opUuid; }
 
-    public List<Integer> getAnnouncements() { return _announcements; }
+    public List<Announcement> getAnnouncements() { return _announcements; }
+
+    public Announcement getPostAnnouncement() { return _postAnnouncement; }
+
 }
