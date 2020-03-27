@@ -15,11 +15,8 @@ import javax.net.ssl.SSLEngineResult.Status;
 
 public class Server {
 
-    private int _port;
     private ServerSocket _serverSocket;
     private Socket _socket;
-    private String _pathToKeyStorePasswd;
-    private String _pathToEntryPasswd;
     private PublicKey _pubKey;
     private PrivateKey _privateKey;
     private Database _db;
@@ -44,7 +41,6 @@ public class Server {
     public Server(boolean activateCC, int port, char[] keyStorePasswd, char[] entryPasswd, String alias, List<String> usersPubKeyPaths) {
         loadPublicKey();
         loadPrivateKey(keyStorePasswd, entryPasswd, alias);
-        _port = port;
         _operations = new ConcurrentHashMap<>();
         _users = new ConcurrentHashMap<>();
         _announcementMapper = new ConcurrentHashMap<>();
@@ -158,9 +154,7 @@ public class Server {
     /**
      * Registers the user and associated public key in the system before first use.
      * Makes necessary initializations to enable first use of DPAS
-     * @param pubKey
-     * @param opUuid
-     * @param clientSignature
+     * @param vpm
      * @return ProtocolMessage
      */
 
@@ -204,6 +198,10 @@ public class Server {
      */
     public StatusCode verifyOperation(Operation operation) {
         //TODO
+        int uuid = operation.getUUID();
+        // checks if this operation was already performed
+        if (_operations.containsKey(uuid)) return StatusCode.DUPLICATE_OPERATION;
+
         return null;
     }
 
