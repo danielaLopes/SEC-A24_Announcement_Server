@@ -73,7 +73,7 @@ public class ClientUI {
         String message = promptMessage();
         List<Integer> references = parseReferences(promptReference());
 
-        _client.postGeneral(message, references);
+        _client.post(message, references);
     }
 
     /**
@@ -118,7 +118,7 @@ public class ClientUI {
         System.out.println("4 - " + Message.READ_GENERAL);
         System.out.println("0 - " + Message.EXIT);
 
-        return _scanner.nextInt();
+        return Integer.parseInt(_scanner.nextLine());
     }
 
     /**

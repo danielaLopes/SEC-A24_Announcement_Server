@@ -17,6 +17,10 @@ public class User {
         _dbTableName = dbTableName;        
     }
 
+    public String getdbTableName() {
+        return _dbTableName;
+    }
+
     public int postAnnouncementBoard(PostOperation announcement) {
         _announcementBoard.add(announcement);
         return getNumAnnouncements() - 1;
@@ -34,4 +38,5 @@ public class User {
     public int getNumAnnouncements() {
         return _announcementBoard.size();
     }
+
 }
