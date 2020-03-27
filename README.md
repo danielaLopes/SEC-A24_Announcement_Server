@@ -27,11 +27,16 @@ Inside project root directory (announcement/):
 mvn clean install
 ```
 2. Run server:
-```
-cd server/
-mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="<keyStorePassword> <entryPassword> <alias>"
-mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="password password ola"
-```
+    - General:
+    ```
+    cd server/
+    mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="<keyStorePassword> <entryPassword> <alias> <number of clients> <path to clients public keys>"
+    ```
+    - 1 client:
+    ```
+    cd server/
+    mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="password password ola 1 ../client/src/main/resources/crypto/public.key"
+    ```
 2. Run client:
 ```
 cd client/
