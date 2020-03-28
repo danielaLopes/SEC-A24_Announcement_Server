@@ -10,7 +10,7 @@ public class Application {
         Database db = new Database();
 
         //db.createGeneralBoardTable();
-        List<Integer> ref = new ArrayList<Integer>();
+       /* List<Integer> ref = new ArrayList<Integer>();
         ref.add(1);
         ref.add(3);
         byte[] b = ProtocolMessageConverter.objToByteArray(ref);
@@ -21,7 +21,9 @@ public class Application {
         db.insertAnnouncementGB("d", b, 72, "funkyuuid");
 
         List<Announcement> a = db.getGBAnnouncements(3);
-        System.out.println(a.get(0).getAnnouncement());
+        System.out.println(a.get(0).getAnnouncement());*/
+
+        
 
     }
 }
