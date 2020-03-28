@@ -171,22 +171,36 @@ public class Server {
         
             if (verifySignature(vpm)) {
                 System.out.println("Client Signature verified successfully.");
+
+                if (!_users.containsKey(clientPubKey)) {
+
+                    int i = UUIDGenerator.generateUUID();
+                    String uuid = "T" + Integer.toString(i);
+                    User user = new User(clientPubKey, uuid);
+                    _users.put(clientPubKey, user);
+                    _db.createUserTable(uuid);
+    
+                    byte[] b = ProtocolMessageConverter.objToByteArray(clientPubKey);
+                    byte[] encodedhash = null;
+                    try {
+                        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                        encodedhash = digest.digest(b);
+                    }
+                    catch(NoSuchAlgorithmException e) {
+                        System.out.println(e);
+                    }
+    
+                    _db.insertUser(encodedhash, uuid);
+    
+                    sc = StatusCode.OK;
+                }
+                else
+                    sc = StatusCode.DUPLICATE_USER;
             }
             else {
                 System.out.println("Could not verify client signature");
-                System.exit(-1);
+                sc = StatusCode.INVALID_SIGNATURE;
             }
-
-            if (!_users.containsKey(clientPubKey)) {
-                int i = UUIDGenerator.generateUUID();
-                String uuid = "T" + Integer.toString(i);
-                User user = new User(clientPubKey, uuid);
-                _users.put(clientPubKey, user);
-                _db.createUserTable(uuid);
-                sc = StatusCode.OK;
-            }
-            else
-                sc = StatusCode.DUPLICATE_USER;
         }
 
         else
@@ -248,32 +262,32 @@ public class Server {
         
             if (verifySignature(vpm)) {
                 System.out.println("Client Signature verified successfully.");
+
+                if (!_users.containsKey(clientPubKey)) {
+                    System.out.println("User not registered");
+                    sc = StatusCode.UNKNOWN_USER;
+                }
+                else {
+                    System.out.println("User posting announcement in user table");
+                    int uuid = UUIDGenerator.generateUUID();
+                    /*PostOperation newAnnouncement = new PostOperation(opUuid, message, pubKey, announcements, clientSignature);
+                    StatusCode signStatus = verifyOperation(newAnnouncement);
+                    if (signStatus.equals(StatusCode.OK)) {
+                        status = signStatus;
+                        int index =_users.get(pubKey).postAnnouncementBoard(newAnnouncement);
+                        // client's public key is used to indicate it's stored in that client's PostOperation Board
+                        _announcementMapper.put(uuid, new AnnouncementLocation(pubKey, index));
+                    }*/
+                    ProtocolMessage pm = vpm.getProtocolMessage();
+                    Announcement a = pm.getPostAnnouncement();
+                    byte[] ref = ProtocolMessageConverter.objToByteArray(a.getReferences());
+                    _db.insertAnnouncement(a.getAnnouncement(), ref, uuid, getUserUUID(pm.getPublicKey()));
+                    sc = StatusCode.OK;
+                }
             }
             else {
                 System.out.println("Could not verify client signature");
-                System.exit(-1);
-            }
-
-            if (!_users.containsKey(clientPubKey)) {
-                System.out.println("User not registered");
-                System.exit(-1);
-            }
-            else {
-                System.out.println("User posting announcement in user table");
-                sc = StatusCode.OK;
-                int uuid = UUIDGenerator.generateUUID();
-                /*PostOperation newAnnouncement = new PostOperation(opUuid, message, pubKey, announcements, clientSignature);
-                StatusCode signStatus = verifyOperation(newAnnouncement);
-                if (signStatus.equals(StatusCode.OK)) {
-                    status = signStatus;
-                    int index =_users.get(pubKey).postAnnouncementBoard(newAnnouncement);
-                    // client's public key is used to indicate it's stored in that client's PostOperation Board
-                    _announcementMapper.put(uuid, new AnnouncementLocation(pubKey, index));
-                }*/
-                ProtocolMessage pm = vpm.getProtocolMessage();
-                Announcement a = pm.getPostAnnouncement();
-                byte[] ref = ProtocolMessageConverter.objToByteArray(a.getReferences());
-                _db.insertAnnouncement(a.getAnnouncement(), ref, uuid, getUserUUID(pm.getPublicKey()));
+                sc = StatusCode.INVALID_SIGNATURE;
             }
         }
 
@@ -301,37 +315,37 @@ public class Server {
         
             if (verifySignature(vpm)) {
                 System.out.println("Client Signature verified successfully.");
+
+                if (!_users.containsKey(clientPubKey)) {
+                    System.out.println("User not registered");
+                    sc = StatusCode.UNKNOWN_USER;
+                }
+                else {
+                    System.out.println("User posting announcement in general board");
+                    int uuid = UUIDGenerator.generateUUID();
+                    /*PostOperation newAnnouncement = new PostOperation(opUuid, message, pubKey, announcements, clientSignature);
+                    StatusCode signStatus = verifyOperation(newAnnouncement);
+                    System.out.println("Signature status code: " + signStatus);
+                    if (signStatus.equals(StatusCode.OK)) {
+                        status = signStatus;
+                        int index;
+                        synchronized (_generalBoard) {
+                            index = _generalBoard.size();
+                            _generalBoard.add(newAnnouncement);
+                        }
+                        // server's public key is used to indicate it's stored in the General Board
+                        _announcementMapper.put(uuid, new AnnouncementLocation(_pubKey, index));
+                    }*/
+                    ProtocolMessage pm = vpm.getProtocolMessage();
+                    Announcement a = pm.getPostAnnouncement();
+                    byte[] ref = ProtocolMessageConverter.objToByteArray(a.getReferences());
+                    _db.insertAnnouncementGB(a.getAnnouncement(), ref, uuid, getUserUUID(pm.getPublicKey()));
+                    sc = StatusCode.OK;
+                }
             }
             else {
                 System.out.println("Could not verify client signature");
-                System.exit(-1);
-            }
-
-            if (!_users.containsKey(clientPubKey)) {
-                System.out.println("User not registered");
-                System.exit(-1);
-            }
-            else {
-                System.out.println("User posting announcement in general board");
-                sc = StatusCode.OK;
-                int uuid = UUIDGenerator.generateUUID();
-                /*PostOperation newAnnouncement = new PostOperation(opUuid, message, pubKey, announcements, clientSignature);
-                StatusCode signStatus = verifyOperation(newAnnouncement);
-                System.out.println("Signature status code: " + signStatus);
-                if (signStatus.equals(StatusCode.OK)) {
-                    status = signStatus;
-                    int index;
-                    synchronized (_generalBoard) {
-                        index = _generalBoard.size();
-                        _generalBoard.add(newAnnouncement);
-                    }
-                    // server's public key is used to indicate it's stored in the General Board
-                    _announcementMapper.put(uuid, new AnnouncementLocation(_pubKey, index));
-                }*/
-                ProtocolMessage pm = vpm.getProtocolMessage();
-                Announcement a = pm.getPostAnnouncement();
-                byte[] ref = ProtocolMessageConverter.objToByteArray(a.getReferences());
-                _db.insertAnnouncementGB(a.getAnnouncement(), ref, uuid, getUserUUID(pm.getPublicKey()));
+                sc = StatusCode.INVALID_SIGNATURE;
             }
         }
 

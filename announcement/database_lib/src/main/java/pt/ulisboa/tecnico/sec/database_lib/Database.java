@@ -17,6 +17,7 @@ public class Database {
 
             resetDatabase();
             createGeneralBoardTable();
+            createUsersTable();
         }
         catch(Exception e) {
             System.out.println(e);
@@ -33,6 +34,18 @@ public class Database {
             System.out.println(e);
         }
     }
+
+    public void createUsersTable() {
+        try {
+            String usersTable = "CREATE TABLE IF NOT EXISTS Users (PublicKey VARBINARY(256) NOT NULL, ClientUUID VARCHAR(256) NOT NULL, PRIMARY KEY(PublicKey, ClientUUID)) CHARACTER SET utf8";
+            PreparedStatement statement = _con.prepareStatement(usersTable);
+            statement.executeUpdate();
+        }
+        catch(Exception e) {
+            System.out.println(e);
+        }
+    }
+
 
     public void createUserTable(String uuid) {
         try {
@@ -67,6 +80,17 @@ public class Database {
         }
     }
 
+    public void dropUsersTable() {
+        try {
+            String usersTable = "DROP TABLE USERS";
+            PreparedStatement statement = _con.prepareStatement(usersTable);
+            statement.executeUpdate();
+        }
+        catch(Exception e) {
+            System.out.println(e);
+        }
+    }
+
     public void resetDatabase() {
         try {
             String dropDatabase = "DROP DATABASE IF EXISTS announcement";
@@ -92,7 +116,6 @@ public class Database {
             statement.setBytes(2, reference);
             statement.setInt(3, announcementID);
             statement.setString(4, clientUUID);
-
             statement.executeUpdate();  
             return 1;
         }
@@ -109,7 +132,21 @@ public class Database {
             statement.setString(1, announcememnt);
             statement.setBytes(2, reference);
             statement.setInt(3, announcementID);
+            statement.executeUpdate();  
+            return 1;
+        }
+        catch(Exception e) {
+            System.out.println(e);
+            return 0;
+        }
+    }
 
+    public int insertUser(byte[] publicKey, String clientUUID) {
+        try {
+            String users = "INSERT INTO Users(PublicKey, ClientUUID) VALUES (?, ?)";
+            PreparedStatement statement = _con.prepareStatement(users);
+            statement.setBytes(1, publicKey);
+            statement.setString(2, clientUUID);
             statement.executeUpdate();  
             return 1;
         }
