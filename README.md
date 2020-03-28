@@ -30,12 +30,12 @@ mvn clean install -DskipTests
     - General:
     ```
     cd server/
-    mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="<keyStorePassword> <entryPassword> <alias> <number of clients> <path to clients public keys>"
+    mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="<keyStorePassword> <entryPassword> <alias> <pubKeyPath> <keyStorePath>"
     ```
     - 1 client:
     ```
     cd server/
-    mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="password password ola 1 ../client/src/main/resources/crypto/public.key"
+    mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="password password ola src/main/resources/crypto/public.key src/main/resources/crypto/server_keystore.jks"
     ```
 2. Run client:
 ```
