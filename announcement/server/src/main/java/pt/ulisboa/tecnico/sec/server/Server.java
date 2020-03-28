@@ -239,19 +239,33 @@ public class Server {
             return createVerifiableMessage(new ProtocolMessage(
                     "REGISTER", sc, _pubKey, vpm.getProtocolMessage().getOpUuid()));
         }
-
-        if (!_users.containsKey(clientPubKey)) {
+        sc = verifyUserRegistered(clientPubKey);
+        if (sc.equals(StatusCode.OK)) {
             int i = UUIDGenerator.generateUUID();
             String uuid = "T" + Integer.toString(i);
             User user = new User(clientPubKey, uuid);
             _users.put(clientPubKey, user);
             _db.createUserTable(uuid);
-            sc = StatusCode.OK;
-        }
-        else
-            sc = StatusCode.DUPLICATE_USER;
 
-        return createVerifiableMessage(new ProtocolMessage("REGISTER", sc, _pubKey, vpm.getProtocolMessage().getOpUuid()));
+            byte[] b = ProtocolMessageConverter.objToByteArray(clientPubKey);
+            byte[] encodedhash = null;
+            try {
+                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                encodedhash = digest.digest(b);
+            }
+            catch(NoSuchAlgorithmException e) {
+                System.out.println(e);
+            }
+
+            _db.insertUser(encodedhash, uuid);
+        }
+        else {
+            return createVerifiableMessage(new ProtocolMessage(
+                "REGISTER", sc, _pubKey, vpm.getProtocolMessage().getOpUuid()));
+        }
+
+        return createVerifiableMessage(new ProtocolMessage(
+                "REGISTER", StatusCode.OK, _pubKey, vpm.getProtocolMessage().getOpUuid()));
     }
 
     /**
@@ -275,9 +289,10 @@ public class Server {
                     "POST", sc, _pubKey, vpm.getProtocolMessage().getOpUuid()));
         }
 
+        System.out.println("User posting announcement in user table");
+
         // Save Operation
         System.out.println("User posting announcement in user table");
-        sc = StatusCode.OK;
         int uuid = UUIDGenerator.generateUUID();
         /*PostOperation newAnnouncement = new PostOperation(opUuid, message, pubKey, announcements, clientSignature);
         StatusCode signStatus = verifyOperation(newAnnouncement);
@@ -317,9 +332,7 @@ public class Server {
                     "POST", sc, _pubKey, vpm.getProtocolMessage().getOpUuid()));
         }
 
-        // Save Operation
         System.out.println("User posting announcement in general board");
-        sc = StatusCode.OK;
         int uuid = UUIDGenerator.generateUUID();
         /*PostOperation newAnnouncement = new PostOperation(opUuid, message, pubKey, announcements, clientSignature);
         StatusCode signStatus = verifyOperation(newAnnouncement);
