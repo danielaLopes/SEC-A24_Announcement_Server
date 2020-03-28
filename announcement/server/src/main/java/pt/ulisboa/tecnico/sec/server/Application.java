@@ -9,19 +9,15 @@ import java.util.List;
 public class Application {
     public static void main(String[] args) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
 
-        if(args.length < 4) {
-            System.out.println("Args: <keyStorePassword> <entryPassword> <alias>");
+        if(args.length < 5) {
+            System.out.println("\"Usage: <keyStorePassword> <entryPassword> <alias> <pubKeyPath> <keyStorePath>");
             return;
         }
 
         System.out.println("Hello world server");
 
-        List<String> usersPubKeys = new ArrayList<String>();
-        for (int i = 1; i <= Integer.parseInt(args[3]); i++) {
-            usersPubKeys.add(args[3+i]);
-        }
-
-        Server server = new Server(false, 8000, args[0].toCharArray(), args[1].toCharArray(), args[2], usersPubKeys);
+        Server server = new Server(false, args[0].toCharArray(), args[1].toCharArray(), args[2],
+                args[3], args[4]);
         server.start();
 
         // testing
@@ -45,21 +41,5 @@ public class Application {
         for (PostOperation announcement: announcements1) {
             System.out.println(announcement.getMessage());
         }
-        /*List<Integer> references2 = new ArrayList<>();
-        references2.add(2);
-        server.postGeneral(userPubKey, "message2", references2, signature);
-        List<PostOperation> announcements2 = server.readGeneral(2);
-        for (PostOperation announcement: announcements2) {
-            System.out.println(announcement.getMessage());
-        }*/
-
-        /*catch (FileNotFoundException e) {
-            System.out.println("Error: File " + file.getAbsolutePath() + " was not found!");
-        } catch (IOException e) {
-            System.out.println("Error: Not possible to close FileInputStream");
-        } catch (CertificateException e) {
-            System.out.println("Error: Not possible to load Certificate");
-            e.printStackTrace();
-        }*/
     }
 }

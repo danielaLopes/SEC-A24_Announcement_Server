@@ -1,7 +1,5 @@
 package pt.ulisboa.tecnico.sec.communication_lib;
 
-import org.omg.CORBA.UNKNOWN;
-
 public enum StatusCode {
     OK(0, "Successful."),
     DUPLICATE_USER(1, "User already exists."),
@@ -9,9 +7,10 @@ public enum StatusCode {
     INVALID_SIGNATURE(3, "Signature is invalid."),
     DUPLICATE_OPERATION(4, "Operation with given UUID was already processed."),
     INVALID_MESSAGE_LENGTH(5, "Maximum message length to post announcement is 255."),
-    UNKNOWN_PUBKEY(6, "Unknown public key."),
-    UNKNOWN_USER(7, "Unknown user.");
-    //INVALID_NUMBER_OF_ANNOUNCEMENTS(6, ".");
+    USER_NOT_REGISTERED(6, "User is not registed."),
+    INVALID_REFERENCE(7, "Invalid Reference: referenced announcement does not exist."),
+    INVALID_ALGORITHM(8, "Signature Algorithm not supported");
+    // UNREGISTERED_USER
 
     private final int code;
     private final String description;
