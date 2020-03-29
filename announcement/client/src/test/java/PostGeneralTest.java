@@ -1,4 +1,5 @@
 import pt.ulisboa.tecnico.sec.client.Client;
+import pt.ulisboa.tecnico.sec.communication_lib.StatusCode;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -22,9 +23,9 @@ class PostGeneralTest extends BaseTest {
 
     @Test
     void success() {
-        boolean success = _client.postGeneral(MESSAGE, REFERENCES);
+        int statusCode = _client.postGeneral(MESSAGE, REFERENCES);
         
-        assertEquals(success, true);
+        assertEquals(statusCode, StatusCode.OK.getCode());
     }
 
     @Test
@@ -34,9 +35,23 @@ class PostGeneralTest extends BaseTest {
             invalidMessage += "A";
         }
 
-        boolean success = _client.postGeneral(invalidMessage, REFERENCES);
+        int statusCode = _client.postGeneral(invalidMessage, REFERENCES);
         
-        assertEquals(success, false);
+        assertEquals(statusCode, StatusCode.INVALID_MESSAGE_LENGTH.getCode());
+    }
+
+    @Test
+    void messageIsNull() {
+        int statusCode = _client.postGeneral(null, REFERENCES);
+        
+        assertEquals(statusCode, -1);
+    }
+
+    @Test
+    void referencesIsNull() {
+        int statusCode = _client.postGeneral(MESSAGE, null);
+        
+        assertEquals(statusCode, -1);
     }
 
 }

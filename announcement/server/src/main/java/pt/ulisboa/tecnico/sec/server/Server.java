@@ -131,7 +131,7 @@ public class Server {
         // checks if this operation was already performed
         if (_operations.containsKey(opUuid)) return StatusCode.DUPLICATE_OPERATION;
 
-        return StatusCode.DUPLICATE_OPERATION;
+        return StatusCode.OK;
     }
 
     /**
@@ -168,10 +168,10 @@ public class Server {
      * @return StatusCode
      */
     public StatusCode verifyUserRegistered(PublicKey clientPubKey) {
-        if (!_users.containsKey(clientPubKey)) {
-            return StatusCode.USER_NOT_REGISTERED;
+        if (_users.containsKey(clientPubKey)) {
+            return StatusCode.OK;
         }
-        return StatusCode.OK;
+        return StatusCode.USER_NOT_REGISTERED;
     }
 
     public StatusCode verifyPost(int opUuid, VerifiableProtocolMessage vpm, String message,
@@ -240,7 +240,7 @@ public class Server {
                     "REGISTER", sc, _pubKey, vpm.getProtocolMessage().getOpUuid()));
         }
         sc = verifyUserRegistered(clientPubKey);
-        if (sc.equals(StatusCode.OK)) {
+        if (sc.equals(StatusCode.USER_NOT_REGISTERED)) {
             int i = UUIDGenerator.generateUUID();
             String uuid = "T" + Integer.toString(i);
             User user = new User(clientPubKey, uuid);

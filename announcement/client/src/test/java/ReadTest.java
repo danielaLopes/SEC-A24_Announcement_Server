@@ -1,4 +1,5 @@
 import pt.ulisboa.tecnico.sec.client.Client;
+import pt.ulisboa.tecnico.sec.communication_lib.StatusCode;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -23,39 +24,46 @@ class ReadTest extends BaseTest {
 
     @Test
     void success() {
-        boolean successPost = _client1.post(MESSAGE, REFERENCES);
-        boolean successRead = _client2.read(0, 1);
+        int statusCodePost = _client1.post(MESSAGE, REFERENCES);
+        int statusCodeRead = _client2.read(0, 1);
         
-        assertEquals(successPost, true);
-        assertEquals(successRead, true);
+        assertEquals(statusCodePost, StatusCode.OK.getCode());
+        assertEquals(statusCodeRead, StatusCode.OK.getCode());
     }
 
     @Test
-    void numberOfAnnouncementsIsZero() {
-        boolean success = _client2.read(0, 0);
-        
-        assertEquals(success, false);
+    void negativeNumberOfAnnouncements() {
+        /*boolean success = _client.post(MESSAGE, REFERENCES);
+
+        assertEquals(success, true);*/
     }
 
     @Test
-    void numberOfAnnouncementsIsNegative() {
-        boolean success = _client2.read(0, -1);
-        
-        assertEquals(success, false);
+    void zeroNumberOfAnnouncements() {
+        /*boolean success = _client.post(MESSAGE, REFERENCES);
+
+        assertEquals(success, true);*/
+    }
+
+    @Test
+    void tooManyAnnouncements() {
+        /*boolean success = _client.post(MESSAGE, REFERENCES);
+
+        assertEquals(success, true);*/
     }
 
     @Test
     void userIsNegative() {
-        boolean success = _client2.read(-1, 1);
+        int statusCode = _client2.read(-1, 1);
         
-        assertEquals(success, false);
+        assertEquals(statusCode, StatusCode.USER_NOT_REGISTERED.getCode());
     }
 
     @Test
     void userDoesNotExist() {
-        boolean success = _client2.read(1, 1);
+        int statusCode = _client2.read(1, 1);
         
-        assertEquals(success, false);
+        assertEquals(statusCode, StatusCode.USER_NOT_REGISTERED.getCode());
     }
 
 }
