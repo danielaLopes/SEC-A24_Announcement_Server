@@ -26,7 +26,7 @@ public class Database {
 
     public void createGeneralBoardTable() {
         try {
-            String generalBoardTable = "CREATE TABLE IF NOT EXISTS GeneralBoard (Announcement VARCHAR(256) NOT NULL, Reference VARBINARY(256), AnnouncementID INT(8) NOT NULL, ClientUUID VARCHAR(255) NOT NULL, Seq INT AUTO_INCREMENT ,PRIMARY KEY(Seq)) CHARACTER SET utf8";
+            String generalBoardTable = "CREATE TABLE IF NOT EXISTS GeneralBoard (Announcement VARCHAR(256) NOT NULL, Reference VARBINARY(256), AnnouncementID INT(8) NOT NULL, ClientUUID VARCHAR(255) NOT NULL, Seq INT AUTO_INCREMENT, PRIMARY KEY(Seq)) CHARACTER SET utf8";
             PreparedStatement statement = _con.prepareStatement(generalBoardTable);
             statement.executeUpdate();
         }
@@ -49,7 +49,7 @@ public class Database {
 
     public void createUserTable(String uuid) {
         try {
-            String userTable = "CREATE TABLE IF NOT EXISTS " + uuid + " (Announcement VARCHAR(256) NOT NULL, Reference VARBINARY(256), AnnouncementID INT(8) NOT NULL, PRIMARY KEY(AnnouncementID)) CHARACTER SET utf8";
+            String userTable = "CREATE TABLE IF NOT EXISTS " + uuid + " (Announcement VARCHAR(256) NOT NULL, Reference VARBINARY(256), AnnouncementID INT(8) NOT NULL, Seq INT AUTO_INCREMENT, PRIMARY KEY(Seq)) CHARACTER SET utf8";
             PreparedStatement statement = _con.prepareStatement(userTable);
             statement.executeUpdate();
         }
@@ -156,10 +156,44 @@ public class Database {
         }
     }
 
+    public List<Announcement> getUserAnnouncements(int n, byte[] b) {
+        List<Announcement> l = new ArrayList<Announcement>();
+        try {
+            String query = "SELECT ClientUUID FROM Users WHERE PublicKey=?";
+            PreparedStatement preparedStatement = _con.prepareStatement(query);
+            preparedStatement.setBytes(1, b);
+            ResultSet rs = preparedStatement.executeQuery();
+            if(rs.next()) {
+                    String tableName = rs.getString(1);
+                    System.out.println("TABLE NAME: " + tableName);
+                if (n > 0)
+                    query = "SELECT * FROM " + tableName + " ORDER BY Seq DESC LIMIT " + Integer.toString(n);
+                else
+                    query = "SELECT * FROM " + tableName + " ORDER BY Seq DESC";
+                preparedStatement = _con.prepareStatement(query);
+                rs = preparedStatement.executeQuery();
+                while (rs.next()){
+                    ArrayList<Integer> references = (ArrayList<Integer>) ProtocolMessageConverter.byteArrayToObj(rs.getBytes(2));
+                    Announcement a = new Announcement(rs.getString(1), references, rs.getInt(3), rs.getString(4));
+                    l.add(0, a);
+                }
+            }
+        }
+        catch (SQLException e) {
+            System.out.println(e);
+        }
+        return l;
+    } 
+    
+
     public List<Announcement> getGBAnnouncements(int n) {
         List<Announcement> l = new ArrayList<Announcement>();
         try {
-            String query = "SELECT * FROM GeneralBoard ORDER BY Seq DESC LIMIT " + Integer.toString(n);
+            String query = null;
+            if (n > 0)
+                query = "SELECT * FROM GeneralBoard ORDER BY Seq DESC LIMIT " + Integer.toString(n);
+            else
+                query = "SELECT * FROM GeneralBoard ORDER BY Seq DESC";
             PreparedStatement preparedStatement = _con.prepareStatement(query);
             ResultSet rs = preparedStatement.executeQuery();
             while (rs.next()){
@@ -182,6 +216,45 @@ public class Database {
             System.out.println(e);
             System.out.println("Could not close connection.");
         }  
+    }
+
+    public DBStructure retrieveStructure() {
+        List<GeneralBoardStructure> generalBoard = new ArrayList<GeneralBoardStructure>();
+        List<UserBoardStructure> userBoard = new ArrayList<UserBoardStructure>();
+        List<UserStructure> users = new ArrayList<UserStructure>();
+
+        try {
+            String query = "SELECT * FROM GeneralBoard ORDER BY Seq ASC";
+            PreparedStatement preparedStatement = _con.prepareStatement(query);
+            ResultSet rs = preparedStatement.executeQuery();
+            while (rs.next()){
+                GeneralBoardStructure gbs = new GeneralBoardStructure(rs.getString(1), rs.getBytes(2), rs.getInt(3), rs.getString(4));
+                generalBoard.add(gbs);
+            }
+
+            query = "SELECT * FROM Users";
+            preparedStatement = _con.prepareStatement(query);
+            rs = preparedStatement.executeQuery();
+            while (rs.next()){
+                UserStructure us = new UserStructure(rs.getBytes(1), rs.getString(2));
+                users.add(us);
+
+                //For every user, a user table exists. Iterate over each user table
+                String tableName = rs.getString(2);
+                String userQuery = "SELECT * FROM " + tableName +" ORDER BY Seq ASC";
+                PreparedStatement userPreparedStatement = _con.prepareStatement(userQuery);
+                ResultSet userRS = userPreparedStatement.executeQuery();
+                while (userRS.next()){
+                    UserBoardStructure ubs = new UserBoardStructure(userRS.getString(1), userRS.getBytes(2), userRS.getInt(3));
+                    userBoard.add(ubs);
+                }
+            }
+        }
+        catch (SQLException e) {
+            System.out.println(e);
+        }
+
+        return new DBStructure(generalBoard, userBoard, users);
     }
 
 }

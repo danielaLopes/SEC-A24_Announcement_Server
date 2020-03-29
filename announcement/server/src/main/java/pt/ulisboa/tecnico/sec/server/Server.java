@@ -206,6 +206,27 @@ public class Server {
         return sc;
     }
 
+    public StatusCode verifyRead(int opUuid, VerifiableProtocolMessage vpm, PublicKey clientPubKey) {
+        StatusCode sc;
+
+        sc = verifyDupOperation(opUuid);
+        if (!sc.equals(StatusCode.OK)) {
+            return sc;
+        }
+
+        sc = verifySignature(vpm);
+        if (!sc.equals(StatusCode.OK)) {
+            return sc;
+        }
+
+        sc = verifyUserRegistered(clientPubKey);
+        if (!sc.equals(StatusCode.OK)) {
+            return sc;
+        }
+
+        return sc;
+    }
+
 
     public VerifiableProtocolMessage createVerifiableMessage(ProtocolMessage pm) {
         try {
@@ -367,15 +388,38 @@ public class Server {
      * @param number of announcements to be returned
      * @return a list of announcements
      */
-    public List<PostOperation> read(PublicKey pubKey, int number) {
-        // TODO : signature
-        User user =_users.get(pubKey);
-        if (0 < number && number <= user.getNumAnnouncements()) {
-            return user.getAnnouncements(number);
+    public VerifiableProtocolMessage read(VerifiableProtocolMessage vpm) {
+        StatusCode sc;
+
+        int opUuid = vpm.getProtocolMessage().getOpUuid();
+        PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
+        int number = vpm.getProtocolMessage().getReadNumberAnnouncements();
+        PublicKey toReadPublicKey = vpm.getProtocolMessage().getToReadPublicKey();
+
+        // verifications
+        sc = verifyRead(opUuid, vpm, clientPubKey);
+        if (!sc.equals(StatusCode.OK)) {
+            return createVerifiableMessage(new ProtocolMessage(
+                    "READ", sc, _pubKey, vpm.getProtocolMessage().getOpUuid()));
         }
-        else {
-            return user.getAllAnnouncements(); // TODO: even if it's an invalid number, like -1
+
+        System.out.println("User reading announcement from user board");
+
+        byte[] b = ProtocolMessageConverter.objToByteArray(toReadPublicKey);
+        byte[] encodedhash = null;
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            encodedhash = digest.digest(b);
         }
+        catch(NoSuchAlgorithmException e) {
+            System.out.println(e);
+        }
+
+        ProtocolMessage pm = vpm.getProtocolMessage();
+        System.out.println("checking database");
+        List<Announcement> announcements = _db.getUserAnnouncements(number, encodedhash);
+
+        return createVerifiableMessage(new ProtocolMessage("READ", StatusCode.OK, _pubKey, pm.getOpUuid(), announcements));
     }
 
     /**
@@ -384,17 +428,26 @@ public class Server {
      * @param number
      * @return a list of announcements
      */
-    public List<PostOperation> readGeneral(int number) {
-        // TODO : signature
-        synchronized (_generalBoard) {
-            int nAnnouncements = _generalBoard.size();
-            if (0 < number && number <= nAnnouncements) {
-                return _generalBoard.subList(nAnnouncements - number, nAnnouncements);
-            }
-            else {
-                return _generalBoard;
-            }
+    public VerifiableProtocolMessage readGeneral(VerifiableProtocolMessage vpm) {
+        StatusCode sc;
+
+        int opUuid = vpm.getProtocolMessage().getOpUuid();
+        PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
+        int number = vpm.getProtocolMessage().getReadNumberAnnouncements();
+
+        // verifications
+        sc = verifyRead(opUuid, vpm, clientPubKey);
+        if (!sc.equals(StatusCode.OK)) {
+            return createVerifiableMessage(new ProtocolMessage(
+                    "READGENERAL", sc, _pubKey, vpm.getProtocolMessage().getOpUuid()));
         }
 
+
+
+        System.out.println("User reading announcement from general board");
+        ProtocolMessage pm = vpm.getProtocolMessage();
+        List<Announcement> announcements = _db.getGBAnnouncements(number);
+
+        return createVerifiableMessage(new ProtocolMessage("READGENERAL", StatusCode.OK, _pubKey, pm.getOpUuid(), announcements));
     }
 }
