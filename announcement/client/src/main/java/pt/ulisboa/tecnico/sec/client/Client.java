@@ -317,12 +317,31 @@ public class Client{
             System.out.println("Invalid user.");
             return StatusCode.USER_NOT_REGISTERED.getCode();
         }
+        PublicKey userToReadPB = _otherUsersPubKeys.get(user);
+        int uuid = UUIDGenerator.generateUUID();
+        ProtocolMessage pm = new ProtocolMessage("READ", _pubKey, uuid, number, userToReadPB);
+        VerifiableProtocolMessage vpm = createVerifiableMessage(pm);
+        StatusCode rsc = null;
+        try {
+            _communication.sendMessage(vpm, _oos);
+            VerifiableProtocolMessage rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
+            rsc = getStatusCodeFromProtocolMessage(rvpm);
 
-        PublicKey userPubKey = getPublicKeyFromUser(user);
-        System.out.println(userPubKey);
-        // TODO: client-server communication
+            if (verifySignature(rvpm)) {
+                System.out.println("Server signature verified successfully");
+                printStatusCodeDescription(rsc);
+                printAnnouncements(rvpm.getProtocolMessage().getAnnouncements(), "USER");
+            }
+            else {
+                System.out.println("Could not verify server signature");
+                printStatusCodeDescription(rsc);
+            }
+        }
+        catch (IOException | ClassNotFoundException e) {
+            System.out.println(e);
+        }
 
-        return StatusCode.OK.getCode();
+        return rsc.getCode();
     }
 
     /**
@@ -332,9 +351,41 @@ public class Client{
      */
     public int readGeneral(int number) {
 
-        // TODO: client-server communication
+        int uuid = UUIDGenerator.generateUUID();
+        ProtocolMessage pm = new ProtocolMessage("READGENERAL", _pubKey, uuid, number);
+        VerifiableProtocolMessage vpm = createVerifiableMessage(pm);
+        StatusCode rsc = null;
+        try {
+            _communication.sendMessage(vpm, _oos);
+            VerifiableProtocolMessage rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
+            rsc = getStatusCodeFromProtocolMessage(rvpm);
 
-        return StatusCode.OK.getCode();
+            if (verifySignature(rvpm)) {
+                System.out.println("Server signature verified successfully");
+                printStatusCodeDescription(rsc);
+                printAnnouncements(rvpm.getProtocolMessage().getAnnouncements(), "GENERAL");
+            }
+            else {
+                System.out.println("Could not verify server signature");
+                printStatusCodeDescription(rsc);
+            }
+        }
+        catch (IOException | ClassNotFoundException e) {
+            System.out.println(e);
+        }
+
+        return rsc.getCode();
+    }
+
+    public void printAnnouncements(List<Announcement> announcements, String board) {
+        if (announcements.size() == 0)
+            System.out.println("THERE ARE NO ANNOUNCEMENTS TO DISPLAY");
+        else {
+            System.out.println("-------------- ANNOUNCEMENTS FROM " + board + " BOARD " + "--------------");
+            for (int i = 0 ; i < announcements.size() ; i++){
+                System.out.println(Integer.toString(i) + " -> " + announcements.get(i).getAnnouncement());
+            }
+        }
     }
 
     /**

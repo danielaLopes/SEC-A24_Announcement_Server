@@ -47,11 +47,11 @@ public class ClientMessageHandler extends Thread {
                         break;
                     // Read from specific user
                     case "READ":
-                        //read();
+                        read(vpm);
                         break;
                     // Read from General Board
                     case "READGENERAL":
-                        //readGeneral();
+                        readGeneral(vpm);
                         break;
                     case "LOGOUT":
                         closeCommunication();
@@ -61,7 +61,7 @@ public class ClientMessageHandler extends Thread {
                 }
             }
             catch (IOException | ClassNotFoundException e) {
-                System.out.println("lala");
+                System.out.println(e);
             }
         }
     }
@@ -89,6 +89,26 @@ public class ClientMessageHandler extends Thread {
     public void post(VerifiableProtocolMessage vpm) {
         try {
             VerifiableProtocolMessage svpm = _server.post(vpm);
+            _communication.sendMessage(svpm, _oos);
+        }
+        catch (IOException e) {
+          System.out.println(e);
+        }
+    }
+
+    public void readGeneral(VerifiableProtocolMessage vpm) {
+        try {
+            VerifiableProtocolMessage svpm = _server.readGeneral(vpm);
+            _communication.sendMessage(svpm, _oos);
+        }
+        catch (IOException e) {
+          System.out.println(e);
+        }
+    }
+
+    public void read(VerifiableProtocolMessage vpm) {
+        try {
+            VerifiableProtocolMessage svpm = _server.read(vpm);
             _communication.sendMessage(svpm, _oos);
         }
         catch (IOException e) {
