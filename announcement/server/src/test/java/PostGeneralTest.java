@@ -54,6 +54,42 @@ public class PostGeneralTest extends BaseTest {
         assertEquals(success, false);*/
     }
 
+    // null Parameters
+    @Test
+    void publicKeyIsNull() {
+        /*int statusCode = _client.post(null, REFERENCES);
+
+        assertEquals(statusCode, -1);*/
+    }
+
+    @Test
+    void messageIsNull() {
+        /*int statusCode = _client.post(null, REFERENCES);
+
+        assertEquals(statusCode, -1);*/
+    }
+
+    @Test
+    void referencesIsNull() {
+        /*int statusCode = _client.post(MESSAGE, null);
+
+        assertEquals(statusCode, -1);*/
+    }
+
+    @Test
+    void opUuidIsNull() {
+        /*int statusCode = _client.post(null, REFERENCES);
+
+        assertEquals(statusCode, -1);*/
+    }
+
+    @Test
+    void signatureIsNull() {
+        /*int statusCode = _client.post(null, REFERENCES);
+
+        assertEquals(statusCode, -1);*/
+    }
+
     // Replay attacks
     @Test
     void duplicatedOperation() {
