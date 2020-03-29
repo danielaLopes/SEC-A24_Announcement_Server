@@ -12,8 +12,8 @@ public class Database {
 
     public Database() {  
         try{  
-            Class.forName("com.mysql.jdbc.Driver");  
-            _con=DriverManager.getConnection("jdbc:mysql://localhost:3306/announcement","sec","1234");
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            _con=DriverManager.getConnection("jdbc:mysql://localhost:3306/announcement?useSSL=false&serverTimezone=UTC","sec","1234");
 
             resetDatabase();
             createGeneralBoardTable();

@@ -15,8 +15,8 @@
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.39</version>
-        </dependency> 
+            <version>8.0.11</version>
+        </dependency>
         <dependency>
             <groupId>pt.ulisboa.tecnico.sec</groupId>
             <artifactId>crypto_lib</artifactId>
