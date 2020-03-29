@@ -45,7 +45,7 @@ public class Client{
         loadOtherUsersPubKeys(otherUsersPubKeyPaths);
 
         _communication = new Communication();
-
+        startServerCommunication();
     }
 
     /**
@@ -84,7 +84,6 @@ public class Client{
      */
     public void loadServerPublicKey(String path) {
         try {
-            System.out.println(path);
             _serverPubKey = KeyPairUtil.loadPublicKey(path);
         } catch (Exception e) {
             System.out.println("Error: Not possible to initialize client because it was not possible to load server's public key.\n" + e);
@@ -150,7 +149,7 @@ public class Client{
     }
 
     public void printStatusCodeDescription(StatusCode sc) {
-        System.out.println("======" + sc.getDescription() + "======");
+        System.out.println("Status Code: ====== " + sc.getCode() + ": " + sc.getDescription() + " ======");
     }
 
     public VerifiableProtocolMessage createVerifiableMessage(ProtocolMessage pm) {
@@ -183,21 +182,27 @@ public class Client{
         return false;
     }
 
-    // TODO: make register method, see if _pubKey should be assigned here
-    public void register() {
+    public StatusCode getStatusCodeFromProtocolMessage(VerifiableProtocolMessage vpm) {
+        return vpm.getProtocolMessage().getStatusCode();
+    }
+
+    public int register() {
         int uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("REGISTER", _pubKey, uuid);
         VerifiableProtocolMessage vpm = createVerifiableMessage(pm);
+        StatusCode rsc = null;
+
         try {
             _communication.sendMessage(vpm, _oos);
             VerifiableProtocolMessage rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
+            rsc = getStatusCodeFromProtocolMessage(rvpm);
 
             if (verifySignature(rvpm)) {
                 System.out.println("Server signature verified successfully");
-                printStatusCodeDescription(rvpm.getProtocolMessage().getStatusCode());
+                printStatusCodeDescription(rsc);
             }
             else {
-                System.out.println("Could not verify server signature");
+                System.out.println("Could not register: could not verify server signature");
                 closeCommunication();
                 System.exit(-1);  
             }
@@ -205,6 +210,8 @@ public class Client{
         catch (IOException | ClassNotFoundException e) {
             System.out.println(e);
         }
+
+        return rsc.getCode();
     }
 
     /**
@@ -213,34 +220,44 @@ public class Client{
      * @param message to be announced
      * @param references to previous announcements
      */
-    public boolean post(String message, List<Integer> references) {
+    public int post(String message, List<Integer> references) {
+        if (message == null) {
+            System.out.println("Message cannot be null.");
+            return -1;
+        }
+        if (references == null) {
+            System.out.println("References cannot be null.");
+            return -1;
+        }
         if (invalidMessageLength(message)) {
             System.out.println("Maximum message length to post announcement is 255.");
-            return false;
+            return StatusCode.INVALID_MESSAGE_LENGTH.getCode();
         }
+
         Announcement a = new Announcement(message, references);
         int uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("POST", _pubKey, uuid, a);
         VerifiableProtocolMessage vpm = createVerifiableMessage(pm);
+        StatusCode rsc = null;
         try {
             _communication.sendMessage(vpm, _oos);
             VerifiableProtocolMessage rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
+            rsc = getStatusCodeFromProtocolMessage(rvpm);
 
             if (verifySignature(rvpm)) {
                 System.out.println("Server signature verified successfully");
-                printStatusCodeDescription(rvpm.getProtocolMessage().getStatusCode());
+                printStatusCodeDescription(rsc);
             }
             else {
                 System.out.println("Could not verify server signature");
-                closeCommunication();
-                System.exit(-1);  
+                printStatusCodeDescription(rsc);
             }
         }
         catch (IOException | ClassNotFoundException e) {
             System.out.println(e);
         }
 
-        return true;
+        return rsc.getCode();
     }
 
     /**
@@ -249,34 +266,44 @@ public class Client{
      * @param message to be announced
      * @param references to previous announcements
      */
-    public boolean postGeneral(String message, List<Integer> references) {
+    public int postGeneral(String message, List<Integer> references) {
+        if (message == null) {
+            System.out.println("Message cannot be null.");
+            return -1;
+        }
+        if (references == null) {
+            System.out.println("References cannot be null.");
+            return -1;
+        }
         if (invalidMessageLength(message)) {
             System.out.println("Maximum message length to post announcement is 255.");
-            return false;
+            return StatusCode.INVALID_MESSAGE_LENGTH.getCode();
         }
+
         Announcement a = new Announcement(message, references);
         int uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("POSTGENERAL", _pubKey, uuid, a);
         VerifiableProtocolMessage vpm = createVerifiableMessage(pm);
+        StatusCode rsc = null;
         try {
             _communication.sendMessage(vpm, _oos);
             VerifiableProtocolMessage rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
+            rsc = getStatusCodeFromProtocolMessage(rvpm);
 
             if (verifySignature(rvpm)) {
                 System.out.println("Server signature verified successfully");
-                printStatusCodeDescription(rvpm.getProtocolMessage().getStatusCode());
+                printStatusCodeDescription(rsc);
             }
             else {
                 System.out.println("Could not verify server signature");
-                closeCommunication();
-                System.exit(-1);  
+                printStatusCodeDescription(rsc);
             }
         }
         catch (IOException | ClassNotFoundException e) {
             System.out.println(e);
         }
 
-        return true;
+        return rsc.getCode();
     }
 
     /**
@@ -285,19 +312,17 @@ public class Client{
      * @param user whose Board is to be read
      * @param number of announcements to be retrieved
      */
-    public boolean read(int user, int number) {
-        if (invalidNumberOfAnnouncements(number)) {
-            System.out.println("Minimum number of announcements to read is 1.");
-            return false;
-        }
+    public int read(int user, int number) {
         if (invalidUser(user)) {
-            System.out.println("User does not exist.");
-            return false;
+            System.out.println("Invalid user.");
+            return StatusCode.USER_NOT_REGISTERED.getCode();
         }
 
+        PublicKey userPubKey = getPublicKeyFromUser(user);
+        System.out.println(userPubKey);
         // TODO: client-server communication
 
-        return true;
+        return StatusCode.OK.getCode();
     }
 
     /**
@@ -305,15 +330,11 @@ public class Client{
      * from the General Board.
      * @param number of announcements to be retrieved
      */
-    public boolean readGeneral(int number) {
-        if (invalidNumberOfAnnouncements(number)) {
-            System.out.println("Minimum number of announcements to read is 1.");
-            return false;
-        }
+    public int readGeneral(int number) {
 
         // TODO: client-server communication
 
-        return true;
+        return StatusCode.OK.getCode();
     }
 
     /**
@@ -329,7 +350,7 @@ public class Client{
      * @param number
      */
     public boolean invalidNumberOfAnnouncements(int number) {
-        return number <= 0;
+        return number < 0;
     }
 
     /**

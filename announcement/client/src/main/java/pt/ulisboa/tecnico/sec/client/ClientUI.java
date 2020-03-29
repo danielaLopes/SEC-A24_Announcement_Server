@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import java.util.regex.Pattern;
+
 public class ClientUI {
 
     private Client _client;
@@ -20,30 +22,29 @@ public class ClientUI {
      * Starts Client UI for better interaction.
      */
     public void start() {
-        _client.startServerCommunication();
-        int option = 1;
+        String option = "1";
 
-        while (option != 0) {
+        while (!option.equals("0")) {
             option = promptGeneralMenu();
             System.out.println("OPTION:" + option);
             switch (option) {
-                case 1:
+                case "1":
                     post();
                     break;
                 // Post to General Board
-                case 2:
+                case "2":
                     postGeneral();
                     break;
                 // Read from specific user
-                case 3:
+                case "3":
                     read();
                     break;
                 // Read from General Board
-                case 4:
+                case "4":
                     readGeneral();
                     break;
                 // Exit and close communication
-                case 0:
+                case "0":
                     closeCommunication();
                     break;
                 default:
@@ -71,7 +72,13 @@ public class ClientUI {
      */
     public void post() {
         String message = promptMessage();
-        List<Integer> references = parseReferences(promptReference());
+        String referencesIn = promptReference();
+        if (!referencesIn.trim().equals("") && !Pattern.matches("[\\d+,]*\\d+", referencesIn)) {
+            System.out.println("Invalid references sequence.");
+            return;
+        }
+
+        List<Integer> references = parseReferences(referencesIn);
 
         _client.post(message, references);
     }
@@ -82,7 +89,10 @@ public class ClientUI {
      */
     public void postGeneral() {
         String message = promptMessage();
-        List<Integer> references = parseReferences(promptReference());
+        String referencesIn = promptReference();
+        
+        
+        List<Integer> references = parseReferences(referencesIn);
 
         _client.postGeneral(message, references);
     }
@@ -109,7 +119,7 @@ public class ClientUI {
     /**
      * Prompts the user for an action.
      */
-    public int promptGeneralMenu() {
+    public String promptGeneralMenu() {
         System.out.println();
         System.out.println(Message.WELCOME);
         System.out.println("1 - " + Message.POST);
@@ -118,7 +128,7 @@ public class ClientUI {
         System.out.println("4 - " + Message.READ_GENERAL);
         System.out.println("0 - " + Message.EXIT);
 
-        return Integer.parseInt(_scanner.nextLine());
+        return _scanner.nextLine();
     }
 
     /**
@@ -165,10 +175,12 @@ public class ClientUI {
         String[] referencesArray = references.split(",");
         List<Integer> referencesList = new ArrayList<Integer>();
 
-        for (String r : referencesArray) {
-            referencesList.add(Integer.parseInt(r));
+        if (!references.equals("")) {
+            for (String r : referencesArray) {
+                referencesList.add(Integer.parseInt(r.trim()));
+            }
         }
-
+    
         return referencesList;
     }
 }

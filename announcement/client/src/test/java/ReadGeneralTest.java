@@ -1,4 +1,5 @@
 import pt.ulisboa.tecnico.sec.client.Client;
+import pt.ulisboa.tecnico.sec.communication_lib.StatusCode;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -22,23 +23,30 @@ class ReadGeneralTest extends BaseTest {
     @Test
     void success() {
         _client.post(MESSAGE, REFERENCES);
-        boolean success = _client.readGeneral(1);
+        int statusCode = _client.readGeneral(1);
         
-        assertEquals(success, true);
+        assertEquals(statusCode, StatusCode.OK.getCode());
     }
 
     @Test
-    void numberOfAnnouncementsIsZero() {
-        boolean success = _client.readGeneral(0);
-        
-        assertEquals(success, false);
+    void negativeNumberOfAnnouncements() {
+        /*boolean success = _client.post(MESSAGE, REFERENCES);
+
+        assertEquals(success, true);*/
     }
 
     @Test
-    void numberOfAnnouncementsIsNegative() {
-        boolean success = _client.readGeneral(-1);
-        
-        assertEquals(success, false);
+    void zeroNumberOfAnnouncements() {
+        /*boolean success = _client.post(MESSAGE, REFERENCES);
+
+        assertEquals(success, true);*/
+    }
+
+    @Test
+    void tooManyAnnouncements() {
+        /*boolean success = _client.post(MESSAGE, REFERENCES);
+
+        assertEquals(success, true);*/
     }
 
 }

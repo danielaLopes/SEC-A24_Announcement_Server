@@ -9,7 +9,8 @@ public enum StatusCode {
     INVALID_MESSAGE_LENGTH(5, "Maximum message length to post announcement is 255."),
     USER_NOT_REGISTERED(6, "User is not registed."),
     INVALID_REFERENCE(7, "Invalid Reference: referenced announcement does not exist."),
-    INVALID_ALGORITHM(8, "Signature Algorithm not supported");
+    INVALID_ALGORITHM(8, "Signature Algorithm not supported"),
+    USER_ALREADY_REGISTERED(9, "User is already registered.");
     // UNREGISTERED_USER
 
     private final int code;

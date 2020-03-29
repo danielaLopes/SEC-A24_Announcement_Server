@@ -1,4 +1,5 @@
 import pt.ulisboa.tecnico.sec.client.Client;
+import pt.ulisboa.tecnico.sec.communication_lib.StatusCode;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -7,23 +8,24 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-class PostAnnouncementTest extends BaseTest {
+class PostTest extends BaseTest {
 
     private Client _client;
     private List<String> _otherUsersPubKeyPaths;
 
-    public PostAnnouncementTest() {
+    public PostTest() {
         _otherUsersPubKeyPaths = new ArrayList<String>();
         _otherUsersPubKeyPaths.add(PUBLICKEY_PATH2);
         _otherUsersPubKeyPaths.add(PUBLICKEY_PATH3);
 
-        _client = new Client(PUBLICKEY_PATH1, KEYSTORE_PATH1, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH, _otherUsersPubKeyPaths);    }
+        _client = new Client(PUBLICKEY_PATH1, KEYSTORE_PATH1, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH, _otherUsersPubKeyPaths);
+    }
 
     @Test
     void success() {
-        boolean success = _client.post(MESSAGE, REFERENCES);
+        int statusCode = _client.post(MESSAGE, REFERENCES);
         
-        assertEquals(success, true);
+        assertEquals(statusCode, StatusCode.OK.getCode());
     }
 
     @Test
@@ -33,9 +35,23 @@ class PostAnnouncementTest extends BaseTest {
             invalidMessage += "A";
         }
 
-        boolean success = _client.post(invalidMessage, REFERENCES);
+        int statusCode = _client.post(invalidMessage, REFERENCES);
         
-        assertEquals(success, false);
+        assertEquals(statusCode, StatusCode.INVALID_MESSAGE_LENGTH.getCode());
+    }
+
+    @Test
+    void messageIsNull() {
+        int statusCode = _client.post(null, REFERENCES);
+        
+        assertEquals(statusCode, -1);
+    }
+
+    @Test
+    void referencesIsNull() {
+        int statusCode = _client.post(MESSAGE, null);
+        
+        assertEquals(statusCode, -1);
     }
 
 }
