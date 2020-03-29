@@ -35,7 +35,7 @@ public class Server {
      */
     private ConcurrentHashMap<Integer, AnnouncementLocation> _announcementMapper;
     // TODO: in General Board, posts should remain accountable, so should the value be a signature(post) + post = PostOperation?
-    private List<PostOperation> _generalBoard;
+    private List<Announcement> _generalBoard;
     private Communication _communication;
 
     public Server(boolean activateCC, char[] keyStorePasswd, char[] entryPasswd, String alias,
@@ -154,6 +154,9 @@ public class Server {
      * @return StatusCode
      */
     public StatusCode verifyReferences(List<Integer> references) {
+        for (int exRef : _announcementMapper.keySet()) {
+            System.out.println("===REF===: " + exRef);
+        }
         for (int reference : references) {
             if (!_announcementMapper.containsKey(reference)) {
                 return StatusCode.INVALID_REFERENCE;
@@ -252,6 +255,7 @@ public class Server {
      */
 
     public VerifiableProtocolMessage registerUser(VerifiableProtocolMessage vpm) {
+
         StatusCode sc;
         PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
 
@@ -260,6 +264,7 @@ public class Server {
             return createVerifiableMessage(new ProtocolMessage(
                     "REGISTER", sc, _pubKey, vpm.getProtocolMessage().getOpUuid()));
         }
+
         sc = verifyUserRegistered(clientPubKey);
         if (sc.equals(StatusCode.USER_NOT_REGISTERED)) {
             int i = UUIDGenerator.generateUUID();
@@ -310,23 +315,18 @@ public class Server {
                     "POST", sc, _pubKey, vpm.getProtocolMessage().getOpUuid()));
         }
 
-        System.out.println("User posting announcement in user table");
-
         // Save Operation
         System.out.println("User posting announcement in user table");
         int uuid = UUIDGenerator.generateUUID();
-        /*PostOperation newAnnouncement = new PostOperation(opUuid, message, pubKey, announcements, clientSignature);
-        StatusCode signStatus = verifyOperation(newAnnouncement);
-        if (signStatus.equals(StatusCode.OK)) {
-            status = signStatus;
-            int index =_users.get(pubKey).postAnnouncementBoard(newAnnouncement);
-            // client's public key is used to indicate it's stored in that client's PostOperation Board
-            _announcementMapper.put(uuid, new AnnouncementLocation(pubKey, index));
-        }*/
         ProtocolMessage pm = vpm.getProtocolMessage();
         Announcement a = pm.getPostAnnouncement();
         byte[] ref = ProtocolMessageConverter.objToByteArray(a.getReferences());
+
         _db.insertAnnouncement(a.getAnnouncement(), ref, uuid, getUserUUID(pm.getPublicKey()));
+
+        int index =_users.get(clientPubKey).postAnnouncementBoard(a);
+        // client's public key is used to indicate it's stored in that client's PostOperation Board
+        _announcementMapper.put(uuid, new AnnouncementLocation(clientPubKey, index));
 
         return createVerifiableMessage(new ProtocolMessage(
                 "POST", StatusCode.OK, _pubKey, vpm.getProtocolMessage().getOpUuid()));
@@ -355,23 +355,20 @@ public class Server {
 
         System.out.println("User posting announcement in general board");
         int uuid = UUIDGenerator.generateUUID();
-        /*PostOperation newAnnouncement = new PostOperation(opUuid, message, pubKey, announcements, clientSignature);
-        StatusCode signStatus = verifyOperation(newAnnouncement);
-        System.out.println("Signature status code: " + signStatus);
-        if (signStatus.equals(StatusCode.OK)) {
-            status = signStatus;
-            int index;
-            synchronized (_generalBoard) {
-                index = _generalBoard.size();
-                _generalBoard.add(newAnnouncement);
-            }
-            // server's public key is used to indicate it's stored in the General Board
-            _announcementMapper.put(uuid, new AnnouncementLocation(_pubKey, index));
-        }*/
+
         ProtocolMessage pm = vpm.getProtocolMessage();
         Announcement a = pm.getPostAnnouncement();
         byte[] ref = ProtocolMessageConverter.objToByteArray(a.getReferences());
+
         _db.insertAnnouncementGB(a.getAnnouncement(), ref, uuid, getUserUUID(pm.getPublicKey()));
+
+        int index;
+        synchronized (_generalBoard) {
+            index = _generalBoard.size();
+            _generalBoard.add(a);
+        }
+        // server's public key is used to indicate it's stored in the General Board
+        _announcementMapper.put(uuid, new AnnouncementLocation(_pubKey, index));
 
         return createVerifiableMessage(new ProtocolMessage("POSTGENERAL", StatusCode.OK, _pubKey, vpm.getProtocolMessage().getOpUuid()));
     }
@@ -384,8 +381,7 @@ public class Server {
      * Obtains the most recent number announcements posted by the user with associated key
      * (from the user's PostOperation Board).
      * If number == 0, all announcements should be returned.
-     * @param pubKey
-     * @param number of announcements to be returned
+     * @param vpm
      * @return a list of announcements
      */
     public VerifiableProtocolMessage read(VerifiableProtocolMessage vpm) {
@@ -418,6 +414,7 @@ public class Server {
         ProtocolMessage pm = vpm.getProtocolMessage();
         System.out.println("checking database");
         List<Announcement> announcements = _db.getUserAnnouncements(number, encodedhash);
+        // TODO: Announcements need to have a signature
 
         return createVerifiableMessage(new ProtocolMessage("READ", StatusCode.OK, _pubKey, pm.getOpUuid(), announcements));
     }
@@ -425,7 +422,7 @@ public class Server {
     /**
      * Obtains the most recent number announcements on the General Board.
      * If number == 0, all announcements should be returned.
-     * @param number
+     * @param vpm
      * @return a list of announcements
      */
     public VerifiableProtocolMessage readGeneral(VerifiableProtocolMessage vpm) {
@@ -447,6 +444,7 @@ public class Server {
         System.out.println("User reading announcement from general board");
         ProtocolMessage pm = vpm.getProtocolMessage();
         List<Announcement> announcements = _db.getGBAnnouncements(number);
+        // TODO: Announcements need to have a signature
 
         return createVerifiableMessage(new ProtocolMessage("READGENERAL", StatusCode.OK, _pubKey, pm.getOpUuid(), announcements));
     }

@@ -2,7 +2,7 @@ package pt.ulisboa.tecnico.sec.communication_lib;
 
 public enum StatusCode {
     OK(0, "Successful."),
-    DUPLICATE_USER(1, "User already exists."),
+    USER_ALREADY_REGISTERED(1, "User is already registered."),
     INVALID_KEY(2, "Public Key is invalid."),
     INVALID_SIGNATURE(3, "Signature is invalid."),
     DUPLICATE_OPERATION(4, "Operation with given UUID was already processed."),
@@ -10,8 +10,7 @@ public enum StatusCode {
     USER_NOT_REGISTERED(6, "User is not registed."),
     INVALID_REFERENCE(7, "Invalid Reference: referenced announcement does not exist."),
     INVALID_ALGORITHM(8, "Signature Algorithm not supported"),
-    USER_ALREADY_REGISTERED(9, "User is already registered.");
-    // UNREGISTERED_USER
+    NULL_FIELD(9, "Null fields are not allowed.");
 
     private final int code;
     private final String description;

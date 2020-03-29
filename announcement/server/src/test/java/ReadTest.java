@@ -51,6 +51,35 @@ public class ReadTest {
         assertEquals(success, true);*/
     }
 
+    // null Parameters
+    @Test
+    void publicKeyIsNull() {
+        /*int statusCode = _client.post(null, REFERENCES);
+
+        assertEquals(statusCode, -1);*/
+    }
+
+    @Test
+    void numberIsNull() {
+        /*int statusCode = _client.post(null, REFERENCES);
+
+        assertEquals(statusCode, -1);*/
+    }
+
+    @Test
+    void opUuidIsNull() {
+        /*int statusCode = _client.post(null, REFERENCES);
+
+        assertEquals(statusCode, -1);*/
+    }
+
+    @Test
+    void signatureIsNull() {
+        /*int statusCode = _client.post(null, REFERENCES);
+
+        assertEquals(statusCode, -1);*/
+    }
+
     // Replay attacks
     @Test
     void duplicatedOperation() {
