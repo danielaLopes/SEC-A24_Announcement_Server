@@ -56,11 +56,11 @@ public class ProtocolMessage implements Serializable {
     }
 
     // Post Response or Register Response
-    public ProtocolMessage(String command, StatusCode statusCode, int opUuid) {
+    /*public ProtocolMessage(String command, StatusCode statusCode, int opUuid) {
         _command = command;
         _statusCode = statusCode;
         _opUuid = opUuid;
-    }
+    }*/
 
     public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, int opUuid) {
         _command = command;

@@ -181,7 +181,7 @@ public class Server {
      */
     public StatusCode verifyUserRegistered(PublicKey clientPubKey) {
         if (_users.containsKey(clientPubKey)) {
-            return StatusCode.OK;
+            return StatusCode.USER_ALREADY_REGISTERED;
         }
         return StatusCode.USER_NOT_REGISTERED;
     }
@@ -199,8 +199,6 @@ public class Server {
                                  List<Integer> references, PublicKey clientPubKey) {
         StatusCode sc;
 
-        // TODO: EQUIVALENT TO INTEGER NULL IS ZERO????
-        // TODO: CREATE FUNCTION TO VERIFY OPUUID VALIDITY???
         if (verifyOpUuid(opUuid).equals(StatusCode.NULL_FIELD) || vpm == null || message == null ||
                 references == null || clientPubKey == null || vpm.getProtocolMessage() == null ||
                 vpm.getSignedProtocolMessage() == null) {
@@ -228,8 +226,8 @@ public class Server {
         }
 
         sc = verifyUserRegistered(clientPubKey);
-        if (!sc.equals(StatusCode.OK)) {
-            return sc;
+        if (!sc.equals(StatusCode.USER_NOT_REGISTERED)) {
+            return StatusCode.OK;
         }
 
         return sc;
@@ -238,8 +236,6 @@ public class Server {
     public StatusCode verifyRead(int opUuid, VerifiableProtocolMessage vpm, PublicKey clientPubKey) {
         StatusCode sc;
 
-        // TODO: EQUIVALENT TO INTEGER NULL IS ZERO????
-        // TODO: CREATE FUNCTION TO VERIFY OPUUID VALIDITY???
         if (verifyOpUuid(opUuid).equals(StatusCode.NULL_FIELD) || vpm == null || clientPubKey == null ||
                 vpm.getProtocolMessage() == null || vpm.getSignedProtocolMessage() == null) {
             return StatusCode.NULL_FIELD;
@@ -256,8 +252,8 @@ public class Server {
         }
 
         sc = verifyUserRegistered(clientPubKey);
-        if (!sc.equals(StatusCode.OK)) {
-            return sc;
+        if (!sc.equals(StatusCode.USER_NOT_REGISTERED)) {
+            return StatusCode.OK;
         }
 
         return sc;
@@ -295,10 +291,20 @@ public class Server {
         VerifiableProtocolMessage response;
         PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
 
+        if (verifyOpUuid(opUuid).equals(StatusCode.NULL_FIELD) || vpm == null ||
+                clientPubKey == null || vpm.getProtocolMessage() == null ||
+                vpm.getSignedProtocolMessage() == null) {
+            response = createVerifiableMessage(new ProtocolMessage(
+                    "REGISTER", StatusCode.NULL_FIELD, _pubKey, opUuid));
+            _operations.put(opUuid, response);
+            return response;
+        }
+
         sc = verifyDupOperation(opUuid);
         if (sc.equals(StatusCode.DUPLICATE_OPERATION)) {
             return _operations.get(opUuid);
         }
+
         sc = verifySignature(vpm);
         if (!sc.equals(StatusCode.OK)) {
             response = createVerifiableMessage(new ProtocolMessage(
