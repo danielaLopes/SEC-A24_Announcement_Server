@@ -45,6 +45,8 @@ public class Announcement implements Serializable{
 
     public int getAnnouncementID() { return _announcementID; }
 
+    public void setAnnouncementID(int id) { _announcementID = id; }
+
     public String getClientUUID() { return _clientUUID; }
 
     public PublicKey getClientPublicKey() { return _clientPublicKey; }

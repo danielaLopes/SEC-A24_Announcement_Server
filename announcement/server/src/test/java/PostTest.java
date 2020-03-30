@@ -80,7 +80,9 @@ public class PostTest extends BaseTest {
         assertEquals(sc1, StatusCode.OK);
 
         // posting second announcement
-        List<Integer> references2 = new ArrayList<>(Arrays.asList(opUuid1));
+        Announcement a1 = vpm_response1.getProtocolMessage().getPostAnnouncement();
+        int ref1Uuid = vpm_response1.getProtocolMessage().getPostAnnouncement().getAnnouncementID();
+        List<Integer> references2 = new ArrayList<>(Arrays.asList(ref1Uuid));
         Announcement announcement2 = new Announcement(MESSAGE2, references2);
         int opUuid2 = UUIDGenerator.generateUUID();
         ProtocolMessage pm2 = new ProtocolMessage(
@@ -91,13 +93,11 @@ public class PostTest extends BaseTest {
 
         VerifiableProtocolMessage vpm_response2 = server.post(vpm2);
         StatusCode sc2 = vpm_response2.getProtocolMessage().getStatusCode();
-        // TODO: OPUUID IS DIFFERENT FROM THE UUID ASSIGNED TO AN ANNOUNCEMENT BY THE SERVER, DO A READ
-        System.out.println("REF1: " + opUuid1);
-        System.out.println("status code: " + sc2);
         assertEquals(sc2, StatusCode.OK);
 
         // posting third announcement
-        List<Integer> references3 = new ArrayList<>(Arrays.asList(opUuid1, opUuid2));
+        int ref2Uuid = vpm_response2.getProtocolMessage().getPostAnnouncement().getAnnouncementID();
+        List<Integer> references3 = new ArrayList<>(Arrays.asList(ref1Uuid, ref2Uuid));
         Announcement announcement3 = new Announcement(MESSAGE3, references3);
         int opUuid3 = UUIDGenerator.generateUUID();
         ProtocolMessage pm3 = new ProtocolMessage(
@@ -168,7 +168,7 @@ public class PostTest extends BaseTest {
     }
 
     @Test
-    void InvalidReferences() throws Exception{
+    void InvalidReferences() throws Exception {
 
         /*Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
@@ -223,8 +223,7 @@ public class PostTest extends BaseTest {
         assertEquals(scRegister1, StatusCode.OK);
 
         // posting announcement
-        int invalid_opUuid = UUIDGenerator.generateUUID();
-        List<Integer> references1 = new ArrayList<>(Arrays.asList(invalid_opUuid));
+        List<Integer> references1 = new ArrayList<>();
         Announcement announcement1 = new Announcement(MESSAGE1, references1);
         int opUuid1 = UUIDGenerator.generateUUID();
         ProtocolMessage pm1 = new ProtocolMessage(
@@ -258,8 +257,7 @@ public class PostTest extends BaseTest {
         assertEquals(scRegister1, StatusCode.OK);
 
         // posting announcement
-        int invalid_opUuid = UUIDGenerator.generateUUID();
-        List<Integer> references1 = new ArrayList<>(Arrays.asList(invalid_opUuid));
+        List<Integer> references1 = new ArrayList<>();
         Announcement announcement1 = new Announcement(null, references1);
         int opUuid1 = UUIDGenerator.generateUUID();
         ProtocolMessage pm1 = new ProtocolMessage(
