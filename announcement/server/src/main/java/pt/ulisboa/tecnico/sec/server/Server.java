@@ -78,7 +78,7 @@ public class Server {
         }
         if (_privateKey == null) {
             System.out.println("Error: Not possible to initialize server because it " +
-                    "was not possible to load private key due to wrong password or alias.\n" + e);
+                    "was not possible to load private key due to wrong password or alias.\n");
             System.exit(-1);
         }
     }
@@ -161,9 +161,9 @@ public class Server {
      * @return StatusCode
      */
     public StatusCode verifyReferences(List<Integer> references) {
-        for (int exRef : _announcementMapper.keySet()) {
+        /*for (int exRef : _announcementMapper.keySet()) {
             System.out.println("===REF===: " + exRef);
-        }
+        }*/
         for (int reference : references) {
             if (!_announcementMapper.containsKey(reference)) {
                 return StatusCode.INVALID_REFERENCE;
@@ -324,19 +324,20 @@ public class Server {
 
         // Save Operation
         System.out.println("User posting announcement in user table");
-        int uuid = UUIDGenerator.generateUUID();
+        int announcementUuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = vpm.getProtocolMessage();
         Announcement a = pm.getPostAnnouncement();
+        a.setAnnouncementID(announcementUuid);
         byte[] ref = ProtocolMessageConverter.objToByteArray(a.getReferences());
 
-        _db.insertAnnouncement(a.getAnnouncement(), ref, uuid, getUserUUID(pm.getPublicKey()));
+        _db.insertAnnouncement(a.getAnnouncement(), ref, announcementUuid, getUserUUID(pm.getPublicKey()));
 
         int index =_users.get(clientPubKey).postAnnouncementBoard(a);
         // client's public key is used to indicate it's stored in that client's PostOperation Board
-        _announcementMapper.put(uuid, new AnnouncementLocation(clientPubKey, index));
+        _announcementMapper.put(announcementUuid, new AnnouncementLocation(clientPubKey, index));
 
         return createVerifiableMessage(new ProtocolMessage(
-                "POST", StatusCode.OK, _pubKey, vpm.getProtocolMessage().getOpUuid()));
+                "POST", StatusCode.OK, _pubKey, vpm.getProtocolMessage().getOpUuid(), a));
     }
 
     /**
@@ -361,13 +362,14 @@ public class Server {
         }
 
         System.out.println("User posting announcement in general board");
-        int uuid = UUIDGenerator.generateUUID();
+        int announcementUuid = UUIDGenerator.generateUUID();
 
         ProtocolMessage pm = vpm.getProtocolMessage();
         Announcement a = pm.getPostAnnouncement();
+        a.setAnnouncementID(announcementUuid);
         byte[] ref = ProtocolMessageConverter.objToByteArray(a.getReferences());
 
-        _db.insertAnnouncementGB(a.getAnnouncement(), ref, uuid, getUserUUID(pm.getPublicKey()));
+        _db.insertAnnouncementGB(a.getAnnouncement(), ref, announcementUuid, getUserUUID(pm.getPublicKey()));
 
         int index;
         synchronized (_generalBoard) {
@@ -375,9 +377,10 @@ public class Server {
             _generalBoard.add(a);
         }
         // server's public key is used to indicate it's stored in the General Board
-        _announcementMapper.put(uuid, new AnnouncementLocation(_pubKey, index));
+        _announcementMapper.put(announcementUuid, new AnnouncementLocation(_pubKey, index));
 
-        return createVerifiableMessage(new ProtocolMessage("POSTGENERAL", StatusCode.OK, _pubKey, vpm.getProtocolMessage().getOpUuid()));
+        return createVerifiableMessage(new ProtocolMessage(
+                "POSTGENERAL", StatusCode.OK, _pubKey, vpm.getProtocolMessage().getOpUuid(), a));
     }
 
     public String getUserUUID(PublicKey publicKey) {

@@ -47,6 +47,14 @@ public class ProtocolMessage implements Serializable {
         _postAnnouncement = announcement;
     }
 
+    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, int opUuid, Announcement announcement) {
+        _opUuid = opUuid;
+        _command = command;
+        _statusCode = statusCode;
+        _publicKey = publicKey;
+        _postAnnouncement = announcement;
+    }
+
     // Post Response or Register Response
     public ProtocolMessage(String command, StatusCode statusCode, int opUuid) {
         _command = command;
