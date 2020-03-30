@@ -15,6 +15,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SignatureException;
 import java.io.*;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +24,7 @@ public class Client{
     private PublicKey _pubKey;
     private PrivateKey _privateKey;
 
-    private List<PublicKey> _otherUsersPubKeys;
+    private List<PublicKey> _usersPubKeys;
     private PublicKey _serverPubKey;
 
     private final Communication _communication;
@@ -39,8 +40,8 @@ public class Client{
         
         loadServerPublicKey(serverPubKeyPath);
 
-        _otherUsersPubKeys = new ArrayList<PublicKey>();
-        loadOtherUsersPubKeys(otherUsersPubKeyPaths);
+        _usersPubKeys = new ArrayList<PublicKey>();
+        loadUsersPubKeys(otherUsersPubKeyPaths);
 
         _communication = new Communication();
         startServerCommunication();
@@ -90,12 +91,13 @@ public class Client{
     }
 
     /**
-     * Loads other known user's public keys to _otherUsersPubKeys.
+     * Loads other known user's public keys to _usersPubKeys.
      */
-    public void loadOtherUsersPubKeys(List<String> paths) {
+    public void loadUsersPubKeys(List<String> paths) {
+        _usersPubKeys.add(_pubKey);
         for (String path : paths) {
             try {
-                _otherUsersPubKeys.add(KeyPairUtil.loadPublicKey(path));
+                _usersPubKeys.add(KeyPairUtil.loadPublicKey(path));
             } catch (Exception e) {
                 System.out.println("Error: Not possible to initialize client because it was not possible to load other users public keys.\n" + e);
                 System.exit(-1);
@@ -107,17 +109,17 @@ public class Client{
      * Prints other known user's public keys.
      */
     public void printOtherUsersPubKeys() {
-        for (int i = 0; i < _otherUsersPubKeys.size(); i++) {
-            System.out.println("* " + i + ": " + _otherUsersPubKeys.get(i));
+        for (int i = 0; i < _usersPubKeys.size(); i++) {
+            System.out.println("* " + i + ": " + _usersPubKeys.get(i));
         }
     }
 
     /**
      * Retrieves the public key of a specific user.
-     * @param userIndex describes the index of a user in _otherUsersPubKeys
+     * @param userIndex describes the index of a user in _usersPubKeys
      */
     public PublicKey getPublicKeyFromUser(int userIndex) {
-        return _otherUsersPubKeys.get(userIndex);
+        return _usersPubKeys.get(userIndex);
     }
 
     /**
@@ -133,7 +135,7 @@ public class Client{
             register();
         }
         catch(IOException e) {
-            System.out.println("Error starting client socket");
+            System.out.println("Error starting client socket. Make sure the server is running.");
         }
     }
 
@@ -148,7 +150,7 @@ public class Client{
             _communication.close(_clientSocket);
         }
         catch(IOException e) {
-            System.out.println("Error closing socket");
+            System.out.println("Error closing socket.");
         }   
     }
 
@@ -161,7 +163,7 @@ public class Client{
     }
 
     /**
-     * Creates a VerifiableProtocolMessage with @pm and signed @pm, in order
+     * Creates a VerifiableProtocolMessage with pm and signed pm, in order
      * to avoid messages being tampered.
      * @param pm is a ProtocolMessage
      * @return the VerificableProtocolMessage to be sent
@@ -179,8 +181,8 @@ public class Client{
     }
 
     /**
-     * Verifies if the signed ProtocolMessage inside @vpm is valid, i.e.
-     * if we sign the ProtocolMessage inside @vpm it should be equivalent
+     * Verifies if the signed ProtocolMessage inside vpm is valid, i.e.
+     * if we sign the ProtocolMessage inside vpm it should be equivalent
      * to its signed instance.
      * @param vpm is a VerifiableProtocolMessage
      * @return a boolean, expressing if the signature is valid or not
@@ -207,8 +209,17 @@ public class Client{
      * @param vpm is a VerifiableProtocolMessage
      * @return a StatusCode
      */
-    public StatusCode getStatusCodeFromProtocolMessage(VerifiableProtocolMessage vpm) {
+    public StatusCode getStatusCodeFromVPM(VerifiableProtocolMessage vpm) {
         return vpm.getProtocolMessage().getStatusCode();
+    }
+
+    /**
+     * Retrieves the list of announcements of a VerifiableProtocolMessage.
+     * @param vpm is a VerifiableProtocolMessage
+     * @return list of announcements
+     */
+    public List<Announcement> getAnnouncementsFromVPM(VerifiableProtocolMessage vpm) {
+        return vpm.getProtocolMessage().getAnnouncements();
     }
 
     /**
@@ -225,7 +236,7 @@ public class Client{
         try {
             _communication.sendMessage(vpm, _oos);
             VerifiableProtocolMessage rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
-            rsc = getStatusCodeFromProtocolMessage(rvpm);
+            rsc = getStatusCodeFromVPM(rvpm);
 
             if (verifySignature(rvpm)) {
                 System.out.println("Server signature verified successfully");
@@ -273,7 +284,7 @@ public class Client{
         try {
             _communication.sendMessage(vpm, _oos);
             VerifiableProtocolMessage rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
-            rsc = getStatusCodeFromProtocolMessage(rvpm);
+            rsc = getStatusCodeFromVPM(rvpm);
 
             if (verifySignature(rvpm)) {
                 System.out.println("Server signature verified successfully");
@@ -320,7 +331,7 @@ public class Client{
         try {
             _communication.sendMessage(vpm, _oos);
             VerifiableProtocolMessage rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
-            rsc = getStatusCodeFromProtocolMessage(rvpm);
+            rsc = getStatusCodeFromVPM(rvpm);
 
             if (verifySignature(rvpm)) {
                 System.out.println("Server signature verified successfully");
@@ -339,31 +350,32 @@ public class Client{
     }
 
     /**
-     * Retrieves the number latest announcements to be read
-     * from the user's Board.
-     * @param user whose Board is to be read
+     * Retrieves the number latest announcements from the user's Board.
+     * @param user 
      * @param number of announcements to be retrieved
-     * @return the StatusCode of the operation
+     * @return a pair containing a StatusCode of the operation
+     * and the list of announcements received 
      */
-    public int read(int user, int number) {
+    public AbstractMap.SimpleEntry<Integer, List<Announcement>> read(int user, int number) {
         if (invalidUser(user)) {
             System.out.println("Invalid user.");
-            return StatusCode.USER_NOT_REGISTERED.getCode();
+            return new AbstractMap.SimpleEntry<>(StatusCode.USER_NOT_REGISTERED.getCode(), new ArrayList<>());
         }
-        PublicKey userToReadPB = _otherUsersPubKeys.get(user);
+        PublicKey userToReadPB = _usersPubKeys.get(user);
         int uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("READ", _pubKey, uuid, number, userToReadPB);
         VerifiableProtocolMessage vpm = createVerifiableMessage(pm);
+        List<Announcement> announcements = null;
         StatusCode rsc = null;
         try {
             _communication.sendMessage(vpm, _oos);
             VerifiableProtocolMessage rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
-            rsc = getStatusCodeFromProtocolMessage(rvpm);
+            rsc = getStatusCodeFromVPM(rvpm);
 
             if (verifySignature(rvpm)) {
                 System.out.println("Server signature verified successfully");
                 printStatusCode(rsc);
-                printAnnouncements(rvpm.getProtocolMessage().getAnnouncements(), "USER");
+                announcements = getAnnouncementsFromVPM(rvpm);
             }
             else {
                 System.out.println("Could not verify server signature");
@@ -374,30 +386,30 @@ public class Client{
             System.out.println(e);
         }
 
-        return rsc.getCode();
+        return new AbstractMap.SimpleEntry<>(rsc.getCode(), announcements);
     }
 
     /**
-     * Retrieves the number latest announcements to be read
-     * from the General Board.
+     * Retrieves the number latest announcements from the General Board.
      * @param number of announcements to be retrieved
-     * @return the StatusCode of the operation
+     * @return a pair containing a StatusCode of the operation
+     * and the list of announcements received 
      */
-    public int readGeneral(int number) {
-
+    public AbstractMap.SimpleEntry<Integer, List<Announcement>> readGeneral(int number) {
         int uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("READGENERAL", _pubKey, uuid, number);
         VerifiableProtocolMessage vpm = createVerifiableMessage(pm);
+        List<Announcement> announcements = null;
         StatusCode rsc = null;
         try {
             _communication.sendMessage(vpm, _oos);
             VerifiableProtocolMessage rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
-            rsc = getStatusCodeFromProtocolMessage(rvpm);
+            rsc = getStatusCodeFromVPM(rvpm);
 
             if (verifySignature(rvpm)) {
                 System.out.println("Server signature verified successfully");
                 printStatusCode(rsc);
-                printAnnouncements(rvpm.getProtocolMessage().getAnnouncements(), "GENERAL");
+                announcements = getAnnouncementsFromVPM(rvpm);
             }
             else {
                 System.out.println("Could not verify server signature");
@@ -408,23 +420,7 @@ public class Client{
             System.out.println(e);
         }
 
-        return rsc.getCode();
-    }
-
-    /**
-     * Prints the list of @announcements in a @board.
-     * @param announcements list of announcements to print
-     * @param board in which the announcements are
-     */
-    public void printAnnouncements(List<Announcement> announcements, String board) {
-        if (announcements.size() == 0)
-            System.out.println("THERE ARE NO ANNOUNCEMENTS TO DISPLAY");
-        else {
-            System.out.println("-------------- ANNOUNCEMENTS FROM " + board + " BOARD " + "--------------");
-            for (int i = 0 ; i < announcements.size() ; i++){
-                System.out.println(Integer.toString(i) + " -> " + announcements.get(i).getAnnouncement());
-            }
-        }
+        return new AbstractMap.SimpleEntry<>(rsc.getCode(), announcements);
     }
 
     /**
@@ -444,11 +440,11 @@ public class Client{
     }
 
     /**
-     * Verifies if a user exists within _otherUsersPubKeys.
+     * Verifies if a user exists within _usersPubKeys.
      * @param user
      */
     public boolean invalidUser(int user) {
-        return user < 0 || user >= _otherUsersPubKeys.size();
+        return user < 0 || user >= _usersPubKeys.size();
     }
 
 }

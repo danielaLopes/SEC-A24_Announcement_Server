@@ -4,9 +4,9 @@ public enum Message {
 
     WELCOME("Welcome to DPAS!"),
 
-    POST("Post announcement to your board"),
+    POST("Post announcement to your Board"),
     POST_GENERAL("Post announcement to General Board"),
-    READ("Read announcements from other users"),
+    READ("Read announcements from Users' Boards"),
     READ_GENERAL("Read announcements from General Board"),
 
     MESSAGE("Message: "),

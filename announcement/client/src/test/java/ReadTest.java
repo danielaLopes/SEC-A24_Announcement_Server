@@ -1,9 +1,12 @@
 import pt.ulisboa.tecnico.sec.client.Client;
+import pt.ulisboa.tecnico.sec.communication_lib.Announcement;
 import pt.ulisboa.tecnico.sec.communication_lib.StatusCode;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 
 import org.junit.jupiter.api.Test;
@@ -24,46 +27,57 @@ class ReadTest extends BaseTest {
 
     @Test
     void success() {
-        int statusCodePost = _client1.post(MESSAGE, REFERENCES);
-        int statusCodeRead = _client2.read(0, 1);
+        _client1.post(MESSAGE, REFERENCES);
+        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client2.read(1, 1);
         
-        assertEquals(statusCodePost, StatusCode.OK.getCode());
-        assertEquals(statusCodeRead, StatusCode.OK.getCode());
+        assertEquals(response.getKey(), StatusCode.OK.getCode());
+        assertEquals(response.getValue().size(), 1);
     }
 
     @Test
     void negativeNumberOfAnnouncements() {
-        /*boolean success = _client.post(MESSAGE, REFERENCES);
-
-        assertEquals(success, true);*/
+        _client1.post(MESSAGE, REFERENCES);
+        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client2.read(1, -1);
+        
+        assertEquals(response.getKey(), StatusCode.OK.getCode());
+        assertTrue(response.getValue().size() > 0);
     }
 
     @Test
     void zeroNumberOfAnnouncements() {
-        /*boolean success = _client.post(MESSAGE, REFERENCES);
-
-        assertEquals(success, true);*/
+        _client1.post(MESSAGE, REFERENCES);
+        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client2.read(1, 0);
+        
+        assertEquals(response.getKey(), StatusCode.OK.getCode());
+        assertTrue(response.getValue().size() > 0);
     }
 
     @Test
     void tooManyAnnouncements() {
-        /*boolean success = _client.post(MESSAGE, REFERENCES);
-
-        assertEquals(success, true);*/
+        for (int i = 0; i < 50; i++) {
+            _client1.post(MESSAGE, REFERENCES);
+        }
+        
+        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client2.read(1, 0);
+        
+        assertEquals(response.getKey(), StatusCode.OK.getCode());
+        assertTrue(response.getValue().size() >= 50);
     }
 
     @Test
     void userIsNegative() {
-        int statusCode = _client2.read(-1, 1);
+        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client2.read(-1, 1);
         
-        assertEquals(statusCode, StatusCode.USER_NOT_REGISTERED.getCode());
+        assertEquals(response.getKey(), StatusCode.USER_NOT_REGISTERED.getCode());
+        assertEquals(response.getValue().size(), 0);
     }
 
     @Test
     void userDoesNotExist() {
-        int statusCode = _client2.read(1, 1);
+        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client2.read(2, 1);
         
-        assertEquals(statusCode, StatusCode.USER_NOT_REGISTERED.getCode());
+        assertEquals(response.getKey(), StatusCode.USER_NOT_REGISTERED.getCode());
+        assertEquals(response.getValue().size(), 0);
     }
 
 }
