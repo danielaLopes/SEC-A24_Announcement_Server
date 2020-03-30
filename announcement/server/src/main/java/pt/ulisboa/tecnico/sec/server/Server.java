@@ -65,13 +65,20 @@ public class Server {
         try {
             keyStore = KeyStorage.loadKeyStore(keyStorePasswd, keyStorePath);
         } catch(Exception e) {
-            System.out.println("Error: Not possible to initialize server because it was not possible to load keystore.\n" + e);
+            System.out.println("Error: Not possible to initialize server because it " +
+                    "was not possible to load keystore.\n" + e);
             System.exit(-1);
         }
         try {
             _privateKey = KeyStorage.loadPrivateKey(entryPasswd, alias, keyStore);
         } catch (Exception e) {
-            System.out.println("Error: Not possible to initialize server because it was not possible to load private key.\n" + e);
+            System.out.println("Error: Not possible to initialize server because it " +
+                    "was not possible to load private key.\n" + e);
+            System.exit(-1);
+        }
+        if (_privateKey == null) {
+            System.out.println("Error: Not possible to initialize server because it " +
+                    "was not possible to load private key due to wrong password or alias.\n" + e);
             System.exit(-1);
         }
     }
