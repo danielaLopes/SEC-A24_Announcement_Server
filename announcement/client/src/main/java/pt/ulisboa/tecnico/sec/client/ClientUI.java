@@ -1,5 +1,8 @@
 package pt.ulisboa.tecnico.sec.client;
 
+import pt.ulisboa.tecnico.sec.communication_lib.*;
+
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -104,7 +107,8 @@ public class ClientUI {
     public void read() {
         int user = promptUser();
         int number = promptNumber();
-        _client.read(user, number);
+        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client.read(user, number);
+        printAnnouncements(response.getValue(), "USER");
     }
 
     /**
@@ -114,6 +118,24 @@ public class ClientUI {
     public void readGeneral() {
         int number = promptNumber();
         _client.readGeneral(number);
+        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client.readGeneral(number);
+        printAnnouncements(response.getValue(), "GENERAL");
+    }
+
+    /**
+     * Prints the list of announcements in a board.
+     * @param announcements list of announcements to print
+     * @param board in which the announcements are
+     */
+    public void printAnnouncements(List<Announcement> announcements, String board) {
+        if (announcements.size() == 0)
+            System.out.println("THERE ARE NO ANNOUNCEMENTS TO DISPLAY");
+        else {
+            System.out.println("-------------- ANNOUNCEMENTS FROM " + board + " BOARD " + "--------------");
+            for (int i = 0 ; i < announcements.size() ; i++){
+                System.out.println(Integer.toString(i) + " -> " + announcements.get(i).getAnnouncement());
+            }
+        }
     }
 
     /**
