@@ -78,7 +78,7 @@ public class Server {
         }
         if (_privateKey == null) {
             System.out.println("Error: Not possible to initialize server because it " +
-                    "was not possible to load private key due to wrong password or alias.\n" + e);
+                    "was not possible to load private key due to wrong password or alias.\n");
             System.exit(-1);
         }
     }
