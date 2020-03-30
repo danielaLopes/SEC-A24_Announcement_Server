@@ -36,7 +36,7 @@ public class PostTest extends BaseTest {
 
         VerifiableProtocolMessage vpm_responseRegister1 = server.registerUser(vpmRegister1);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
-        assertEquals(scRegister1, StatusCode.OK);
+        assertEquals(StatusCode.OK, scRegister1);
 
         // registering client2
         int opUuidRegister2 = UUIDGenerator.generateUUID();
@@ -49,20 +49,20 @@ public class PostTest extends BaseTest {
 
         VerifiableProtocolMessage vpm_responseRegister2 =server.registerUser(vpmRegister2);
         StatusCode scRegister2 = vpm_responseRegister2.getProtocolMessage().getStatusCode();
-        assertEquals(scRegister2, StatusCode.OK);
+        assertEquals(StatusCode.OK, scRegister2);
 
         // registering client3
         int opUuidRegister3 = UUIDGenerator.generateUUID();
         ProtocolMessage pmRegister3 = new ProtocolMessage(
-                "REGISTER", CLIENT2_PUBLIC_KEY, opUuidRegister3);
+                "REGISTER", CLIENT3_PUBLIC_KEY, opUuidRegister3);
         byte[] bpmRegister3 = ProtocolMessageConverter.objToByteArray(pmRegister3);
-        byte[] signedPmRegister3 = SignatureUtil.sign(bpmRegister2, CLIENT3_PRIVATE_KEY);
+        byte[] signedPmRegister3 = SignatureUtil.sign(bpmRegister3, CLIENT3_PRIVATE_KEY);
         VerifiableProtocolMessage vpmRegister3 = new VerifiableProtocolMessage(
                 pmRegister3, signedPmRegister3);
 
         VerifiableProtocolMessage vpm_responseRegister3 = server.registerUser(vpmRegister3);
         StatusCode scRegister3 = vpm_responseRegister3.getProtocolMessage().getStatusCode();
-        assertEquals(scRegister3, StatusCode.OK);
+        assertEquals(StatusCode.OK, scRegister3);
 
 
         // posting first announcement
@@ -77,10 +77,9 @@ public class PostTest extends BaseTest {
 
         VerifiableProtocolMessage vpm_response1 = server.post(vpm1);
         StatusCode sc1 = vpm_response1.getProtocolMessage().getStatusCode();
-        assertEquals(sc1, StatusCode.OK);
+        assertEquals(StatusCode.OK, sc1);
 
         // posting second announcement
-        Announcement a1 = vpm_response1.getProtocolMessage().getPostAnnouncement();
         int ref1Uuid = vpm_response1.getProtocolMessage().getPostAnnouncement().getAnnouncementID();
         List<Integer> references2 = new ArrayList<>(Arrays.asList(ref1Uuid));
         Announcement announcement2 = new Announcement(MESSAGE2, references2);
@@ -93,7 +92,7 @@ public class PostTest extends BaseTest {
 
         VerifiableProtocolMessage vpm_response2 = server.post(vpm2);
         StatusCode sc2 = vpm_response2.getProtocolMessage().getStatusCode();
-        assertEquals(sc2, StatusCode.OK);
+        assertEquals(StatusCode.OK, sc2);
 
         // posting third announcement
         int ref2Uuid = vpm_response2.getProtocolMessage().getPostAnnouncement().getAnnouncementID();
@@ -108,14 +107,14 @@ public class PostTest extends BaseTest {
 
         VerifiableProtocolMessage vpm_response3 = server.post(vpm3);
         StatusCode sc3 = vpm_response3.getProtocolMessage().getStatusCode();
-        assertEquals(sc3, StatusCode.OK);
+        assertEquals(StatusCode.OK, sc3);
     }
 
     // Unregistered User
     @Test
     void userNotRegistered() throws Exception {
 
-        /*Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
+        Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         List<Integer> references1 = new ArrayList<>();
@@ -129,14 +128,14 @@ public class PostTest extends BaseTest {
 
         VerifiableProtocolMessage vpm_response1 = server.post(vpm1);
         StatusCode sc1 = vpm_response1.getProtocolMessage().getStatusCode();
-        assertEquals(sc1, StatusCode.USER_NOT_REGISTERED);*/
+        assertEquals(StatusCode.USER_NOT_REGISTERED, sc1);
     }
 
     // Invalid Announcement fields tests
     @Test
     void messageLengthIsInvalid() throws Exception {
 
-        /*Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
+        Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
@@ -150,7 +149,7 @@ public class PostTest extends BaseTest {
 
         VerifiableProtocolMessage vpm_responseRegister1 =server.registerUser(vpmRegister1);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
-        assertEquals(scRegister1, StatusCode.OK);
+        assertEquals(StatusCode.OK, scRegister1);
 
         // posting announcement
         List<Integer> references1 = new ArrayList<>();
@@ -164,13 +163,13 @@ public class PostTest extends BaseTest {
 
         VerifiableProtocolMessage vpm_response1 = server.post(vpm1);
         StatusCode sc1 = vpm_response1.getProtocolMessage().getStatusCode();
-        assertEquals(sc1, StatusCode.INVALID_MESSAGE_LENGTH);*/
+        assertEquals(StatusCode.INVALID_MESSAGE_LENGTH, sc1);
     }
 
     @Test
     void InvalidReferences() throws Exception {
 
-        /*Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
+        Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
@@ -182,9 +181,9 @@ public class PostTest extends BaseTest {
         VerifiableProtocolMessage vpmRegister1 = new VerifiableProtocolMessage(
                 pmRegister1, signedPmRegister1);
 
-        VerifiableProtocolMessage vpm_responseRegister1 =server.registerUser(vpmRegister1);
+        VerifiableProtocolMessage vpm_responseRegister1 = server.registerUser(vpmRegister1);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
-        assertEquals(scRegister1, StatusCode.OK);
+        assertEquals(StatusCode.OK, scRegister1);
 
         // posting announcement
         int invalid_opUuid = UUIDGenerator.generateUUID();
@@ -199,14 +198,14 @@ public class PostTest extends BaseTest {
 
         VerifiableProtocolMessage vpm_response1 = server.post(vpm1);
         StatusCode sc1 = vpm_response1.getProtocolMessage().getStatusCode();
-        assertEquals(sc1, StatusCode.INVALID_REFERENCE);*/
+        assertEquals(StatusCode.INVALID_REFERENCE, sc1);
     }
 
     // null Parameters
     @Test
     void publicKeyIsNull() throws Exception {
 
-        /*Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
+        Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
@@ -220,7 +219,7 @@ public class PostTest extends BaseTest {
 
         VerifiableProtocolMessage vpm_responseRegister1 =server.registerUser(vpmRegister1);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
-        assertEquals(scRegister1, StatusCode.OK);
+        assertEquals(StatusCode.OK, scRegister1);
 
         // posting announcement
         List<Integer> references1 = new ArrayList<>();
@@ -234,13 +233,13 @@ public class PostTest extends BaseTest {
 
         VerifiableProtocolMessage vpm_response1 = server.post(vpm1);
         StatusCode sc1 = vpm_response1.getProtocolMessage().getStatusCode();
-        assertEquals(sc1, StatusCode.NULL_FIELD);*/
+        assertEquals(StatusCode.NULL_FIELD, sc1);
     }
 
     @Test
     void messageIsNull() throws Exception {
 
-        /*Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
+        Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
@@ -254,7 +253,7 @@ public class PostTest extends BaseTest {
 
         VerifiableProtocolMessage vpm_responseRegister1 =server.registerUser(vpmRegister1);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
-        assertEquals(scRegister1, StatusCode.OK);
+        assertEquals(StatusCode.OK, scRegister1);
 
         // posting announcement
         List<Integer> references1 = new ArrayList<>();
@@ -268,13 +267,13 @@ public class PostTest extends BaseTest {
 
         VerifiableProtocolMessage vpm_response1 = server.post(vpm1);
         StatusCode sc1 = vpm_response1.getProtocolMessage().getStatusCode();
-        assertEquals(sc1, StatusCode.NULL_FIELD);*/
+        assertEquals(StatusCode.NULL_FIELD, sc1);
     }
 
     @Test
     void referencesIsNull() throws Exception {
 
-        /*Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
+        Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
@@ -288,7 +287,7 @@ public class PostTest extends BaseTest {
 
         VerifiableProtocolMessage vpm_responseRegister1 =server.registerUser(vpmRegister1);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
-        assertEquals(scRegister1, StatusCode.OK);
+        assertEquals(StatusCode.OK, scRegister1);
 
         // posting announcement
         Announcement announcement1 = new Announcement(MESSAGE1, null);
@@ -301,13 +300,13 @@ public class PostTest extends BaseTest {
 
         VerifiableProtocolMessage vpm_response1 = server.post(vpm1);
         StatusCode sc1 = vpm_response1.getProtocolMessage().getStatusCode();
-        assertEquals(sc1, StatusCode.NULL_FIELD);*/
+        assertEquals(StatusCode.NULL_FIELD, sc1);
     }
 
     @Test
     void opUuidIsNull() throws Exception {
 
-        /*Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
+        Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
@@ -321,12 +320,13 @@ public class PostTest extends BaseTest {
 
         VerifiableProtocolMessage vpm_responseRegister1 =server.registerUser(vpmRegister1);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
-        assertEquals(scRegister1, StatusCode.OK);
+        assertEquals(StatusCode.OK, scRegister1);
 
         // posting announcement
         List<Integer> references1 = new ArrayList<>();
         Announcement announcement1 = new Announcement(MESSAGE1, references1);
-        Integer opUuid1 = null;
+        //Integer opUuid1 = null;
+        int opUuid1 = 0;
         ProtocolMessage pm1 = new ProtocolMessage(
                 "POST", CLIENT1_PUBLIC_KEY, opUuid1, announcement1);
         byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);
@@ -335,13 +335,13 @@ public class PostTest extends BaseTest {
 
         VerifiableProtocolMessage vpm_response1 = server.post(vpm1);
         StatusCode sc1 = vpm_response1.getProtocolMessage().getStatusCode();
-        assertEquals(sc1, StatusCode.NULL_FIELD);*/
+        assertEquals(StatusCode.NULL_FIELD, sc1);
     }
 
     @Test
     void signatureIsNull() throws Exception {
 
-        /*Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
+        Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
@@ -355,7 +355,7 @@ public class PostTest extends BaseTest {
 
         VerifiableProtocolMessage vpm_responseRegister1 =server.registerUser(vpmRegister1);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
-        assertEquals(scRegister1, StatusCode.OK);
+        assertEquals(StatusCode.OK, scRegister1);
 
         // posting announcement
         List<Integer> references1 = new ArrayList<>();
@@ -367,15 +367,14 @@ public class PostTest extends BaseTest {
 
         VerifiableProtocolMessage vpm_response1 = server.post(vpm1);
         StatusCode sc1 = vpm_response1.getProtocolMessage().getStatusCode();
-        assertEquals(sc1, StatusCode.NULL_FIELD);*/
-
+        assertEquals(StatusCode.NULL_FIELD, sc1);
     }
 
     // Replay attacks
     @Test
     void duplicatedOperation() throws Exception {
 
-        /*Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
+        Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
@@ -389,7 +388,7 @@ public class PostTest extends BaseTest {
 
         VerifiableProtocolMessage vpm_responseRegister1 =server.registerUser(vpmRegister1);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
-        assertEquals(scRegister1, StatusCode.OK);
+        assertEquals(StatusCode.OK, scRegister1);
 
         // posting announcement
         List<Integer> references1 = new ArrayList<>();
@@ -402,14 +401,14 @@ public class PostTest extends BaseTest {
 
         VerifiableProtocolMessage vpm_response1 = server.post(vpm1);
         StatusCode sc1 = vpm_response1.getProtocolMessage().getStatusCode();
-        assertEquals(sc1, StatusCode.DUPLICATE_OPERATION);*/
+        assertEquals(scRegister1, sc1);
     }
 
-    // Message Integrity attacks
+    // Message Integrity attackss
     @Test
     void tamperedMessage() throws Exception {
 
-        /*Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
+        Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
@@ -423,7 +422,7 @@ public class PostTest extends BaseTest {
 
         VerifiableProtocolMessage vpm_responseRegister1 =server.registerUser(vpmRegister1);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
-        assertEquals(scRegister1, StatusCode.OK);
+        assertEquals(StatusCode.OK, scRegister1);
 
         // posting announcement
         List<Integer> references1 = new ArrayList<>();
@@ -440,13 +439,13 @@ public class PostTest extends BaseTest {
 
         VerifiableProtocolMessage vpm_response1 = server.post(vpm1);
         StatusCode sc1 = vpm_response1.getProtocolMessage().getStatusCode();
-        assertEquals(sc1, StatusCode.INVALID_SIGNATURE);*/
+        assertEquals(StatusCode.INVALID_SIGNATURE, sc1);
     }
 
     @Test
     void invalidSignature() throws Exception {
 
-        /*Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
+        Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
@@ -460,7 +459,7 @@ public class PostTest extends BaseTest {
 
         VerifiableProtocolMessage vpm_responseRegister1 =server.registerUser(vpmRegister1);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
-        assertEquals(scRegister1, StatusCode.OK);
+        assertEquals(StatusCode.OK, scRegister1);
 
         // posting announcement
         List<Integer> references1 = new ArrayList<>();
@@ -474,7 +473,6 @@ public class PostTest extends BaseTest {
 
         VerifiableProtocolMessage vpm_response1 = server.post(vpm1);
         StatusCode sc1 = vpm_response1.getProtocolMessage().getStatusCode();
-        assertEquals(sc1, StatusCode.INVALID_SIGNATURE);*/
+        assertEquals(StatusCode.INVALID_SIGNATURE, sc1);
     }
-
 }

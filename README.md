@@ -35,7 +35,7 @@ mvn clean install -DskipTests
     - 1 client:
     ```
     cd server/
-    mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="password password ola src/main/resources/crypto/public.key src/main/resources/crypto/server_keystore.jks"
+    mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="password password alias src/main/resources/crypto/public.key src/main/resources/crypto/server_keystore.jks"
     ```
 2. Run client:
 ```
@@ -102,7 +102,7 @@ openssl genrsa -out client/src/main/resources/crypto/client.key
         ```
         openssl rsa -in client/src/main/resources/crypto/client.key –pubout > client/src/main/resources/crypto/public.key
         ```
-        
+
 3. Signing the client certificate:
     - Certificate signing request:
     ```

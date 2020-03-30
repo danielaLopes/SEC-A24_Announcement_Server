@@ -11,7 +11,7 @@ public class BaseTest {
         public final static String MESSAGE2 = "message2";
         public final static String MESSAGE3 = "message3";
 
-        public final static String INVALID_LENGTH_MESSAGE = new String(new char[256]).replace('\0', 'A');;
+        public final static String INVALID_LENGTH_MESSAGE = new String(new char[256]).replace('\0', 'A');
 
         public final static int MAX_MESSAGE_LENGTH = 255;
 
@@ -37,11 +37,11 @@ public class BaseTest {
                 CLIENT1_PRIVATE_KEY = client1KeyPair.getPrivate();
 
                 KeyPair client2KeyPair = KeyPairUtil.generateKeyPair("RSA", 2048);
-                CLIENT2_PUBLIC_KEY = client1KeyPair.getPublic();
-                CLIENT2_PRIVATE_KEY = client1KeyPair.getPrivate();
+                CLIENT2_PUBLIC_KEY = client2KeyPair.getPublic();
+                CLIENT2_PRIVATE_KEY = client2KeyPair.getPrivate();
 
                 KeyPair client3KeyPair = KeyPairUtil.generateKeyPair("RSA", 2048);
-                CLIENT3_PUBLIC_KEY = client1KeyPair.getPublic();
-                CLIENT3_PRIVATE_KEY = client1KeyPair.getPrivate();
+                CLIENT3_PUBLIC_KEY = client3KeyPair.getPublic();
+                CLIENT3_PRIVATE_KEY = client3KeyPair.getPrivate();
         }
 }
