@@ -1,4 +1,3 @@
-import org.bouncycastle.jcajce.provider.symmetric.ARC4;
 import org.junit.jupiter.api.Test;
 import pt.ulisboa.tecnico.sec.communication_lib.Announcement;
 import pt.ulisboa.tecnico.sec.communication_lib.ProtocolMessage;
@@ -404,7 +403,7 @@ public class PostTest extends BaseTest {
         assertEquals(scRegister1, sc1);
     }
 
-    // Message Integrity attackss
+    // Message Integrity attacks
     @Test
     void tamperedMessage() throws Exception {
 
