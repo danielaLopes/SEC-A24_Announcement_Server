@@ -77,6 +77,11 @@ public class Client{
             System.out.println("Error: Not possible to initialize client because it was not possible to load private key.\n" + e);
             System.exit(-1);
         }
+        if (_privateKey == null) {
+            System.out.println("Error: Not possible to initialize server because it " +
+                    "was not possible to load private key due to wrong password or alias.\n" + e);
+            System.exit(-1);
+        }
     }
 
     /**
