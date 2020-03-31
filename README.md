@@ -26,7 +26,29 @@ Inside project root directory (announcement/):
 ```
 mvn clean install -DskipTests
 ```
-2. Run server:
+
+2. Run Tests:
+    - Every Test
+        ```
+        mvn -DfailIfNoTests=false test
+        ```
+    - Every Test in a class
+        ```
+        mvn -DfailIfNoTests=false -Dtest=ClassTest test
+        ```
+        Example:
+        ```
+        mvn -DfailIfNoTests=false -Dtest=PostGeneralTest test
+        ```
+    - Single unit test
+        ```
+        mvn -DfailIfNoTests=false -Dtest=ClassTest#testMethod test
+        ```
+        Example:
+        ```
+        mvn -DfailIfNoTests=false -Dtest=PostGeneralTest#userNotRegistered test
+        ```
+3. Run server:
     - General:
     ```
     cd server/
@@ -37,7 +59,7 @@ mvn clean install -DskipTests
     cd server/
     mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="password password alias src/main/resources/crypto/public.key src/main/resources/crypto/server_keystore.jks"
     ```
-2. Run client:
+4. Run client:
 ```
 cd client/
 mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="<pubKeyPath> <keyStorePath> <keyStorePassword> <entryPassword> <alias> <serverPubKeyPath> <numberOfOtherClients> <otherClientsPubKeyPaths>*"

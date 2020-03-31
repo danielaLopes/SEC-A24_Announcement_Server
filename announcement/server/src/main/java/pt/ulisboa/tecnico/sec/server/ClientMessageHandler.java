@@ -57,6 +57,7 @@ public class ClientMessageHandler extends Thread {
                         closeCommunication();
                         break;
                     default:
+                        invalidCommand(vpm);
                         break;
                 }
             }
@@ -123,6 +124,16 @@ public class ClientMessageHandler extends Thread {
         catch(IOException e) {
             System.out.println("Error closing socket");
         } 
+    }
+
+    public void invalidCommand(VerifiableProtocolMessage vpm) {
+        try {
+            VerifiableProtocolMessage svpm = _server.invalidCommand(vpm);
+            _communication.sendMessage(svpm, _oos);
+        }
+        catch (IOException e) {
+            System.out.println(e);
+        }
     }
 
 }

@@ -1,9 +1,12 @@
 import org.junit.jupiter.api.BeforeAll;
+import pt.ulisboa.tecnico.sec.communication_lib.Announcement;
 import pt.ulisboa.tecnico.sec.crypto_lib.KeyPairUtil;
 
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class BaseTest {
 
@@ -43,5 +46,13 @@ public class BaseTest {
                 KeyPair client3KeyPair = KeyPairUtil.generateKeyPair("RSA", 2048);
                 CLIENT3_PUBLIC_KEY = client3KeyPair.getPublic();
                 CLIENT3_PRIVATE_KEY = client3KeyPair.getPrivate();
+        }
+
+        void assertEqualAnnouncement(Announcement expected, Announcement obtained) {
+            assertEquals(expected.getAnnouncement(), obtained.getAnnouncement());
+            assertEquals(expected.getAnnouncementID(), obtained.getAnnouncementID());
+            assertEquals(expected.getReferences(), obtained.getReferences());
+            assertEquals(expected.getClientPublicKey(), obtained.getClientPublicKey());
+            // TODO: check if signatures are the same
         }
 }

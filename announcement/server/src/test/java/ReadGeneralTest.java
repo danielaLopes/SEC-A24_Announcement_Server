@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class ReadGeneralTest extends BaseTest {
 
@@ -57,7 +58,7 @@ public class ReadGeneralTest extends BaseTest {
         _announcement1 = new Announcement(MESSAGE1, references1);
         int opUuid1 = UUIDGenerator.generateUUID();
         ProtocolMessage pm1 = new ProtocolMessage(
-                "POST", CLIENT1_PUBLIC_KEY, opUuid1, _announcement1);
+                "POSTGENERAL", CLIENT1_PUBLIC_KEY, opUuid1, _announcement1);
         byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);
         byte[] signedpm1 = SignatureUtil.sign(bpm1, CLIENT1_PRIVATE_KEY);
         VerifiableProtocolMessage vpm1 = new VerifiableProtocolMessage(pm1, signedpm1);
@@ -72,7 +73,7 @@ public class ReadGeneralTest extends BaseTest {
         _announcement2 = new Announcement(MESSAGE2, references2);
         int opUuid2 = UUIDGenerator.generateUUID();
         ProtocolMessage pm2 = new ProtocolMessage(
-                "POST", CLIENT2_PUBLIC_KEY, opUuid2, _announcement2);
+                "POSTGENERAL", CLIENT2_PUBLIC_KEY, opUuid2, _announcement2);
         byte[] bpm2 = ProtocolMessageConverter.objToByteArray(pm2);
         byte[] signedpm2 = SignatureUtil.sign(bpm2, CLIENT2_PRIVATE_KEY);
         VerifiableProtocolMessage vpm2 = new VerifiableProtocolMessage(pm2, signedpm2);
@@ -87,7 +88,7 @@ public class ReadGeneralTest extends BaseTest {
         _announcement3 = new Announcement(MESSAGE3, references3);
         int opUuid3 = UUIDGenerator.generateUUID();
         ProtocolMessage pm3 = new ProtocolMessage(
-                "POST", CLIENT2_PUBLIC_KEY, opUuid3, _announcement3);
+                "POSTGENERAL", CLIENT2_PUBLIC_KEY, opUuid3, _announcement3);
         byte[] bpm3 = ProtocolMessageConverter.objToByteArray(pm3);
         byte[] signedpm3 = SignatureUtil.sign(bpm3, CLIENT2_PRIVATE_KEY);
         VerifiableProtocolMessage vpm3 = new VerifiableProtocolMessage(pm3, signedpm3);
@@ -98,7 +99,7 @@ public class ReadGeneralTest extends BaseTest {
     }
 
     @Test
-    void success() throws Exception {
+    void successReadZero() throws Exception {
 
         // read all announcements
         int opUuid1 = UUIDGenerator.generateUUID();
@@ -114,23 +115,15 @@ public class ReadGeneralTest extends BaseTest {
         List<Announcement> announcements1 = vpm_response1.getProtocolMessage().getAnnouncements();
         assertEquals(3, announcements1.size());
 
-        assertEquals(_announcement1.getAnnouncement(), announcements1.get(0).getAnnouncement());
-        assertEquals(_announcement1.getAnnouncementID(), announcements1.get(0).getAnnouncementID());
-        assertEquals(_announcement1.getReferences(), announcements1.get(0).getReferences());
-        assertEquals(_announcement1.getClientPublicKey(), announcements1.get(0).getClientPublicKey());
-        // TODO: check if signatures are the same
+        assertEqualAnnouncement(_announcement1, announcements1.get(0));
 
-        assertEquals(_announcement2.getAnnouncement(), announcements1.get(1).getAnnouncement());
-        assertEquals(_announcement2.getAnnouncementID(), announcements1.get(1).getAnnouncementID());
-        assertEquals(_announcement2.getReferences(), announcements1.get(1).getReferences());
-        assertEquals(_announcement2.getClientPublicKey(), announcements1.get(1).getClientPublicKey());
-        // TODO: check if signatures are the same
+        assertEqualAnnouncement(_announcement2, announcements1.get(1));
 
-        assertEquals(_announcement3.getAnnouncement(), announcements1.get(2).getAnnouncement());
-        assertEquals(_announcement3.getAnnouncementID(), announcements1.get(2).getAnnouncementID());
-        assertEquals(_announcement3.getReferences(), announcements1.get(2).getReferences());
-        assertEquals(_announcement3.getClientPublicKey(), announcements1.get(2).getClientPublicKey());
-        // TODO: check if signatures are the same
+        assertEqualAnnouncement(_announcement3, announcements1.get(2));
+    }
+
+    @Test
+    void successReadOne() throws Exception {
 
         // read 1 announcement
         int opUuid2 = UUIDGenerator.generateUUID();
@@ -146,11 +139,11 @@ public class ReadGeneralTest extends BaseTest {
         List<Announcement> announcements2 = vpm_response2.getProtocolMessage().getAnnouncements();
         assertEquals(1, announcements2.size());
 
-        assertEquals(_announcement3.getAnnouncement(), announcements2.get(0).getAnnouncement());
-        assertEquals(_announcement3.getAnnouncementID(), announcements2.get(0).getAnnouncementID());
-        assertEquals(_announcement3.getReferences(), announcements2.get(0).getReferences());
-        assertEquals(_announcement3.getClientPublicKey(), announcements2.get(0).getClientPublicKey());
-        // TODO: check if signatures are the same
+        assertEqualAnnouncement(_announcement3, announcements2.get(0));
+    }
+
+    @Test
+    void successReadThree() throws Exception {
 
         // read 3 announcements
         int opUuid3 = UUIDGenerator.generateUUID();
@@ -166,28 +159,16 @@ public class ReadGeneralTest extends BaseTest {
         List<Announcement> announcements3 = vpm_response3.getProtocolMessage().getAnnouncements();
         assertEquals(3, announcements3.size());
 
-        assertEquals(_announcement1.getAnnouncement(), announcements3.get(0).getAnnouncement());
-        assertEquals(_announcement1.getAnnouncementID(), announcements3.get(0).getAnnouncementID());
-        assertEquals(_announcement1.getReferences(), announcements3.get(0).getReferences());
-        assertEquals(_announcement1.getClientPublicKey(), announcements3.get(0).getClientPublicKey());
-        // TODO: check if signatures are the same
+        assertEqualAnnouncement(_announcement1, announcements3.get(0));
 
-        assertEquals(_announcement2.getAnnouncement(), announcements3.get(1).getAnnouncement());
-        assertEquals(_announcement2.getAnnouncementID(), announcements3.get(1).getAnnouncementID());
-        assertEquals(_announcement2.getReferences(), announcements3.get(1).getReferences());
-        assertEquals(_announcement2.getClientPublicKey(), announcements3.get(1).getClientPublicKey());
-        // TODO: check if signatures are the same
+        assertEqualAnnouncement(_announcement2, announcements3.get(1));
 
-        assertEquals(_announcement3.getAnnouncement(), announcements3.get(2).getAnnouncement());
-        assertEquals(_announcement3.getAnnouncementID(), announcements3.get(2).getAnnouncementID());
-        assertEquals(_announcement3.getReferences(), announcements3.get(2).getReferences());
-        assertEquals(_announcement3.getClientPublicKey(), announcements3.get(2).getClientPublicKey());
-        // TODO: check if signatures are the same
+        assertEqualAnnouncement(_announcement3, announcements3.get(2));
     }
 
     // negative numbers, numbers higher than the number of announcements should return all announcements in the board
     @Test
-    void successWithInvalidNumberOfAnnouncements() throws Exception {
+    void successReadNegative() throws Exception {
 
         // negative number
         int opUuid1 = UUIDGenerator.generateUUID();
@@ -203,23 +184,15 @@ public class ReadGeneralTest extends BaseTest {
         List<Announcement> announcements1 = vpm_response1.getProtocolMessage().getAnnouncements();
         assertEquals(3, announcements1.size());
 
-        assertEquals(_announcement1.getAnnouncement(), announcements1.get(0).getAnnouncement());
-        assertEquals(_announcement1.getAnnouncementID(), announcements1.get(0).getAnnouncementID());
-        assertEquals(_announcement1.getReferences(), announcements1.get(0).getReferences());
-        assertEquals(_announcement1.getClientPublicKey(), announcements1.get(0).getClientPublicKey());
-        // TODO: check if signatures are the same
+        assertEqualAnnouncement(_announcement1, announcements1.get(0));
 
-        assertEquals(_announcement2.getAnnouncement(), announcements1.get(1).getAnnouncement());
-        assertEquals(_announcement2.getAnnouncementID(), announcements1.get(1).getAnnouncementID());
-        assertEquals(_announcement2.getReferences(), announcements1.get(1).getReferences());
-        assertEquals(_announcement2.getClientPublicKey(), announcements1.get(1).getClientPublicKey());
-        // TODO: check if signatures are the same
+        assertEqualAnnouncement(_announcement2, announcements1.get(1));
 
-        assertEquals(_announcement3.getAnnouncement(), announcements1.get(2).getAnnouncement());
-        assertEquals(_announcement3.getAnnouncementID(), announcements1.get(2).getAnnouncementID());
-        assertEquals(_announcement3.getReferences(), announcements1.get(2).getReferences());
-        assertEquals(_announcement3.getClientPublicKey(), announcements1.get(2).getClientPublicKey());
-        // TODO: check if signatures are the same
+        assertEqualAnnouncement(_announcement3, announcements1.get(2));
+    }
+
+    @Test
+    void successReadTooMany() throws Exception {
 
         // number higher than the number of announcements
         int opUuid2 = UUIDGenerator.generateUUID();
@@ -235,117 +208,172 @@ public class ReadGeneralTest extends BaseTest {
         List<Announcement> announcements2 = vpm_response2.getProtocolMessage().getAnnouncements();
         assertEquals(3, announcements2.size());
 
-        assertEquals(_announcement1.getAnnouncement(), announcements2.get(0).getAnnouncement());
-        assertEquals(_announcement1.getAnnouncementID(), announcements2.get(0).getAnnouncementID());
-        assertEquals(_announcement1.getReferences(), announcements2.get(0).getReferences());
-        assertEquals(_announcement1.getClientPublicKey(), announcements2.get(0).getClientPublicKey());
-        // TODO: check if signatures are the same
+        assertEqualAnnouncement(_announcement1, announcements2.get(0));
 
-        assertEquals(_announcement2.getAnnouncement(), announcements2.get(1).getAnnouncement());
-        assertEquals(_announcement2.getAnnouncementID(), announcements2.get(1).getAnnouncementID());
-        assertEquals(_announcement2.getReferences(), announcements2.get(1).getReferences());
-        assertEquals(_announcement2.getClientPublicKey(), announcements2.get(1).getClientPublicKey());
-        // TODO: check if signatures are the same
+        assertEqualAnnouncement(_announcement2, announcements2.get(1));
 
-        assertEquals(_announcement3.getAnnouncement(), announcements2.get(2).getAnnouncement());
-        assertEquals(_announcement3.getAnnouncementID(), announcements2.get(2).getAnnouncementID());
-        assertEquals(_announcement3.getReferences(), announcements2.get(2).getReferences());
-        assertEquals(_announcement3.getClientPublicKey(), announcements2.get(2).getClientPublicKey());
-        // TODO: check if signatures are the same
+        assertEqualAnnouncement(_announcement3, announcements2.get(2));
     }
 
     // Unregistered User
     @Test
-    void userNotRegistered() {
+    void userNotRegistered() throws Exception {
 
-    }
+        // read 1 announcement
+        int opUuid1 = UUIDGenerator.generateUUID();
+        ProtocolMessage pm1 = new ProtocolMessage(
+                "READGENERAL", CLIENT3_PUBLIC_KEY, opUuid1, 1);
+        byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);
+        byte[] signedpm1 = SignatureUtil.sign(bpm1, CLIENT3_PRIVATE_KEY);
+        VerifiableProtocolMessage vpm1 = new VerifiableProtocolMessage(pm1, signedpm1);
 
-    // Number of announcements to retrieve related tests
-    @Test
-    void negativeNumberOfAnnouncements() {
-        /*boolean success = _client.post(MESSAGE, REFERENCES);
-
-        assertEquals(success, true);*/
-    }
-
-    @Test
-    void zeroNumberOfAnnouncements() {
-        /*boolean success = _client.post(MESSAGE, REFERENCES);
-
-        assertEquals(success, true);*/
-    }
-
-    @Test
-    void tooManyAnnouncements() {
-        /*boolean success = _client.post(MESSAGE, REFERENCES);
-
-        assertEquals(success, true);*/
+        VerifiableProtocolMessage vpm_response1 = _server.readGeneral(vpm1);
+        StatusCode sc1 = vpm_response1.getProtocolMessage().getStatusCode();
+        assertEquals(StatusCode.USER_NOT_REGISTERED, sc1);
+        List<Announcement> announcements1 = vpm_response1.getProtocolMessage().getAnnouncements();
+        assertNull(announcements1);
     }
 
     // null Parameters
     @Test
-    void publicKeyIsNull() {
-        /*int statusCode = _client.post(null, REFERENCES);
+    void publicKeyIsNull() throws Exception {
 
-        assertEquals(statusCode, -1);*/
+        // read 1 announcement
+        int opUuid1 = UUIDGenerator.generateUUID();
+        ProtocolMessage pm1 = new ProtocolMessage(
+                "READGENERAL", null, opUuid1, 1);
+        byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);
+        byte[] signedpm1 = SignatureUtil.sign(bpm1, CLIENT1_PRIVATE_KEY);
+        VerifiableProtocolMessage vpm1 = new VerifiableProtocolMessage(pm1, signedpm1);
+
+        VerifiableProtocolMessage vpm_response1 = _server.readGeneral(vpm1);
+        StatusCode sc1 = vpm_response1.getProtocolMessage().getStatusCode();
+        assertEquals(StatusCode.NULL_FIELD, sc1);
+        List<Announcement> announcements1 = vpm_response1.getProtocolMessage().getAnnouncements();
+        assertNull(announcements1);
     }
 
     @Test
-    void numberIsNull() {
-        /*int statusCode = _client.post(null, REFERENCES);
+    void opUuidIsNull() throws Exception {
 
-        assertEquals(statusCode, -1);*/
-    }
+        // read 1 announcement
+        ProtocolMessage pm1 = new ProtocolMessage(
+                "READGENERAL", CLIENT1_PUBLIC_KEY, 0, 1);
+        byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);
+        byte[] signedpm1 = SignatureUtil.sign(bpm1, CLIENT1_PRIVATE_KEY);
+        VerifiableProtocolMessage vpm1 = new VerifiableProtocolMessage(pm1, signedpm1);
 
-    @Test
-    void opUuidIsNull() {
-        /*int statusCode = _client.post(null, REFERENCES);
-
-        assertEquals(statusCode, -1);*/
+        VerifiableProtocolMessage vpm_response1 = _server.readGeneral(vpm1);
+        StatusCode sc1 = vpm_response1.getProtocolMessage().getStatusCode();
+        assertEquals(StatusCode.NULL_FIELD, sc1);
+        List<Announcement> announcements1 = vpm_response1.getProtocolMessage().getAnnouncements();
+        assertNull(announcements1);
     }
 
     @Test
     void signatureIsNull() {
-        /*int statusCode = _client.post(null, REFERENCES);
 
-        assertEquals(statusCode, -1);*/
+        // read 1 announcement
+        int opUuid1 = UUIDGenerator.generateUUID();
+        ProtocolMessage pm1 = new ProtocolMessage(
+                "READGENERAL", CLIENT1_PUBLIC_KEY, opUuid1, 1);
+        VerifiableProtocolMessage vpm1 = new VerifiableProtocolMessage(pm1, null);
+
+        VerifiableProtocolMessage vpm_response1 = _server.readGeneral(vpm1);
+        StatusCode sc1 = vpm_response1.getProtocolMessage().getStatusCode();
+        assertEquals(StatusCode.NULL_FIELD, sc1);
+        List<Announcement> announcements1 = vpm_response1.getProtocolMessage().getAnnouncements();
+        assertNull(announcements1);
     }
 
     // Replay attacks
     @Test
-    void duplicatedOperation() {
-        /*String invalidMessage = "";
-        for (int i = 0; i < MAX_MESSAGE_LENGTH; i++) {
-            invalidMessage += "A";
-        }
+    void duplicatedOperation() throws Exception {
 
-        boolean success = _client.post(invalidMessage, REFERENCES);
+        // read 1 announcement
+        int opUuid1 = UUIDGenerator.generateUUID();
+        ProtocolMessage pm1 = new ProtocolMessage(
+                "READGENERAL", CLIENT1_PUBLIC_KEY, opUuid1, 1);
+        byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);
+        byte[] signedpm1 = SignatureUtil.sign(bpm1, CLIENT1_PRIVATE_KEY);
+        VerifiableProtocolMessage vpm1 = new VerifiableProtocolMessage(pm1, signedpm1);
 
-        assertEquals(success, false);*/
+        VerifiableProtocolMessage vpm_response1 = _server.readGeneral(vpm1);
+        StatusCode sc1 = vpm_response1.getProtocolMessage().getStatusCode();
+        assertEquals(StatusCode.OK, sc1);
+        List<Announcement> announcements1 = vpm_response1.getProtocolMessage().getAnnouncements();
+        assertEquals(1, announcements1.size());
+
+        assertEqualAnnouncement(_announcement3, announcements1.get(0));
+
+        VerifiableProtocolMessage vpm_responseDup = _server.readGeneral(vpm1);
+        StatusCode sc2 = vpm_responseDup.getProtocolMessage().getStatusCode();
+        assertEquals(StatusCode.OK, sc2);
+        assertEquals(sc1, sc2);
+        List<Announcement> announcements2 = vpm_responseDup.getProtocolMessage().getAnnouncements();
+        assertEquals(1, announcements2.size());
+
+        assertEqualAnnouncement(_announcement3, announcements2.get(0));
     }
 
     // Message Integrity attacks
     @Test
-    void tamperedMessage() {
-        /*String invalidMessage = "";
-        for (int i = 0; i < MAX_MESSAGE_LENGTH; i++) {
-            invalidMessage += "A";
-        }
+    void tamperedMessage() throws Exception {
 
-        boolean success = _client.post(invalidMessage, REFERENCES);
+        // read 1 announcement
+        int opUuid1 = UUIDGenerator.generateUUID();
+        ProtocolMessage pm1 = new ProtocolMessage(
+                "READGENERAL", CLIENT1_PUBLIC_KEY, opUuid1, 1);
+        ProtocolMessage tampPm1 = new ProtocolMessage(
+                "READGENERAL", CLIENT2_PUBLIC_KEY, opUuid1, 1);
+        byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);
+        byte[] signedpm1 = SignatureUtil.sign(bpm1, CLIENT1_PRIVATE_KEY);
+        VerifiableProtocolMessage vpm1 = new VerifiableProtocolMessage(tampPm1, signedpm1);
 
-        assertEquals(success, false);*/
+        VerifiableProtocolMessage vpm_response1 = _server.readGeneral(vpm1);
+        StatusCode sc1 = vpm_response1.getProtocolMessage().getStatusCode();
+        assertEquals(StatusCode.INVALID_SIGNATURE, sc1);
+        List<Announcement> announcements1 = vpm_response1.getProtocolMessage().getAnnouncements();
+        assertNull(announcements1);
     }
 
     @Test
-    void invalidSignature() {
-        /*String invalidMessage = "";
-        for (int i = 0; i < MAX_MESSAGE_LENGTH; i++) {
-            invalidMessage += "A";
-        }
+    void tamperedCommand() throws Exception {
 
-        boolean success = _client.post(invalidMessage, REFERENCES);
+        // read 1 announcement
+        int opUuid1 = UUIDGenerator.generateUUID();
+        ProtocolMessage pm1 = new ProtocolMessage(
+                "READGENERAL", CLIENT1_PUBLIC_KEY, opUuid1, 1);
+        ProtocolMessage tampPm1 = new ProtocolMessage(
+                "READGENER", CLIENT2_PUBLIC_KEY, opUuid1, 1);
+        byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);
+        byte[] signedpm1 = SignatureUtil.sign(bpm1, CLIENT1_PRIVATE_KEY);
+        VerifiableProtocolMessage vpm1 = new VerifiableProtocolMessage(tampPm1, signedpm1);
 
-        assertEquals(success, false);*/
+        VerifiableProtocolMessage vpm_response1 = _server.readGeneral(vpm1);
+        StatusCode sc1 = vpm_response1.getProtocolMessage().getStatusCode();
+        assertEquals(StatusCode.INVALID_SIGNATURE, sc1);
+        List<Announcement> announcements1 = vpm_response1.getProtocolMessage().getAnnouncements();
+        assertNull(announcements1);
     }
+
+    @Test
+    void invalidSignature() throws Exception {
+
+        // read 1 announcement
+        int opUuid1 = UUIDGenerator.generateUUID();
+        ProtocolMessage pm1 = new ProtocolMessage(
+                "READGENERAL", CLIENT1_PUBLIC_KEY, opUuid1, 1);
+        byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);
+        byte[] signedpm1 = SignatureUtil.sign(bpm1, CLIENT3_PRIVATE_KEY);
+        VerifiableProtocolMessage vpm1 = new VerifiableProtocolMessage(pm1, signedpm1);
+
+        VerifiableProtocolMessage vpm_response1 = _server.readGeneral(vpm1);
+        StatusCode sc1 = vpm_response1.getProtocolMessage().getStatusCode();
+        assertEquals(StatusCode.INVALID_SIGNATURE, sc1);
+        List<Announcement> announcements1 = vpm_response1.getProtocolMessage().getAnnouncements();
+        assertNull(announcements1);
+    }
+
+    // TODO: test with post in user board and check if we can't read it here
 }
