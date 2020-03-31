@@ -474,6 +474,11 @@ public class Server {
         PublicKey toReadPublicKey = vpm.getProtocolMessage().getToReadPublicKey();
 
         // verifications
+        sc = verifyUserRegistered(toReadPublicKey);
+        if (sc.equals(StatusCode.USER_NOT_REGISTERED)) return createVerifiableMessage(new ProtocolMessage(
+                "READ", sc, _pubKey, vpm.getProtocolMessage().getOpUuid()));
+        if (toReadPublicKey == null) return createVerifiableMessage(new ProtocolMessage(
+                "READ", StatusCode.NULL_FIELD, _pubKey, vpm.getProtocolMessage().getOpUuid()));
         sc = verifyRead(opUuid, vpm, clientPubKey);
         if (sc.equals(StatusCode.DUPLICATE_OPERATION)) {
             return _operations.get(opUuid);
@@ -547,6 +552,7 @@ public class Server {
         return response;
     }
 
+    // does not make changes to the system, so it does not need to taken into account in _operations
     public VerifiableProtocolMessage invalidCommand(VerifiableProtocolMessage vpm) {
 
         int opUuid = vpm.getProtocolMessage().getOpUuid();
