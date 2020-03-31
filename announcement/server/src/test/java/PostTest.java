@@ -25,44 +25,22 @@ public class PostTest extends BaseTest {
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
-        int opUuidRegister1 = UUIDGenerator.generateUUID();
-        ProtocolMessage pmRegister1 = new ProtocolMessage(
-                "REGISTER", CLIENT1_PUBLIC_KEY, opUuidRegister1);
-        byte[] bpmRegister1 = ProtocolMessageConverter.objToByteArray(pmRegister1);
-        byte[] signedPmRegister1 = SignatureUtil.sign(bpmRegister1, CLIENT1_PRIVATE_KEY);
-        VerifiableProtocolMessage vpmRegister1 = new VerifiableProtocolMessage(
-                pmRegister1, signedPmRegister1);
-
-        VerifiableProtocolMessage vpm_responseRegister1 = server.registerUser(vpmRegister1);
+        VerifiableProtocolMessage vpm_responseRegister1 = forgeRegisterRequest(
+                server, UUIDGenerator.generateUUID(), CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.OK, scRegister1);
 
         // registering client2
-        int opUuidRegister2 = UUIDGenerator.generateUUID();
-        ProtocolMessage pmRegister2 = new ProtocolMessage(
-                "REGISTER", CLIENT2_PUBLIC_KEY, opUuidRegister2);
-        byte[] bpmRegister2 = ProtocolMessageConverter.objToByteArray(pmRegister2);
-        byte[] signedPmRegister2 = SignatureUtil.sign(bpmRegister2, CLIENT2_PRIVATE_KEY);
-        VerifiableProtocolMessage vpmRegister2 = new VerifiableProtocolMessage(
-                pmRegister2, signedPmRegister2);
-
-        VerifiableProtocolMessage vpm_responseRegister2 =server.registerUser(vpmRegister2);
+        VerifiableProtocolMessage vpm_responseRegister2 = forgeRegisterRequest(
+                server, UUIDGenerator.generateUUID(), CLIENT2_PUBLIC_KEY, CLIENT2_PRIVATE_KEY);
         StatusCode scRegister2 = vpm_responseRegister2.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.OK, scRegister2);
 
         // registering client3
-        int opUuidRegister3 = UUIDGenerator.generateUUID();
-        ProtocolMessage pmRegister3 = new ProtocolMessage(
-                "REGISTER", CLIENT3_PUBLIC_KEY, opUuidRegister3);
-        byte[] bpmRegister3 = ProtocolMessageConverter.objToByteArray(pmRegister3);
-        byte[] signedPmRegister3 = SignatureUtil.sign(bpmRegister3, CLIENT3_PRIVATE_KEY);
-        VerifiableProtocolMessage vpmRegister3 = new VerifiableProtocolMessage(
-                pmRegister3, signedPmRegister3);
-
-        VerifiableProtocolMessage vpm_responseRegister3 = server.registerUser(vpmRegister3);
+        VerifiableProtocolMessage vpm_responseRegister3 = forgeRegisterRequest(
+                server, UUIDGenerator.generateUUID(), CLIENT3_PUBLIC_KEY, CLIENT3_PRIVATE_KEY);
         StatusCode scRegister3 = vpm_responseRegister3.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.OK, scRegister3);
-
 
         // posting first announcement
         List<Integer> references1 = new ArrayList<>();
@@ -138,15 +116,8 @@ public class PostTest extends BaseTest {
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
-        int opUuidRegister1 = UUIDGenerator.generateUUID();
-        ProtocolMessage pmRegister1 = new ProtocolMessage(
-                "REGISTER", CLIENT1_PUBLIC_KEY, opUuidRegister1);
-        byte[] bpmRegister1 = ProtocolMessageConverter.objToByteArray(pmRegister1);
-        byte[] signedPmRegister1 = SignatureUtil.sign(bpmRegister1, CLIENT1_PRIVATE_KEY);
-        VerifiableProtocolMessage vpmRegister1 = new VerifiableProtocolMessage(
-                pmRegister1, signedPmRegister1);
-
-        VerifiableProtocolMessage vpm_responseRegister1 =server.registerUser(vpmRegister1);
+        VerifiableProtocolMessage vpm_responseRegister1 = forgeRegisterRequest(
+                server, UUIDGenerator.generateUUID(), CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.OK, scRegister1);
 
@@ -172,15 +143,8 @@ public class PostTest extends BaseTest {
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
-        int opUuidRegister1 = UUIDGenerator.generateUUID();
-        ProtocolMessage pmRegister1 = new ProtocolMessage(
-                "REGISTER", CLIENT1_PUBLIC_KEY, opUuidRegister1);
-        byte[] bpmRegister1 = ProtocolMessageConverter.objToByteArray(pmRegister1);
-        byte[] signedPmRegister1 = SignatureUtil.sign(bpmRegister1, CLIENT1_PRIVATE_KEY);
-        VerifiableProtocolMessage vpmRegister1 = new VerifiableProtocolMessage(
-                pmRegister1, signedPmRegister1);
-
-        VerifiableProtocolMessage vpm_responseRegister1 = server.registerUser(vpmRegister1);
+        VerifiableProtocolMessage vpm_responseRegister1 = forgeRegisterRequest(
+                server, UUIDGenerator.generateUUID(), CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.OK, scRegister1);
 
@@ -208,15 +172,8 @@ public class PostTest extends BaseTest {
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
-        int opUuidRegister1 = UUIDGenerator.generateUUID();
-        ProtocolMessage pmRegister1 = new ProtocolMessage(
-                "REGISTER", CLIENT1_PUBLIC_KEY, opUuidRegister1);
-        byte[] bpmRegister1 = ProtocolMessageConverter.objToByteArray(pmRegister1);
-        byte[] signedPmRegister1 = SignatureUtil.sign(bpmRegister1, CLIENT1_PRIVATE_KEY);
-        VerifiableProtocolMessage vpmRegister1 = new VerifiableProtocolMessage(
-                pmRegister1, signedPmRegister1);
-
-        VerifiableProtocolMessage vpm_responseRegister1 =server.registerUser(vpmRegister1);
+        VerifiableProtocolMessage vpm_responseRegister1 = forgeRegisterRequest(
+                server, UUIDGenerator.generateUUID(), CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.OK, scRegister1);
 
@@ -242,15 +199,8 @@ public class PostTest extends BaseTest {
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
-        int opUuidRegister1 = UUIDGenerator.generateUUID();
-        ProtocolMessage pmRegister1 = new ProtocolMessage(
-                "REGISTER", CLIENT1_PUBLIC_KEY, opUuidRegister1);
-        byte[] bpmRegister1 = ProtocolMessageConverter.objToByteArray(pmRegister1);
-        byte[] signedPmRegister1 = SignatureUtil.sign(bpmRegister1, CLIENT1_PRIVATE_KEY);
-        VerifiableProtocolMessage vpmRegister1 = new VerifiableProtocolMessage(
-                pmRegister1, signedPmRegister1);
-
-        VerifiableProtocolMessage vpm_responseRegister1 =server.registerUser(vpmRegister1);
+        VerifiableProtocolMessage vpm_responseRegister1 = forgeRegisterRequest(
+                server, UUIDGenerator.generateUUID(), CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.OK, scRegister1);
 
@@ -276,15 +226,8 @@ public class PostTest extends BaseTest {
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
-        int opUuidRegister1 = UUIDGenerator.generateUUID();
-        ProtocolMessage pmRegister1 = new ProtocolMessage(
-                "REGISTER", CLIENT1_PUBLIC_KEY, opUuidRegister1);
-        byte[] bpmRegister1 = ProtocolMessageConverter.objToByteArray(pmRegister1);
-        byte[] signedPmRegister1 = SignatureUtil.sign(bpmRegister1, CLIENT1_PRIVATE_KEY);
-        VerifiableProtocolMessage vpmRegister1 = new VerifiableProtocolMessage(
-                pmRegister1, signedPmRegister1);
-
-        VerifiableProtocolMessage vpm_responseRegister1 =server.registerUser(vpmRegister1);
+        VerifiableProtocolMessage vpm_responseRegister1 = forgeRegisterRequest(
+                server, UUIDGenerator.generateUUID(), CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.OK, scRegister1);
 
@@ -309,15 +252,8 @@ public class PostTest extends BaseTest {
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
-        int opUuidRegister1 = UUIDGenerator.generateUUID();
-        ProtocolMessage pmRegister1 = new ProtocolMessage(
-                "REGISTER", CLIENT1_PUBLIC_KEY, opUuidRegister1);
-        byte[] bpmRegister1 = ProtocolMessageConverter.objToByteArray(pmRegister1);
-        byte[] signedPmRegister1 = SignatureUtil.sign(bpmRegister1, CLIENT1_PRIVATE_KEY);
-        VerifiableProtocolMessage vpmRegister1 = new VerifiableProtocolMessage(
-                pmRegister1, signedPmRegister1);
-
-        VerifiableProtocolMessage vpm_responseRegister1 =server.registerUser(vpmRegister1);
+        VerifiableProtocolMessage vpm_responseRegister1 = forgeRegisterRequest(
+                server, UUIDGenerator.generateUUID(), CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.OK, scRegister1);
 
@@ -344,15 +280,8 @@ public class PostTest extends BaseTest {
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
-        int opUuidRegister1 = UUIDGenerator.generateUUID();
-        ProtocolMessage pmRegister1 = new ProtocolMessage(
-                "REGISTER", CLIENT1_PUBLIC_KEY, opUuidRegister1);
-        byte[] bpmRegister1 = ProtocolMessageConverter.objToByteArray(pmRegister1);
-        byte[] signedPmRegister1 = SignatureUtil.sign(bpmRegister1, CLIENT1_PRIVATE_KEY);
-        VerifiableProtocolMessage vpmRegister1 = new VerifiableProtocolMessage(
-                pmRegister1, signedPmRegister1);
-
-        VerifiableProtocolMessage vpm_responseRegister1 =server.registerUser(vpmRegister1);
+        VerifiableProtocolMessage vpm_responseRegister1 = forgeRegisterRequest(
+                server, UUIDGenerator.generateUUID(), CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.OK, scRegister1);
 
@@ -378,14 +307,8 @@ public class PostTest extends BaseTest {
 
         // registering client1
         int opUuidRepeated = UUIDGenerator.generateUUID();
-        ProtocolMessage pmRegister1 = new ProtocolMessage(
-                "REGISTER", CLIENT1_PUBLIC_KEY, opUuidRepeated);
-        byte[] bpmRegister1 = ProtocolMessageConverter.objToByteArray(pmRegister1);
-        byte[] signedPmRegister1 = SignatureUtil.sign(bpmRegister1, CLIENT1_PRIVATE_KEY);
-        VerifiableProtocolMessage vpmRegister1 = new VerifiableProtocolMessage(
-                pmRegister1, signedPmRegister1);
-
-        VerifiableProtocolMessage vpm_responseRegister1 =server.registerUser(vpmRegister1);
+        VerifiableProtocolMessage vpm_responseRegister1 =  forgeRegisterRequest(
+                server, opUuidRepeated, CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.OK, scRegister1);
 
@@ -411,15 +334,8 @@ public class PostTest extends BaseTest {
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
-        int opUuidRegister1 = UUIDGenerator.generateUUID();
-        ProtocolMessage pmRegister1 = new ProtocolMessage(
-                "REGISTER", CLIENT1_PUBLIC_KEY, opUuidRegister1);
-        byte[] bpmRegister1 = ProtocolMessageConverter.objToByteArray(pmRegister1);
-        byte[] signedPmRegister1 = SignatureUtil.sign(bpmRegister1, CLIENT1_PRIVATE_KEY);
-        VerifiableProtocolMessage vpmRegister1 = new VerifiableProtocolMessage(
-                pmRegister1, signedPmRegister1);
-
-        VerifiableProtocolMessage vpm_responseRegister1 =server.registerUser(vpmRegister1);
+        VerifiableProtocolMessage vpm_responseRegister1 = forgeRegisterRequest(
+                server, UUIDGenerator.generateUUID(), CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.OK, scRegister1);
 
@@ -448,15 +364,8 @@ public class PostTest extends BaseTest {
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
-        int opUuidRegister1 = UUIDGenerator.generateUUID();
-        ProtocolMessage pmRegister1 = new ProtocolMessage(
-                "REGISTER", CLIENT1_PUBLIC_KEY, opUuidRegister1);
-        byte[] bpmRegister1 = ProtocolMessageConverter.objToByteArray(pmRegister1);
-        byte[] signedPmRegister1 = SignatureUtil.sign(bpmRegister1, CLIENT1_PRIVATE_KEY);
-        VerifiableProtocolMessage vpmRegister1 = new VerifiableProtocolMessage(
-                pmRegister1, signedPmRegister1);
-
-        VerifiableProtocolMessage vpm_responseRegister1 =server.registerUser(vpmRegister1);
+        VerifiableProtocolMessage vpm_responseRegister1 = forgeRegisterRequest(
+                server, UUIDGenerator.generateUUID(), CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.OK, scRegister1);
 

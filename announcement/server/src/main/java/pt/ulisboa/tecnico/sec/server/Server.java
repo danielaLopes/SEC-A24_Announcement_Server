@@ -474,11 +474,11 @@ public class Server {
         PublicKey toReadPublicKey = vpm.getProtocolMessage().getToReadPublicKey();
 
         // verifications
+        if (toReadPublicKey == null) return createVerifiableMessage(new ProtocolMessage(
+                "READ", StatusCode.NULL_FIELD, _pubKey, vpm.getProtocolMessage().getOpUuid()));
         sc = verifyUserRegistered(toReadPublicKey);
         if (sc.equals(StatusCode.USER_NOT_REGISTERED)) return createVerifiableMessage(new ProtocolMessage(
                 "READ", sc, _pubKey, vpm.getProtocolMessage().getOpUuid()));
-        if (toReadPublicKey == null) return createVerifiableMessage(new ProtocolMessage(
-                "READ", StatusCode.NULL_FIELD, _pubKey, vpm.getProtocolMessage().getOpUuid()));
         sc = verifyRead(opUuid, vpm, clientPubKey);
         if (sc.equals(StatusCode.DUPLICATE_OPERATION)) {
             return _operations.get(opUuid);

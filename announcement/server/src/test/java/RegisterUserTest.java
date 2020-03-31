@@ -20,15 +20,8 @@ public class RegisterUserTest extends BaseTest {
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
-        int opUuidRegister1 = UUIDGenerator.generateUUID();
-        ProtocolMessage pmRegister1 = new ProtocolMessage(
-                "REGISTER", CLIENT1_PUBLIC_KEY, opUuidRegister1);
-        byte[] bpmRegister1 = ProtocolMessageConverter.objToByteArray(pmRegister1);
-        byte[] signedPmRegister1 = SignatureUtil.sign(bpmRegister1, CLIENT1_PRIVATE_KEY);
-        VerifiableProtocolMessage vpmRegister1 = new VerifiableProtocolMessage(
-                pmRegister1, signedPmRegister1);
-
-        VerifiableProtocolMessage vpm_responseRegister1 = server.registerUser(vpmRegister1);
+        VerifiableProtocolMessage vpm_responseRegister1 = forgeRegisterRequest(
+                server, UUIDGenerator.generateUUID(), CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.OK, scRegister1);
     }
@@ -41,15 +34,8 @@ public class RegisterUserTest extends BaseTest {
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
-        int opUuidRegister1 = UUIDGenerator.generateUUID();
-        ProtocolMessage pmRegister1 = new ProtocolMessage(
-                "REGISTER", null, opUuidRegister1);
-        byte[] bpmRegister1 = ProtocolMessageConverter.objToByteArray(pmRegister1);
-        byte[] signedPmRegister1 = SignatureUtil.sign(bpmRegister1, CLIENT1_PRIVATE_KEY);
-        VerifiableProtocolMessage vpmRegister1 = new VerifiableProtocolMessage(
-                pmRegister1, signedPmRegister1);
-
-        VerifiableProtocolMessage vpm_responseRegister1 = server.registerUser(vpmRegister1);
+        VerifiableProtocolMessage vpm_responseRegister1 = forgeRegisterRequest(
+                server, UUIDGenerator.generateUUID(), null, CLIENT1_PRIVATE_KEY);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.NULL_FIELD, scRegister1);
     }
@@ -61,14 +47,8 @@ public class RegisterUserTest extends BaseTest {
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
-        ProtocolMessage pmRegister1 = new ProtocolMessage(
-                "REGISTER", CLIENT1_PUBLIC_KEY, 0);
-        byte[] bpmRegister1 = ProtocolMessageConverter.objToByteArray(pmRegister1);
-        byte[] signedPmRegister1 = SignatureUtil.sign(bpmRegister1, CLIENT1_PRIVATE_KEY);
-        VerifiableProtocolMessage vpmRegister1 = new VerifiableProtocolMessage(
-                pmRegister1, signedPmRegister1);
-
-        VerifiableProtocolMessage vpm_responseRegister1 = server.registerUser(vpmRegister1);
+        VerifiableProtocolMessage vpm_responseRegister1 = forgeRegisterRequest(
+                server, 0, CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.NULL_FIELD, scRegister1);
     }
@@ -86,7 +66,7 @@ public class RegisterUserTest extends BaseTest {
         VerifiableProtocolMessage vpmRegister1 = new VerifiableProtocolMessage(
                 pmRegister1, null);
 
-        VerifiableProtocolMessage vpm_responseRegister1 =server.registerUser(vpmRegister1);
+        VerifiableProtocolMessage vpm_responseRegister1 = server.registerUser(vpmRegister1);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.NULL_FIELD, scRegister1);
     }
@@ -107,7 +87,7 @@ public class RegisterUserTest extends BaseTest {
         VerifiableProtocolMessage vpmRegister1 = new VerifiableProtocolMessage(
                 pmRegister1, signedPmRegister1);
 
-        VerifiableProtocolMessage vpm_responseRegister1 =server.registerUser(vpmRegister1);
+        VerifiableProtocolMessage vpm_responseRegister1 = server.registerUser(vpmRegister1);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.OK, scRegister1);
 
@@ -168,28 +148,14 @@ public class RegisterUserTest extends BaseTest {
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
-        int opUuidRegister1 = UUIDGenerator.generateUUID();
-        ProtocolMessage pmRegister1 = new ProtocolMessage(
-                "REGISTER", CLIENT1_PUBLIC_KEY, opUuidRegister1);
-        byte[] bpmRegister1 = ProtocolMessageConverter.objToByteArray(pmRegister1);
-        byte[] signedPmRegister1 = SignatureUtil.sign(bpmRegister1, CLIENT1_PRIVATE_KEY);
-        VerifiableProtocolMessage vpmRegister1 = new VerifiableProtocolMessage(
-                pmRegister1, signedPmRegister1);
-
-        VerifiableProtocolMessage vpm_responseRegister1 = server.registerUser(vpmRegister1);
+        VerifiableProtocolMessage vpm_responseRegister1 = forgeRegisterRequest(
+                server, UUIDGenerator.generateUUID(), CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.OK, scRegister1);
 
         // registering client1 twice
-        int opUuidRegister2 = UUIDGenerator.generateUUID();
-        ProtocolMessage pmRegister2 = new ProtocolMessage(
-                "REGISTER", CLIENT1_PUBLIC_KEY, opUuidRegister2);
-        byte[] bpmRegister2 = ProtocolMessageConverter.objToByteArray(pmRegister2);
-        byte[] signedPmRegister2 = SignatureUtil.sign(bpmRegister2, CLIENT1_PRIVATE_KEY);
-        VerifiableProtocolMessage vpmRegister2 = new VerifiableProtocolMessage(
-                pmRegister2, signedPmRegister2);
-
-        VerifiableProtocolMessage vpm_responseRegister2 = server.registerUser(vpmRegister2);
+        VerifiableProtocolMessage vpm_responseRegister2 = forgeRegisterRequest(
+                server, UUIDGenerator.generateUUID(), CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
         StatusCode scRegister2 = vpm_responseRegister2.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.USER_ALREADY_REGISTERED, scRegister2);
     }
