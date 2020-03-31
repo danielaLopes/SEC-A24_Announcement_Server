@@ -27,7 +27,7 @@ public class Server {
      * message that was originally formulated to answer that request.
      */
     private ConcurrentHashMap<Integer, VerifiableProtocolMessage> _operations;
-    private ConcurrentHashMap<PublicKey, User> _users;
+    private ConcurrentHashMap<PublicKey, User> _users; // TODO : is synchronization required inside userdata structures
     /**
      * maps the announcement unique id to the public key of the entity
      * where it's stored and the index on the PostOperation Board,
@@ -545,5 +545,15 @@ public class Server {
                 "READGENERAL", StatusCode.OK, _pubKey, pm.getOpUuid(), announcements));
         _operations.put(opUuid, response);
         return response;
+    }
+
+    public VerifiableProtocolMessage invalidCommand(VerifiableProtocolMessage vpm) {
+
+        int opUuid = vpm.getProtocolMessage().getOpUuid();
+
+        // TODO: make something in client to support this
+        return createVerifiableMessage(new ProtocolMessage(
+                "INVALID", StatusCode.INVALID_COMMAND, _pubKey, opUuid));
+
     }
 }
