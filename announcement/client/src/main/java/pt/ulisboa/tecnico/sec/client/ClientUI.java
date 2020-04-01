@@ -83,7 +83,13 @@ public class ClientUI {
 
         List<Integer> references = parseReferences(referencesIn);
 
-        _client.post(message, references);
+        int statusCode = _client.post(message, references);
+        if (statusCode == StatusCode.OK.getCode()) {
+            System.out.println("Posted announcement.");
+        }
+        else {
+            System.out.println("Could not post announcement.");
+        }
     }
 
     /**
@@ -93,11 +99,19 @@ public class ClientUI {
     public void postGeneral() {
         String message = promptMessage();
         String referencesIn = promptReference();
-        
-        
+        if (!referencesIn.trim().equals("") && !Pattern.matches("[\\d+,]*\\d+", referencesIn)) {
+            System.out.println("Invalid references sequence.");
+            return;
+        }
         List<Integer> references = parseReferences(referencesIn);
 
-        _client.postGeneral(message, references);
+        int statusCode = _client.postGeneral(message, references);
+        if (statusCode == StatusCode.OK.getCode()) {
+            System.out.println("Posted announcement.");
+        }
+        else {
+            System.out.println("Could not post announcement.");
+        }
     }
 
     /**
@@ -108,7 +122,13 @@ public class ClientUI {
         int user = promptUser();
         int number = promptNumber();
         AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client.read(user, number);
-        printAnnouncements(response.getValue(), "USER");
+        if (response.getKey() == StatusCode.OK.getCode()) {
+            printAnnouncements(response.getValue(), "USER");
+        }
+        else {
+            System.out.println("Could not read announcements.");
+        }
+        
     }
 
     /**
@@ -119,7 +139,12 @@ public class ClientUI {
         int number = promptNumber();
         _client.readGeneral(number);
         AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client.readGeneral(number);
-        printAnnouncements(response.getValue(), "GENERAL");
+        if (response.getKey() == StatusCode.OK.getCode()) {
+            printAnnouncements(response.getValue(), "GENERAL");
+        }
+        else {
+            System.out.println("Could not read announcements.");
+        }
     }
 
     /**

@@ -11,7 +11,8 @@ public enum StatusCode {
     INVALID_REFERENCE(7, "Invalid Reference: referenced announcement does not exist."),
     INVALID_ALGORITHM(8, "Signature Algorithm not supported"),
     NULL_FIELD(9, "Null fields are not allowed."),
-    INVALID_COMMAND(10, "Requested command is not supported.");
+    INVALID_COMMAND(10, "Requested command is not supported."),
+    NO_RESPONSE(10, "Could not receive a response.");;
 
     private final int code;
     private final String description;

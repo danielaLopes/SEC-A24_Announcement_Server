@@ -35,6 +35,7 @@ public class ClientMessageHandler extends Thread {
                 switch (command) {
                     // Register a Client
                     case "REGISTER":
+                        // Thread.sleep(10000);
                         registerUser(vpm);
                         break;
                     // Post to Client's Board
@@ -43,6 +44,7 @@ public class ClientMessageHandler extends Thread {
                         break;
                     // Post to General Board
                     case "POSTGENERAL":
+                        // Thread.sleep(3000);
                         postGeneral(vpm);
                         break;
                     // Read from specific user
@@ -51,6 +53,7 @@ public class ClientMessageHandler extends Thread {
                         break;
                     // Read from General Board
                     case "READGENERAL":
+                        // Thread.sleep(10000);
                         readGeneral(vpm);
                         break;
                     case "LOGOUT":
@@ -61,6 +64,8 @@ public class ClientMessageHandler extends Thread {
                         break;
                 }
             }
+            // catch (InterruptedException e) {
+            // }
             catch (IOException | ClassNotFoundException e) {
                 // System.out.println(e);
             }
