@@ -8,6 +8,7 @@ import pt.ulisboa.tecnico.sec.crypto_lib.SignatureUtil;
 import pt.ulisboa.tecnico.sec.crypto_lib.UUIDGenerator;
 
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.security.InvalidKeyException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
@@ -32,6 +33,9 @@ public class Client{
     private ObjectInputStream _ois;
     private Socket _clientSocket;
 
+    private static final int TIMEOUT = 1000;
+    private static final int MAX_REQUESTS = 5;
+
     public Client(String pubKeyPath, String keyStorePath,
                   String keyStorePasswd, String entryPasswd, String alias,
                   String serverPubKeyPath, List<String> otherUsersPubKeyPaths) {
@@ -51,6 +55,10 @@ public class Client{
      * Loads Client's public key to _pubKey.
      */
     public void loadPublicKey(String pubKeyPath) {
+        if (pubKeyPath == null) {
+            System.out.println("Error: Not possible to initialize client because it was not possible to load public key.\n");
+            System.exit(-1);
+        }
         try {
             _pubKey = KeyPairUtil.loadPublicKey(pubKeyPath);
         } catch (Exception e) {
@@ -63,6 +71,11 @@ public class Client{
      * Loads Client's private key to _privateKey.
      */
     public void loadPrivateKey(String keyStorePath, String keyStorePasswd, String entryPasswd, String alias) {
+        if (keyStorePath == null || keyStorePasswd == null || entryPasswd == null || alias == null) {
+            System.out.println("Error: Not possible to initialize client because it was not possible to load keystore.\n");
+            System.exit(-1);
+        }
+
         KeyStore keyStore = null;
         try {
             keyStore = KeyStorage.loadKeyStore(keyStorePasswd.toCharArray(), keyStorePath);
@@ -87,6 +100,11 @@ public class Client{
      * Loads server's public key to _serverPubKey.
      */
     public void loadServerPublicKey(String path) {
+        if (path == null) {
+            System.out.println("Error: Not possible to initialize client because it was not possible to load server's public key.\n");
+            System.exit(-1);
+        }
+
         try {
             _serverPubKey = KeyPairUtil.loadPublicKey(path);
         } catch (Exception e) {
@@ -99,6 +117,10 @@ public class Client{
      * Loads other known user's public keys to _usersPubKeys.
      */
     public void loadUsersPubKeys(List<String> paths) {
+        if (paths == null) {
+            System.out.println("Error: Not possible to initialize client because it was not possible to load other users public keys.\n");
+            System.exit(-1);
+        }
         _usersPubKeys.add(_pubKey);
         for (String path : paths) {
             try {
@@ -120,6 +142,13 @@ public class Client{
     }
 
     /**
+     * @return the server's public key
+     */
+    public PublicKey getServerPubKey() {
+        return _serverPubKey;
+    }
+
+    /**
      * Retrieves the public key of a specific user.
      * @param userIndex describes the index of a user in _usersPubKeys
      */
@@ -133,6 +162,7 @@ public class Client{
     public void startServerCommunication() {
         try {
             _clientSocket = new Socket("localhost", 8888);
+            _clientSocket.setSoTimeout(TIMEOUT);
 
             _oos = new ObjectOutputStream(_clientSocket.getOutputStream());
             _ois = new ObjectInputStream(_clientSocket.getInputStream());
@@ -164,6 +194,8 @@ public class Client{
      * given by the server.
      */
     public void printStatusCode(StatusCode sc) {
+        if (sc == null) return;
+
         System.out.println("Status Code: ====== " + sc.getCode() + ": " + sc.getDescription() + " ======");
     }
 
@@ -174,6 +206,8 @@ public class Client{
      * @return the VerificableProtocolMessage to be sent
      */
     public VerifiableProtocolMessage createVerifiableMessage(ProtocolMessage pm) {
+        if (pm == null) return null;
+
         try {
             byte[] bpm = ProtocolMessageConverter.objToByteArray(pm);
             byte[] signedpm = SignatureUtil.sign(bpm, _privateKey);
@@ -193,6 +227,7 @@ public class Client{
      * @return a boolean, expressing if the signature is valid or not
      */
     public boolean verifySignature(VerifiableProtocolMessage vpm) {
+        if (vpm == null) return false;
         try {
             byte[] bpm = ProtocolMessageConverter.objToByteArray(vpm.getProtocolMessage());
             return SignatureUtil.verifySignature(vpm.getSignedProtocolMessage(), _serverPubKey, bpm);
@@ -215,6 +250,7 @@ public class Client{
      * @return a StatusCode
      */
     public StatusCode getStatusCodeFromVPM(VerifiableProtocolMessage vpm) {
+        if (vpm == null) return null;
         return vpm.getProtocolMessage().getStatusCode();
     }
 
@@ -224,31 +260,46 @@ public class Client{
      * @return list of announcements
      */
     public List<Announcement> getAnnouncementsFromVPM(VerifiableProtocolMessage vpm) {
+        if (vpm == null) return null;
         return vpm.getProtocolMessage().getAnnouncements();
     }
 
+    /**
+     * Makes a request to the Server, receiving a response as a VerifiableProtocolMessage
+     * @param pm is the ProtocolMessage to be sent
+     * @return the server's response
+     */
     public VerifiableProtocolMessage requestServer(ProtocolMessage pm) {
+        if (pm == null) return null;
+
         VerifiableProtocolMessage vpm = createVerifiableMessage(pm);
         VerifiableProtocolMessage rvpm = null;
         StatusCode rsc = null;
+        int requestsCounter = 0;
 
-        try {
-            _communication.sendMessage(vpm, _oos);
-            rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
-            rsc = getStatusCodeFromVPM(rvpm);
+        while (rvpm == null && requestsCounter < MAX_REQUESTS) {
+            try {
+                _communication.sendMessage(vpm, _oos);
+                rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
+                rsc = getStatusCodeFromVPM(rvpm);
 
-            if (verifySignature(rvpm)) {
-                System.out.println("Server signature verified successfully");
-                printStatusCode(rsc);
+                if (verifySignature(rvpm)) {
+                    System.out.println("Server signature verified successfully");
+                    printStatusCode(rsc);
+                }
+                else {
+                    System.out.println("Could not register: could not verify server signature");
+                    closeCommunication();
+                    System.exit(-1);
+                }
             }
-            else {
-                System.out.println("Could not register: could not verify server signature");
-                closeCommunication();
-                System.exit(-1);
+            catch(SocketTimeoutException e) {
+                System.out.println("Could not receive a response on request " + (++requestsCounter) + 
+                ". Trying again...");
             }
-        }
-        catch (IOException | ClassNotFoundException e) {
-            System.out.println(e);
+            catch (IOException | ClassNotFoundException e) {
+                System.out.println(e);
+            }
         }
 
         return rvpm;
@@ -263,8 +314,18 @@ public class Client{
         int uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("REGISTER", _pubKey, uuid);
         VerifiableProtocolMessage vpm = requestServer(pm);
-        StatusCode rsc = getStatusCodeFromVPM(vpm);
-
+        
+        StatusCode rsc = null;
+        if (vpm == null) {
+            rsc = StatusCode.NO_RESPONSE;
+            System.out.println("Could not register: could not receive a response");
+            closeCommunication();
+            System.exit(-1);
+        }
+        else {
+            rsc = getStatusCodeFromVPM(vpm);
+        }
+        
         return rsc.getCode();
     }
 
@@ -293,8 +354,14 @@ public class Client{
         int uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("POST", _pubKey, uuid, a);
         VerifiableProtocolMessage vpm = requestServer(pm);
-        StatusCode rsc = getStatusCodeFromVPM(vpm);
-
+        StatusCode rsc = null;
+        if (vpm == null) {
+            rsc = StatusCode.NO_RESPONSE;
+        }
+        else {
+            rsc = getStatusCodeFromVPM(vpm);
+        }
+        
         return rsc.getCode();
     }
 
@@ -323,8 +390,14 @@ public class Client{
         int uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("POSTGENERAL", _pubKey, uuid, a);
         VerifiableProtocolMessage vpm = requestServer(pm);
-        StatusCode rsc = getStatusCodeFromVPM(vpm);
-
+        StatusCode rsc = null;
+        if (vpm == null) {
+            rsc = StatusCode.NO_RESPONSE;
+        }
+        else {
+            rsc = getStatusCodeFromVPM(vpm);
+        }
+        
         return rsc.getCode();
     }
 
@@ -344,9 +417,16 @@ public class Client{
         int uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("READ", _pubKey, uuid, number, userToReadPB);
         VerifiableProtocolMessage vpm = requestServer(pm);
+        List<Announcement> announcements = null;
 
-        StatusCode rsc = getStatusCodeFromVPM(vpm);
-        List<Announcement> announcements = getAnnouncementsFromVPM(vpm);
+        StatusCode rsc = null;
+        if (vpm == null) {
+            rsc = StatusCode.NO_RESPONSE;
+        }
+        else {
+            rsc = getStatusCodeFromVPM(vpm);
+            announcements = getAnnouncementsFromVPM(vpm);
+        }
 
         return new AbstractMap.SimpleEntry<>(rsc.getCode(), announcements);
     }
@@ -361,9 +441,16 @@ public class Client{
         int uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("READGENERAL", _pubKey, uuid, number);
         VerifiableProtocolMessage vpm = requestServer(pm);
+        List<Announcement> announcements = new ArrayList<Announcement>();
 
-        StatusCode rsc = getStatusCodeFromVPM(vpm);
-        List<Announcement> announcements = getAnnouncementsFromVPM(vpm);
+        StatusCode rsc = null;
+        if (vpm == null) {
+            rsc = StatusCode.NO_RESPONSE;
+        }
+        else {
+            rsc = getStatusCodeFromVPM(vpm);
+            announcements = getAnnouncementsFromVPM(vpm);
+        }
 
         return new AbstractMap.SimpleEntry<>(rsc.getCode(), announcements);
     }
@@ -373,6 +460,7 @@ public class Client{
      * @param message
      */
     public boolean invalidMessageLength(String message) {
+        if (message == null) return false;
         return message.length() >= 255;
     }
 

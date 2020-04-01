@@ -14,28 +14,55 @@ import org.junit.jupiter.api.Test;
 
 class ReadGeneralTest extends BaseTest {
 
-    private Client _client;
+    private Client _client1, _client2, _client3;
 
     public ReadGeneralTest() {
         List<String> otherUsersPubKeyPaths = new ArrayList<String>();
         otherUsersPubKeyPaths.add(PUBLICKEY_PATH2);
         otherUsersPubKeyPaths.add(PUBLICKEY_PATH3);
+        _client1 = new Client(PUBLICKEY_PATH1, KEYSTORE_PATH1, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH, otherUsersPubKeyPaths);
 
-        _client = new Client(PUBLICKEY_PATH1, KEYSTORE_PATH1, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH, otherUsersPubKeyPaths);    }
+        otherUsersPubKeyPaths = new ArrayList<String>();
+        otherUsersPubKeyPaths.add(PUBLICKEY_PATH1);
+        otherUsersPubKeyPaths.add(PUBLICKEY_PATH3);
+        _client2 = new Client(PUBLICKEY_PATH2, KEYSTORE_PATH2, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH, otherUsersPubKeyPaths);
+
+        otherUsersPubKeyPaths = new ArrayList<String>();
+        otherUsersPubKeyPaths.add(PUBLICKEY_PATH1);
+        otherUsersPubKeyPaths.add(PUBLICKEY_PATH2);
+        _client3 = new Client(PUBLICKEY_PATH3, KEYSTORE_PATH3, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH, otherUsersPubKeyPaths);
+    }
 
     @Test
     void success() {
-        _client.postGeneral(MESSAGE, REFERENCES);
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client.readGeneral(1);
+        _client1.postGeneral(MESSAGE, REFERENCES);
+        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client1.readGeneral(1);
         
         assertEquals(response.getKey(), StatusCode.OK.getCode());
         assertEquals(response.getValue().size(), 1);
     }
 
     @Test
+    void tooManyUsers() {
+        _client1.postGeneral(MESSAGE, REFERENCES);
+        AbstractMap.SimpleEntry<Integer, List<Announcement>> response1 = _client1.readGeneral(1);
+        AbstractMap.SimpleEntry<Integer, List<Announcement>> response2 = _client2.readGeneral(1);
+        AbstractMap.SimpleEntry<Integer, List<Announcement>> response3 = _client3.readGeneral(1);
+        
+        assertEquals(response1.getKey(), StatusCode.OK.getCode());
+        assertEquals(response1.getValue().size(), 1);
+
+        assertEquals(response2.getKey(), StatusCode.OK.getCode());
+        assertEquals(response2.getValue().size(), 1);
+        
+        assertEquals(response3.getKey(), StatusCode.OK.getCode());
+        assertEquals(response3.getValue().size(), 1);
+    }
+
+    @Test
     void negativeNumberOfAnnouncements() {
-        _client.postGeneral(MESSAGE, REFERENCES);
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client.readGeneral(-1);
+        _client1.postGeneral(MESSAGE, REFERENCES);
+        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client1.readGeneral(-1);
         
         assertEquals(response.getKey(), StatusCode.OK.getCode());
         assertTrue(response.getValue().size() > 0);
@@ -43,8 +70,8 @@ class ReadGeneralTest extends BaseTest {
 
     @Test
     void zeroNumberOfAnnouncements() {
-        _client.postGeneral(MESSAGE, REFERENCES);
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client.readGeneral(0);
+        _client1.postGeneral(MESSAGE, REFERENCES);
+        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client1.readGeneral(0);
         
         assertEquals(response.getKey(), StatusCode.OK.getCode());
         assertTrue(response.getValue().size() > 0);
@@ -52,14 +79,28 @@ class ReadGeneralTest extends BaseTest {
 
     @Test
     void tooManyAnnouncements() {
-        for (int i = 0; i < 50; i++) {
-            _client.postGeneral(MESSAGE, REFERENCES);
+        for (int i = 0; i < 5; i++) {
+            _client1.postGeneral(MESSAGE, REFERENCES);
+        }
+        for (int i = 0; i < 5; i++) {
+            _client2.postGeneral(MESSAGE, REFERENCES);
+        }
+        for (int i = 0; i < 5; i++) {
+            _client3.postGeneral(MESSAGE, REFERENCES);
         }
         
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client.readGeneral(0);
+        AbstractMap.SimpleEntry<Integer, List<Announcement>> response1 = _client1.readGeneral(0);
+        AbstractMap.SimpleEntry<Integer, List<Announcement>> response2 = _client2.readGeneral(0);
+        AbstractMap.SimpleEntry<Integer, List<Announcement>> response3 = _client3.readGeneral(0);
         
-        assertEquals(response.getKey(), StatusCode.OK.getCode());
-        assertTrue(response.getValue().size() >= 50);
+        assertEquals(response1.getKey(), StatusCode.OK.getCode());
+        assertTrue(response1.getValue().size() >= 15);
+
+        assertEquals(response2.getKey(), StatusCode.OK.getCode());
+        assertTrue(response2.getValue().size() >= 15);
+        
+        assertEquals(response3.getKey(), StatusCode.OK.getCode());
+        assertTrue(response3.getValue().size() >= 15);
     }
 
 }
