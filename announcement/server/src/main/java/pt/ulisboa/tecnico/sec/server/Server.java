@@ -501,10 +501,17 @@ public class Server {
         }
 
         ProtocolMessage pm = vpm.getProtocolMessage();
-        System.out.println("checking database");
-        List<Announcement> announcements = _db.getUserAnnouncements(number, encodedhash);
+        // System.out.println("checking database");
+        // List<Announcement> announcements = _db.getUserAnnouncements(number, encodedhash);
         // TODO: Announcements need to have a signature
-
+        List<Announcement> announcements;
+        int nAnnouncements = _users.get(toReadPublicKey).getNumAnnouncements();
+        if ((0 < number) && (number <= nAnnouncements)) {
+            announcements = new ArrayList<>(_users.get(toReadPublicKey).getAnnouncements(number));
+        }
+        else {
+            announcements = _users.get(toReadPublicKey).getAllAnnouncements();
+        }
         response = createVerifiableMessage(new ProtocolMessage(
                 "READ", StatusCode.OK, _pubKey, pm.getOpUuid(), announcements));
         _operations.put(opUuid, response);
@@ -542,7 +549,15 @@ public class Server {
         // TODO : access memmory
         System.out.println("User reading announcement from general board");
         ProtocolMessage pm = vpm.getProtocolMessage();
-        List<Announcement> announcements = _db.getGBAnnouncements(number);
+        // List<Announcement> announcements = _db.getGBAnnouncements(number);
+        List<Announcement> announcements;
+        int nAnnouncements = _generalBoard.size();
+        if ((0 < number) && (number <= nAnnouncements)) {
+            announcements = new ArrayList<>(_generalBoard.subList(nAnnouncements - number, nAnnouncements));
+        }
+        else {
+            announcements = _generalBoard;
+        }
         // TODO: Announcements need to have a signature
 
         response = createVerifiableMessage(new ProtocolMessage(
