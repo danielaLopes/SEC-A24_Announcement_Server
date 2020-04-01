@@ -227,20 +227,14 @@ public class Client{
         return vpm.getProtocolMessage().getAnnouncements();
     }
 
-    /**
-     * Allows the Client to register in the Server, hence providing its Public Key.
-     * Must be the first operation to be done in the Client-Server communication.
-     * @return the StatusCode of the operation
-     */
-    public int register() {
-        int uuid = UUIDGenerator.generateUUID();
-        ProtocolMessage pm = new ProtocolMessage("REGISTER", _pubKey, uuid);
+    public VerifiableProtocolMessage requestServer(ProtocolMessage pm) {
         VerifiableProtocolMessage vpm = createVerifiableMessage(pm);
+        VerifiableProtocolMessage rvpm = null;
         StatusCode rsc = null;
 
         try {
             _communication.sendMessage(vpm, _oos);
-            VerifiableProtocolMessage rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
+            rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
             rsc = getStatusCodeFromVPM(rvpm);
 
             if (verifySignature(rvpm)) {
@@ -250,12 +244,26 @@ public class Client{
             else {
                 System.out.println("Could not register: could not verify server signature");
                 closeCommunication();
-                System.exit(-1);  
+                System.exit(-1);
             }
         }
         catch (IOException | ClassNotFoundException e) {
             System.out.println(e);
         }
+
+        return rvpm;
+    }
+
+    /**
+     * Allows the Client to register in the Server, hence providing its Public Key.
+     * Must be the first operation to be done in the Client-Server communication.
+     * @return the StatusCode of the operation
+     */
+    public int register() {
+        int uuid = UUIDGenerator.generateUUID();
+        ProtocolMessage pm = new ProtocolMessage("REGISTER", _pubKey, uuid);
+        VerifiableProtocolMessage vpm = requestServer(pm);
+        StatusCode rsc = getStatusCodeFromVPM(vpm);
 
         return rsc.getCode();
     }
@@ -270,11 +278,11 @@ public class Client{
     public int post(String message, List<Integer> references) {
         if (message == null) {
             System.out.println("Message cannot be null.");
-            return -1;
+            return StatusCode.NULL_FIELD.getCode();
         }
         if (references == null) {
             System.out.println("References cannot be null.");
-            return -1;
+            return StatusCode.NULL_FIELD.getCode();
         }
         if (invalidMessageLength(message)) {
             System.out.println("Maximum message length to post announcement is 255.");
@@ -284,25 +292,8 @@ public class Client{
         Announcement a = new Announcement(message, references);
         int uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("POST", _pubKey, uuid, a);
-        VerifiableProtocolMessage vpm = createVerifiableMessage(pm);
-        StatusCode rsc = null;
-        try {
-            _communication.sendMessage(vpm, _oos);
-            VerifiableProtocolMessage rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
-            rsc = getStatusCodeFromVPM(rvpm);
-
-            if (verifySignature(rvpm)) {
-                System.out.println("Server signature verified successfully");
-                printStatusCode(rsc);
-            }
-            else {
-                System.out.println("Could not verify server signature");
-                printStatusCode(rsc);
-            }
-        }
-        catch (IOException | ClassNotFoundException e) {
-            System.out.println(e);
-        }
+        VerifiableProtocolMessage vpm = requestServer(pm);
+        StatusCode rsc = getStatusCodeFromVPM(vpm);
 
         return rsc.getCode();
     }
@@ -317,11 +308,11 @@ public class Client{
     public int postGeneral(String message, List<Integer> references) {
         if (message == null) {
             System.out.println("Message cannot be null.");
-            return -1;
+            return StatusCode.NULL_FIELD.getCode();
         }
         if (references == null) {
             System.out.println("References cannot be null.");
-            return -1;
+            return StatusCode.NULL_FIELD.getCode();
         }
         if (invalidMessageLength(message)) {
             System.out.println("Maximum message length to post announcement is 255.");
@@ -331,25 +322,8 @@ public class Client{
         Announcement a = new Announcement(message, references);
         int uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("POSTGENERAL", _pubKey, uuid, a);
-        VerifiableProtocolMessage vpm = createVerifiableMessage(pm);
-        StatusCode rsc = null;
-        try {
-            _communication.sendMessage(vpm, _oos);
-            VerifiableProtocolMessage rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
-            rsc = getStatusCodeFromVPM(rvpm);
-
-            if (verifySignature(rvpm)) {
-                System.out.println("Server signature verified successfully");
-                printStatusCode(rsc);
-            }
-            else {
-                System.out.println("Could not verify server signature");
-                printStatusCode(rsc);
-            }
-        }
-        catch (IOException | ClassNotFoundException e) {
-            System.out.println(e);
-        }
+        VerifiableProtocolMessage vpm = requestServer(pm);
+        StatusCode rsc = getStatusCodeFromVPM(vpm);
 
         return rsc.getCode();
     }
@@ -369,27 +343,10 @@ public class Client{
         PublicKey userToReadPB = _usersPubKeys.get(user);
         int uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("READ", _pubKey, uuid, number, userToReadPB);
-        VerifiableProtocolMessage vpm = createVerifiableMessage(pm);
-        List<Announcement> announcements = null;
-        StatusCode rsc = null;
-        try {
-            _communication.sendMessage(vpm, _oos);
-            VerifiableProtocolMessage rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
-            rsc = getStatusCodeFromVPM(rvpm);
+        VerifiableProtocolMessage vpm = requestServer(pm);
 
-            if (verifySignature(rvpm)) {
-                System.out.println("Server signature verified successfully");
-                printStatusCode(rsc);
-                announcements = getAnnouncementsFromVPM(rvpm);
-            }
-            else {
-                System.out.println("Could not verify server signature");
-                printStatusCode(rsc);
-            }
-        }
-        catch (IOException | ClassNotFoundException e) {
-            System.out.println(e);
-        }
+        StatusCode rsc = getStatusCodeFromVPM(vpm);
+        List<Announcement> announcements = getAnnouncementsFromVPM(vpm);
 
         return new AbstractMap.SimpleEntry<>(rsc.getCode(), announcements);
     }
@@ -403,27 +360,10 @@ public class Client{
     public AbstractMap.SimpleEntry<Integer, List<Announcement>> readGeneral(int number) {
         int uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("READGENERAL", _pubKey, uuid, number);
-        VerifiableProtocolMessage vpm = createVerifiableMessage(pm);
-        List<Announcement> announcements = null;
-        StatusCode rsc = null;
-        try {
-            _communication.sendMessage(vpm, _oos);
-            VerifiableProtocolMessage rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
-            rsc = getStatusCodeFromVPM(rvpm);
+        VerifiableProtocolMessage vpm = requestServer(pm);
 
-            if (verifySignature(rvpm)) {
-                System.out.println("Server signature verified successfully");
-                printStatusCode(rsc);
-                announcements = getAnnouncementsFromVPM(rvpm);
-            }
-            else {
-                System.out.println("Could not verify server signature");
-                printStatusCode(rsc);
-            }
-        }
-        catch (IOException | ClassNotFoundException e) {
-            System.out.println(e);
-        }
+        StatusCode rsc = getStatusCodeFromVPM(vpm);
+        List<Announcement> announcements = getAnnouncementsFromVPM(vpm);
 
         return new AbstractMap.SimpleEntry<>(rsc.getCode(), announcements);
     }

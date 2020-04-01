@@ -15,14 +15,13 @@ import org.junit.jupiter.api.Test;
 class ReadGeneralTest extends BaseTest {
 
     private Client _client;
-    private List<String> _otherUsersPubKeyPaths;
 
     public ReadGeneralTest() {
-        _otherUsersPubKeyPaths = new ArrayList<String>();
-        _otherUsersPubKeyPaths.add(PUBLICKEY_PATH2);
-        _otherUsersPubKeyPaths.add(PUBLICKEY_PATH3);
+        List<String> otherUsersPubKeyPaths = new ArrayList<String>();
+        otherUsersPubKeyPaths.add(PUBLICKEY_PATH2);
+        otherUsersPubKeyPaths.add(PUBLICKEY_PATH3);
 
-        _client = new Client(PUBLICKEY_PATH1, KEYSTORE_PATH1, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH, _otherUsersPubKeyPaths);    }
+        _client = new Client(PUBLICKEY_PATH1, KEYSTORE_PATH1, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH, otherUsersPubKeyPaths);    }
 
     @Test
     void success() {

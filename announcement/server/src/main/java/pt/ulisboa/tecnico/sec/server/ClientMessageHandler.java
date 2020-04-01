@@ -62,7 +62,7 @@ public class ClientMessageHandler extends Thread {
                 }
             }
             catch (IOException | ClassNotFoundException e) {
-                System.out.println(e);
+                // System.out.println(e);
             }
         }
     }
