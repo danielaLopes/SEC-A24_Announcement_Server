@@ -255,7 +255,6 @@ public class Server {
         if (!sc.equals(StatusCode.USER_NOT_REGISTERED)) {
             return StatusCode.OK;
         }
-
         return sc;
     }
 
