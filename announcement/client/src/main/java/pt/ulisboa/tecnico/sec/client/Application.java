@@ -5,8 +5,6 @@ import java.util.ArrayList;
 
 public class Application {
     public static void main(String[] args) {
-        System.out.println("Hello world client");
-
         if (args.length < 6) {
             System.out.println("Usage: <pubKeyPath> <keyStorePath> <keyStorePassword>" + 
             " <entryPassword> <alias> <serverPubKeyPath> <numberOfOtherClients> <otherClientsPubKeyPaths>*");

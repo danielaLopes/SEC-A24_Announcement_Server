@@ -1,7 +1,10 @@
 import java.util.List;
 
+import org.junit.jupiter.api.BeforeEach;
+
 import pt.ulisboa.tecnico.sec.crypto_lib.KeyPairUtil;
 import pt.ulisboa.tecnico.sec.crypto_lib.KeyStorage;
+import pt.ulisboa.tecnico.sec.database_lib.Database;
 
 import java.security.KeyStore;
 import java.security.PrivateKey;
@@ -34,6 +37,13 @@ class BaseTest {
     public final static String ENTRY_PASSWD = "password";
     public final static String ALIAS = "alias";
 
+
+
+    @BeforeEach
+    void init() {
+        Database _db = new Database();
+        _db.resetDatabaseTest();
+    }
 
     public PrivateKey loadPrivateKey(String keyStorePath, String keyStorePasswd, String entryPasswd, String alias) throws Exception {
         if (keyStorePath == null || keyStorePasswd == null || entryPasswd == null || alias == null) {

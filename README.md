@@ -22,12 +22,24 @@ show tables;
 
 ## Instructions
 Inside project root directory (announcement/):
-1. Build project:
-```
-mvn clean install -DskipTests
-```
+1. Generate Client and Server keys and keystore.
+    - For simple Client generation (will generate 3 pairs):
+        ```
+        ./generateClientKeys.sh < generateClientKeysInput.txt
+        ./createClientKeyStore.sh
+        ```
+    - For simple Server generation:
+        ```
+        ./generateServerKeys.sh < generateServerKeysInput.txt
+        ./createServerKeyStore.sh
+        ```
 
-2. Run Tests:
+2. Build project:
+    ```
+    mvn clean install -DskipTests
+    ```
+
+3. Run Tests:
     - Every Test
         ```
         mvn -DfailIfNoTests=false test
@@ -48,24 +60,27 @@ mvn clean install -DskipTests
         ```
         mvn -DfailIfNoTests=false -Dtest=PostGeneralTest#userNotRegistered test
         ```
-3. Run server:
+4. Run server:
     - General:
-    ```
-    cd server/
-    mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="<keyStorePassword> <entryPassword> <alias> <pubKeyPath> <keyStorePath>"
-    ```
+        ```
+        cd server/
+        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="<keyStorePassword> <entryPassword> <alias> <pubKeyPath> <keyStorePath>"
+        ```
     - 1 client:
-    ```
-    cd server/
-    mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="password password alias src/main/resources/crypto/public.key src/main/resources/crypto/server_keystore.jks"
-    ```
-4. Run client:
-```
-cd client/
-mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="<pubKeyPath> <keyStorePath> <keyStorePassword> <entryPassword> <alias> <serverPubKeyPath> <numberOfOtherClients> <otherClientsPubKeyPaths>*"
-
-mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="src/main/resources/crypto/public1.key src/main/resources/crypto/client1_keystore.jks password password alias ../server/src/main/resources/crypto/public.key 2 src/main/resources/crypto/public2.key src/main/resources/crypto/public3.key"
-```
+        ```
+        cd server/
+        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="password password alias src/main/resources/crypto/public.key src/main/resources/crypto/server_keystore.jks"
+        ```
+5. Run client:
+    - General:
+        ```
+        cd client/
+        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="<pubKeyPath> <keyStorePath> <keyStorePassword> <entryPassword> <alias> <serverPubKeyPath> <numberOfOtherClients> <otherClientsPubKeyPaths>*"
+        ```
+    - 3 clients:
+        ```
+        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="src/main/resources/crypto/public1.key src/main/resources/crypto/client1_keystore.jks password password alias ../server/src/main/resources/crypto/public.key 2 src/main/resources/crypto/public2.key src/main/resources/crypto/public3.key"
+        ```
 
 ## Interacting with the Client UI
 
