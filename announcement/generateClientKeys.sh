@@ -1,3 +1,6 @@
+mkdir client/src/main/resources
+mkdir client/src/main/resources/crypto
+
 openssl genrsa -out client/src/main/resources/crypto/client1.key
 
 openssl rsa -in client/src/main/resources/crypto/client1.key -out client/src/main/resources/crypto/public1.key -pubout

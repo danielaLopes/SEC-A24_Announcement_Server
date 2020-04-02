@@ -83,7 +83,13 @@ public class ClientUI {
 
         List<Integer> references = parseReferences(referencesIn);
 
-        _client.post(message, references);
+        StatusCode statusCode = _client.post(message, references);
+        if (statusCode == StatusCode.OK) {
+            System.out.println("Posted announcement.");
+        }
+        else {
+            System.out.println("Could not post announcement.");
+        }
     }
 
     /**
@@ -93,11 +99,19 @@ public class ClientUI {
     public void postGeneral() {
         String message = promptMessage();
         String referencesIn = promptReference();
-        
-        
+        if (!referencesIn.trim().equals("") && !Pattern.matches("[\\d+,]*\\d+", referencesIn)) {
+            System.out.println("Invalid references sequence.");
+            return;
+        }
         List<Integer> references = parseReferences(referencesIn);
 
-        _client.postGeneral(message, references);
+        StatusCode statusCode = _client.postGeneral(message, references);
+        if (statusCode == StatusCode.OK) {
+            System.out.println("Posted announcement.");
+        }
+        else {
+            System.out.println("Could not post announcement.");
+        }
     }
 
     /**
@@ -107,8 +121,14 @@ public class ClientUI {
     public void read() {
         int user = promptUser();
         int number = promptNumber();
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client.read(user, number);
-        printAnnouncements(response.getValue(), "USER");
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client.read(user, number);
+        if (response.getKey() == StatusCode.OK) {
+            printAnnouncements(response.getValue(), "USER");
+        }
+        else {
+            System.out.println("Could not read announcements.");
+        }
+        
     }
 
     /**
@@ -118,8 +138,13 @@ public class ClientUI {
     public void readGeneral() {
         int number = promptNumber();
         _client.readGeneral(number);
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client.readGeneral(number);
-        printAnnouncements(response.getValue(), "GENERAL");
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client.readGeneral(number);
+        if (response.getKey() == StatusCode.OK) {
+            printAnnouncements(response.getValue(), "GENERAL");
+        }
+        else {
+            System.out.println("Could not read announcements.");
+        }
     }
 
     /**

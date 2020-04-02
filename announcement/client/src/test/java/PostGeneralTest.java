@@ -10,21 +10,30 @@ import org.junit.jupiter.api.Test;
 
 class PostGeneralTest extends BaseTest {
 
-    private Client _client;
-    
-    public PostGeneralTest() {
-        List<String> otherUsersPubKeyPaths = new ArrayList<String>();
-        otherUsersPubKeyPaths.add(PUBLICKEY_PATH2);
-        otherUsersPubKeyPaths.add(PUBLICKEY_PATH3);
+    private Client _client1, _client2, _client3;
 
-        _client = new Client(PUBLICKEY_PATH1, KEYSTORE_PATH1, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH, otherUsersPubKeyPaths);
+    public PostGeneralTest() {
+        _client1 = new Client(PUBLICKEY_PATH1, KEYSTORE_PATH1, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH);
+        _client2 = new Client(PUBLICKEY_PATH2, KEYSTORE_PATH2, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH);
+        _client3 = new Client(PUBLICKEY_PATH3, KEYSTORE_PATH3, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH);
     }
 
     @Test
     void success() {
-        int statusCode = _client.postGeneral(MESSAGE, REFERENCES);
+        StatusCode statusCode = _client1.postGeneral(MESSAGE, REFERENCES);
         
-        assertEquals(statusCode, StatusCode.OK.getCode());
+        assertEquals(statusCode, StatusCode.OK);
+    }
+
+    @Test
+    void tooManyUsers() {
+        StatusCode statusCode1 = _client1.postGeneral(MESSAGE, REFERENCES);
+        StatusCode statusCode2 = _client2.postGeneral(MESSAGE, REFERENCES);
+        StatusCode statusCode3 = _client3.postGeneral(MESSAGE, REFERENCES);
+        
+        assertEquals(statusCode1, StatusCode.OK);
+        assertEquals(statusCode2, StatusCode.OK);
+        assertEquals(statusCode3, StatusCode.OK);
     }
 
     @Test
@@ -34,23 +43,23 @@ class PostGeneralTest extends BaseTest {
             invalidMessage += "A";
         }
 
-        int statusCode = _client.postGeneral(invalidMessage, REFERENCES);
+        StatusCode statusCode = _client1.postGeneral(invalidMessage, REFERENCES);
         
-        assertEquals(statusCode, StatusCode.INVALID_MESSAGE_LENGTH.getCode());
+        assertEquals(statusCode, StatusCode.INVALID_MESSAGE_LENGTH);
     }
 
     @Test
     void messageIsNull() {
-        int statusCode = _client.postGeneral(null, REFERENCES);
+        StatusCode statusCode = _client1.postGeneral(null, REFERENCES);
         
-        assertEquals(statusCode, StatusCode.NULL_FIELD.getCode());
+        assertEquals(statusCode, StatusCode.NULL_FIELD);
     }
 
     @Test
     void referencesIsNull() {
-        int statusCode = _client.postGeneral(MESSAGE, null);
+        StatusCode statusCode = _client1.postGeneral(MESSAGE, null);
         
-        assertEquals(statusCode, StatusCode.NULL_FIELD.getCode());
+        assertEquals(statusCode, StatusCode.NULL_FIELD);
     }
 
 }
