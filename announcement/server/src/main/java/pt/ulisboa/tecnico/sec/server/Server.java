@@ -67,6 +67,10 @@ public class Server {
         return null;
     }
 
+    public void resetDatabase() {
+        _db.resetDatabase();
+    }
+
     public void printDataStructures() {
         System.out.println("_users: " + _users + "END");
         System.out.println("_generalBoard: " + _generalBoard + "END");
@@ -322,6 +326,7 @@ public class Server {
         }
 
         sc = verifyUserRegistered(clientPubKey);
+        System.out.println("SC: " + sc);
         if (!sc.equals(StatusCode.USER_NOT_REGISTERED)) {
             return StatusCode.OK;
         }
@@ -353,6 +358,8 @@ public class Server {
      */
 
     public VerifiableProtocolMessage registerUser(VerifiableProtocolMessage vpm) {
+
+        System.out.println("===register user===");
         StatusCode sc;
 
         int opUuid = vpm.getProtocolMessage().getOpUuid();
@@ -403,6 +410,7 @@ public class Server {
             _db.insertUser(b, uuid);
 
         }
+        // user is already registered
         else {
             response = createVerifiableMessage(new ProtocolMessage(
                     "REGISTER", sc, _pubKey, vpm.getProtocolMessage().getOpUuid()));
@@ -420,6 +428,8 @@ public class Server {
 
         byte[] operation = ProtocolMessageConverter.objToByteArray(response);
         _db.insertOperation(opUuid, operation);
+
+        System.out.println("===user registered ok===");
 
         return response;
     }
@@ -483,7 +493,7 @@ public class Server {
         byte[] operation = ProtocolMessageConverter.objToByteArray(response);
         _db.insertOperation(opUuid, operation);
 
-        printDataStructures();
+        //printDataStructures();
 
         return response;
     }

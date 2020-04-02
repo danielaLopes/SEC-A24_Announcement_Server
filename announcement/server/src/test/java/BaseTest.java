@@ -53,7 +53,7 @@ public class BaseTest {
         CLIENT3_PRIVATE_KEY = client3KeyPair.getPrivate();
     }
 
-    VerifiableProtocolMessage forgeRegisterRequest(
+    static VerifiableProtocolMessage forgeRegisterRequest(
             Server server, int opUuid, PublicKey clientPubKey, PrivateKey clientPrivKey) throws Exception {
 
         ProtocolMessage pmRegister1 = new ProtocolMessage(
