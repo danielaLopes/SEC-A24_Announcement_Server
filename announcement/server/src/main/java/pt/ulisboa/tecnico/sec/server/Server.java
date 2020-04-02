@@ -8,8 +8,11 @@ import java.io.*;
 import java.net.*;
 import java.security.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import javax.net.ssl.SSLEngineResult.Status;
 
@@ -163,14 +166,16 @@ public class Server {
      * @return StatusCode
      */
     public StatusCode verifyReferences(List<Integer> references) {
-        /*for (int exRef : _announcementMapper.keySet()) {
-            System.out.println("===REF===: " + exRef);
-        }*/
+
         for (int reference : references) {
             if (!_announcementMapper.containsKey(reference)) {
                 return StatusCode.INVALID_REFERENCE;
             }
         }
+        // server eliminates repeated references
+        Set<Integer> set = new HashSet<>(references);
+        if (set.size() != references.size())
+            return StatusCode.DUPLICATE_REFERENCE;
         return StatusCode.OK;
     }
 
