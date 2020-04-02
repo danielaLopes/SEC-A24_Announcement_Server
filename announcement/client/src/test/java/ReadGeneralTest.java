@@ -25,44 +25,44 @@ class ReadGeneralTest extends BaseTest {
     @Test
     void success() {
         _client1.postGeneral(MESSAGE, REFERENCES);
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client1.readGeneral(1);
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client1.readGeneral(1);
         
-        assertEquals(response.getKey(), StatusCode.OK.getCode());
+        assertEquals(response.getKey(), StatusCode.OK);
         assertEquals(response.getValue().size(), 1);
     }
 
     @Test
     void tooManyUsers() {
         _client1.postGeneral(MESSAGE, REFERENCES);
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response1 = _client1.readGeneral(1);
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response2 = _client2.readGeneral(1);
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response3 = _client3.readGeneral(1);
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response1 = _client1.readGeneral(1);
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response2 = _client2.readGeneral(1);
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response3 = _client3.readGeneral(1);
         
-        assertEquals(response1.getKey(), StatusCode.OK.getCode());
+        assertEquals(response1.getKey(), StatusCode.OK);
         assertEquals(response1.getValue().size(), 1);
 
-        assertEquals(response2.getKey(), StatusCode.OK.getCode());
+        assertEquals(response2.getKey(), StatusCode.OK);
         assertEquals(response2.getValue().size(), 1);
         
-        assertEquals(response3.getKey(), StatusCode.OK.getCode());
+        assertEquals(response3.getKey(), StatusCode.OK);
         assertEquals(response3.getValue().size(), 1);
     }
 
     @Test
     void negativeNumberOfAnnouncements() {
         _client1.postGeneral(MESSAGE, REFERENCES);
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client1.readGeneral(-1);
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client1.readGeneral(-1);
         
-        assertEquals(response.getKey(), StatusCode.OK.getCode());
+        assertEquals(response.getKey(), StatusCode.OK);
         assertTrue(response.getValue().size() > 0);
     }
 
     @Test
     void zeroNumberOfAnnouncements() {
         _client1.postGeneral(MESSAGE, REFERENCES);
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client1.readGeneral(0);
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client1.readGeneral(0);
         
-        assertEquals(response.getKey(), StatusCode.OK.getCode());
+        assertEquals(response.getKey(), StatusCode.OK);
         assertTrue(response.getValue().size() > 0);
     }
 
@@ -78,17 +78,17 @@ class ReadGeneralTest extends BaseTest {
             _client3.postGeneral(MESSAGE, REFERENCES);
         }
         
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response1 = _client1.readGeneral(0);
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response2 = _client2.readGeneral(0);
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response3 = _client3.readGeneral(0);
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response1 = _client1.readGeneral(0);
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response2 = _client2.readGeneral(0);
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response3 = _client3.readGeneral(0);
         
-        assertEquals(response1.getKey(), StatusCode.OK.getCode());
+        assertEquals(response1.getKey(), StatusCode.OK);
         assertTrue(response1.getValue().size() >= 15);
 
-        assertEquals(response2.getKey(), StatusCode.OK.getCode());
+        assertEquals(response2.getKey(), StatusCode.OK);
         assertTrue(response2.getValue().size() >= 15);
         
-        assertEquals(response3.getKey(), StatusCode.OK.getCode());
+        assertEquals(response3.getKey(), StatusCode.OK);
         assertTrue(response3.getValue().size() >= 15);
     }
 

@@ -30,9 +30,9 @@ class ReadTest extends BaseTest {
     void success() throws Exception {
         _client1.post(MESSAGE, REFERENCES);
 
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client2.read(_pubKey1, 1);
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client2.read(_pubKey1, 1);
         
-        assertEquals(response.getKey(), StatusCode.OK.getCode());
+        assertEquals(response.getKey(), StatusCode.OK);
         assertEquals(response.getValue().size(), 1);
     }
 
@@ -40,31 +40,31 @@ class ReadTest extends BaseTest {
     void tooManyUsers() throws Exception {
         _client1.post(MESSAGE, REFERENCES);
 
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response2 = _client2.read(_pubKey1, 1);
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response3 = _client3.read(_pubKey1, 1);
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response2 = _client2.read(_pubKey1, 1);
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response3 = _client3.read(_pubKey1, 1);
 
-        assertEquals(response2.getKey(), StatusCode.OK.getCode());
+        assertEquals(response2.getKey(), StatusCode.OK);
         assertEquals(response2.getValue().size(), 1);
         
-        assertEquals(response3.getKey(), StatusCode.OK.getCode());
+        assertEquals(response3.getKey(), StatusCode.OK);
         assertEquals(response3.getValue().size(), 1);
     }
 
     @Test
     void negativeNumberOfAnnouncements() {
         _client1.post(MESSAGE, REFERENCES);
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client2.read(_pubKey1, -1);
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client2.read(_pubKey1, -1);
         
-        assertEquals(response.getKey(), StatusCode.OK.getCode());
+        assertEquals(response.getKey(), StatusCode.OK);
         assertTrue(response.getValue().size() > 0);
     }
 
     @Test
     void zeroNumberOfAnnouncements() {
         _client1.post(MESSAGE, REFERENCES);
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client2.read(_pubKey1, 0);
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client2.read(_pubKey1, 0);
         
-        assertEquals(response.getKey(), StatusCode.OK.getCode());
+        assertEquals(response.getKey(), StatusCode.OK);
         assertTrue(response.getValue().size() > 0);
     }
 
@@ -74,17 +74,17 @@ class ReadTest extends BaseTest {
             _client1.post(MESSAGE, REFERENCES);
         }
         
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client2.read(_pubKey1, 0);
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client2.read(_pubKey1, 0);
         
-        assertEquals(response.getKey(), StatusCode.OK.getCode());
+        assertEquals(response.getKey(), StatusCode.OK);
         assertTrue(response.getValue().size() >= 5);
     }
 
     @Test
     void userIsNull() {
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client2.read(null, 1);
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client2.read(null, 1);
         
-        assertEquals(response.getKey(), StatusCode.NULL_FIELD.getCode());
+        assertEquals(response.getKey(), StatusCode.NULL_FIELD);
         assertEquals(response.getValue().size(), 0);
     }
 

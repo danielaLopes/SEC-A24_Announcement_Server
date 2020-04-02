@@ -30,7 +30,6 @@ public class PostTest extends BaseTest {
 
     @Test
     void success() {
-
         int sc = _client1.post("message1", new ArrayList<>());
         assertEquals(1, sc);
     }

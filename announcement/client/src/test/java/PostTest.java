@@ -20,20 +20,20 @@ class PostTest extends BaseTest {
 
     @Test
     void success() {
-        int statusCode = _client1.post(MESSAGE, REFERENCES);
+        StatusCode statusCode = _client1.post(MESSAGE, REFERENCES);
         
-        assertEquals(statusCode, StatusCode.OK.getCode());
+        assertEquals(statusCode, StatusCode.OK);
     }
 
     @Test
     void tooManyUsers() {
-        int statusCode1 = _client1.post(MESSAGE, REFERENCES);
-        int statusCode2 = _client2.post(MESSAGE, REFERENCES);
-        int statusCode3 = _client3.post(MESSAGE, REFERENCES);
+        StatusCode statusCode1 = _client1.post(MESSAGE, REFERENCES);
+        StatusCode statusCode2 = _client2.post(MESSAGE, REFERENCES);
+        StatusCode statusCode3 = _client3.post(MESSAGE, REFERENCES);
         
-        assertEquals(statusCode1, StatusCode.OK.getCode());
-        assertEquals(statusCode2, StatusCode.OK.getCode());
-        assertEquals(statusCode3, StatusCode.OK.getCode());
+        assertEquals(statusCode1, StatusCode.OK);
+        assertEquals(statusCode2, StatusCode.OK);
+        assertEquals(statusCode3, StatusCode.OK);
     }
 
     @Test
@@ -43,23 +43,23 @@ class PostTest extends BaseTest {
             invalidMessage += "A";
         }
 
-        int statusCode = _client1.post(invalidMessage, REFERENCES);
+        StatusCode statusCode = _client1.post(invalidMessage, REFERENCES);
         
-        assertEquals(statusCode, StatusCode.INVALID_MESSAGE_LENGTH.getCode());
+        assertEquals(statusCode, StatusCode.INVALID_MESSAGE_LENGTH);
     }
 
     @Test
     void messageIsNull() {
-        int statusCode = _client1.post(null, REFERENCES);
+        StatusCode statusCode = _client1.post(null, REFERENCES);
         
-        assertEquals(statusCode, StatusCode.NULL_FIELD.getCode());
+        assertEquals(statusCode, StatusCode.NULL_FIELD);
     }
 
     @Test
     void referencesIsNull() {
-        int statusCode = _client1.post(MESSAGE, null);
+        StatusCode statusCode = _client1.post(MESSAGE, null);
         
-        assertEquals(statusCode, StatusCode.NULL_FIELD.getCode());
+        assertEquals(statusCode, StatusCode.NULL_FIELD);
     }
 
 }

@@ -13,7 +13,7 @@ class RegisterTest extends BaseTest {
     void success() {
         _client1 = new Client(PUBLICKEY_PATH1, KEYSTORE_PATH1, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH);
 
-        int statusCode = _client1.register();
+        StatusCode statusCode = _client1.register();
 
         assertEquals(StatusCode.USER_ALREADY_REGISTERED.getCode(), statusCode);
     }
@@ -23,8 +23,8 @@ class RegisterTest extends BaseTest {
         _client1 = new Client(PUBLICKEY_PATH1, KEYSTORE_PATH1, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH);
         _client2 = new Client(PUBLICKEY_PATH2, KEYSTORE_PATH2, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH);
 
-        int statusCode1 = _client1.register();
-        int statusCode2 = _client1.register();
+        StatusCode statusCode1 = _client1.register();
+        StatusCode statusCode2 = _client1.register();
 
         assertEquals(StatusCode.USER_ALREADY_REGISTERED.getCode(), statusCode1);
         assertEquals(StatusCode.USER_ALREADY_REGISTERED.getCode(), statusCode2);
@@ -36,9 +36,9 @@ class RegisterTest extends BaseTest {
         _client2 = new Client(PUBLICKEY_PATH2, KEYSTORE_PATH2, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH);
         _client3 = new Client(PUBLICKEY_PATH3, KEYSTORE_PATH3, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH);
 
-        int statusCode1 = _client1.register();
-        int statusCode2 = _client2.register();
-        int statusCode3 = _client3.register();
+        StatusCode statusCode1 = _client1.register();
+        StatusCode statusCode2 = _client2.register();
+        StatusCode statusCode3 = _client3.register();
 
         assertEquals(StatusCode.USER_ALREADY_REGISTERED.getCode(), statusCode1);
         assertEquals(StatusCode.USER_ALREADY_REGISTERED.getCode(), statusCode2);
