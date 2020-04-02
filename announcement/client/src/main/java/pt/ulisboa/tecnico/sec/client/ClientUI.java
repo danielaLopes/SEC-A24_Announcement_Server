@@ -29,29 +29,30 @@ public class ClientUI {
 
         while (!option.equals("0")) {
             option = promptGeneralMenu();
-            System.out.println("OPTION:" + option);
-            switch (option) {
-                case "1":
-                    post();
-                    break;
-                // Post to General Board
-                case "2":
-                    postGeneral();
-                    break;
-                // Read from specific user
-                case "3":
-                    read();
-                    break;
-                // Read from General Board
-                case "4":
-                    readGeneral();
-                    break;
-                // Exit and close communication
-                case "0":
-                    closeCommunication();
-                    break;
-                default:
-                    break;
+            if (!option.equals("\n")) {
+                switch (option) {
+                    case "1":
+                        post();
+                        break;
+                    // Post to General Board
+                    case "2":
+                        postGeneral();
+                        break;
+                    // Read from specific user
+                    case "3":
+                        read();
+                        break;
+                    // Read from General Board
+                    case "4":
+                        readGeneral();
+                        break;
+                    // Exit and close communication
+                    case "0":
+                        closeCommunication();
+                        break;
+                    default:
+                        break;
+                }
             }
         }
     }
@@ -148,17 +149,21 @@ public class ClientUI {
     }
 
     /**
-     * Prints the list of announcements in a board.
+     * Prints a list of announcements.
      * @param announcements list of announcements to print
-     * @param board in which the announcements are
+     * @param board where the announcements were posted
      */
     public void printAnnouncements(List<Announcement> announcements, String board) {
         if (announcements.size() == 0)
-            System.out.println("THERE ARE NO ANNOUNCEMENTS TO DISPLAY");
+            System.out.println("\nTHERE ARE NO ANNOUNCEMENTS TO DISPLAY");
         else {
-            System.out.println("-------------- ANNOUNCEMENTS FROM " + board + " BOARD " + "--------------");
-            for (int i = 0 ; i < announcements.size() ; i++){
-                System.out.println(Integer.toString(i) + " -> " + announcements.get(i).getAnnouncement());
+            System.out.println("\n-------------- ANNOUNCEMENTS FROM " + board + " --------------");
+            for (Announcement a: announcements){
+                System.out.println("\n------------------- ANNOUNCEMENT -------------------");
+                System.out.println("*** From: " + a.getClientPublicKey().toString());
+                System.out.println("*** Message: " + a.getAnnouncement());
+                System.out.println("*** ID: " + a.getAnnouncementID());
+                System.out.println("\n------------------END ANNOUNCEMENT------------------");
             }
         }
     }
@@ -201,7 +206,18 @@ public class ClientUI {
         _client.printOtherUsersPubKeys();
         System.out.println(Message.USER_BOARD);
 
-        return _scanner.nextInt();
+        boolean scan = true;
+        int option = 0;
+        while (scan) {
+            try {
+                option = Integer.parseInt(_scanner.nextLine());
+                scan = false;
+            } catch(NumberFormatException e) {
+                scan = true;
+            }
+        }
+
+        return option;
     }
 
     /**
@@ -209,7 +225,18 @@ public class ClientUI {
      */
     public int promptNumber() {
         System.out.println(Message.READ_NUMBER);
-        return _scanner.nextInt();
+        boolean scan = true;
+        int option = 0;
+        while (scan) {
+            try {
+                option = Integer.parseInt(_scanner.nextLine());
+                scan = false;
+            } catch(NumberFormatException e) {
+                scan = true;
+            }
+        }
+
+        return option;
     }
 
     /**
