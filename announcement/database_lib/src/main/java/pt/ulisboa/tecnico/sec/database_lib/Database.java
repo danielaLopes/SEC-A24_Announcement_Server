@@ -105,11 +105,11 @@ public class Database {
 
     public void resetDatabase() {
         try {
-            //String dropDatabase = "DROP DATABASE IF EXISTS announcement";
+            // String dropDatabase = "DROP DATABASE IF EXISTS announcement";
             String createDatabase = "CREATE DATABASE IF NOT EXISTS announcement";
             String useDatabase = "USE announcement";
-            //PreparedStatement statement = _con.prepareStatement(dropDatabase);
-            //statement.executeUpdate();
+            // PreparedStatement statement = _con.prepareStatement(dropDatabase);
+            // statement.executeUpdate();
             PreparedStatement statement = _con.prepareStatement(createDatabase);
             statement.executeUpdate();
             statement = _con.prepareStatement(useDatabase);
@@ -118,6 +118,26 @@ public class Database {
         catch(Exception e) {
             System.out.println(e);
         }
+    }
+
+    public void resetDatabaseTest() {
+        try {
+            String dropDatabase = "DROP DATABASE IF EXISTS announcement";
+            String createDatabase = "CREATE DATABASE IF NOT EXISTS announcement";
+            String useDatabase = "USE announcement";
+            PreparedStatement statement = _con.prepareStatement(dropDatabase);
+            statement.executeUpdate();
+            statement = _con.prepareStatement(createDatabase);
+            statement.executeUpdate();
+            statement = _con.prepareStatement(useDatabase);
+            statement.executeUpdate();
+        }
+        catch(Exception e) {
+            System.out.println(e);
+        }
+        createGeneralBoardTable();
+        createUsersTable();
+        createOperationsTable();
     }
 
     public int insertAnnouncementGB(String announcememnt, byte[] reference, int announcementID, String clientUUID) {

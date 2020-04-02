@@ -466,6 +466,7 @@ public class Server {
         ProtocolMessage pm = vpm.getProtocolMessage();
         Announcement a = pm.getPostAnnouncement();
         a.setAnnouncementID(announcementUuid);
+        a.setPublicKey(pm.getPublicKey());
         byte[] ref = ProtocolMessageConverter.objToByteArray(a.getReferences());
 
         byte[] b = ProtocolMessageConverter.objToByteArray(vpm);
@@ -525,6 +526,7 @@ public class Server {
         ProtocolMessage pm = vpm.getProtocolMessage();
         Announcement a = pm.getPostAnnouncement();
         a.setAnnouncementID(announcementUuid);
+        a.setPublicKey(pm.getPublicKey());
         byte[] ref = ProtocolMessageConverter.objToByteArray(a.getReferences());
 
         _db.insertAnnouncementGB(a.getAnnouncement(), ref, announcementUuid, getUserUUID(pm.getPublicKey()));

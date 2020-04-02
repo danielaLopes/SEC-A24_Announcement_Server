@@ -13,4 +13,6 @@ public class VerifiableProtocolMessage implements Serializable{
 
     public ProtocolMessage getProtocolMessage() { return _pm; }
     public byte[] getSignedProtocolMessage() { return _signedpm; }
+
+    public void setProtocolMessage(ProtocolMessage pm) { _pm = pm; }
 }

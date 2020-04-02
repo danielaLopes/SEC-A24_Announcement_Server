@@ -22,19 +22,19 @@ import java.util.List;
 
 public class Client{
 
-    private PublicKey _pubKey;
+    protected PublicKey _pubKey;
     private PrivateKey _privateKey;
 
     private List<PublicKey> _usersPubKeys;
     private PublicKey _serverPubKey;
 
-    private final Communication _communication;
-    private ObjectOutputStream _oos;
-    private ObjectInputStream _ois;
+    protected final Communication _communication;
+    protected ObjectOutputStream _oos;
+    protected ObjectInputStream _ois;
     private Socket _clientSocket;
 
-    private static final int TIMEOUT = 1000;
-    private static final int MAX_REQUESTS = 5;
+    protected static final int TIMEOUT = 1000;
+    protected static final int MAX_REQUESTS = 5;
 
     public Client(String pubKeyPath, String keyStorePath,
                   String keyStorePasswd, String entryPasswd, String alias,
@@ -158,6 +158,13 @@ public class Client{
      */
     public PublicKey getServerPubKey() {
         return _serverPubKey;
+    }
+
+    /**
+     * @return the client's public key
+     */
+    public PublicKey getPubKey() {
+        return _pubKey;
     }
 
     /**
@@ -293,6 +300,9 @@ public class Client{
             try {
                 _communication.sendMessage(vpm, _oos);
                 rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
+                if (rvpm == null) {
+                    return null;
+                }
                 rsc = getStatusCodeFromVPM(rvpm);
 
                 if (verifySignature(rvpm)) {
