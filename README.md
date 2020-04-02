@@ -64,7 +64,7 @@ mvn clean install -DskipTests
 cd client/
 mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="<pubKeyPath> <keyStorePath> <keyStorePassword> <entryPassword> <alias> <serverPubKeyPath> <numberOfOtherClients> <otherClientsPubKeyPaths>*"
 
-mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="src/main/resources/crypto/public1.key src/main/resources/crypto/client1_keystore.jks password password ola ../server/src/main/resources/crypto/public.key 2 src/main/resources/crypto/public2.key src/main/resources/crypto/public3.key"
+mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="src/main/resources/crypto/public1.key src/main/resources/crypto/client1_keystore.jks password password alias ../server/src/main/resources/crypto/public.key 2 src/main/resources/crypto/public2.key src/main/resources/crypto/public3.key"
 ```
 
 ## Interacting with the Client UI
@@ -134,6 +134,10 @@ openssl genrsa -out client/src/main/resources/crypto/client.key
     ```
     openssl x509 -req -days 365 -in client/src/main/resources/crypto/client.csr -CA server/src/main/resources/crypto/server.crt -CAkey server/src/main/resources/crypto/server.key -out client/src/main/resources/crypto/client.crt
     ```
+    - If not possible to sign with CA certificate, self-sign:
+    ```
+    openssl x509 -req -days 365 -in client/src/main/resources/crypto/client1.csr -signkey client/src/main/resources/crypto/client1.key -out client/src/main/resources/crypto/client1.crt
+    ```
 
 ## Create new keystore
 ```
@@ -145,33 +149,26 @@ Server example:
 mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.crypto_lib.CreateKeyStorage" -Dexec.args="password ../server/src/main/resources/crypto/server1_keystore.jks"
 ```
 
-## Store private keys in keystore (NOT WORKING)
-```
-cd crypto_lib/
-mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.crypto_lib.StoreKeys" -Dexec.args="keyStorePassword entryPassword alias path_to_keystore.jks path_to_private.key path_cert.crt"
-```
-Server example:
-```
-mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.crypto_lib.StoreKeys" -Dexec.args="password1 password2 ../server/src/main/resources/crypto/server1_keystore.jks ../server/src/main/resources/crypto/server_pkcs8.key ../server/src/main/resources/crypto/server.crt"
-rm ../server/src/main/resources/crypto/server_pkcs8.key
-rm ../server/src/main/resources/crypto/server.key
-```
-
 ## KeyStore commands
-- Import private key (in Windows, requires Administrator)
+In Windows:
+```
+set OPENSSL_CONF=C:\Program Files\OpenSSL-Win64\bin\openssl.cfg
+```
+- Import server's private key into the KeyStore (in Windows, requires Administrator)
     1. Create PKCS12 keystore from private key and public certificate.
     ```
-    openssl pkcs12 -export -name ola -in server/src/main/resources/crypto/server.crt -inkey server/src/main/resources/crypto/server.key -out server/src/main/resources/crypto/keystore.p12
+    openssl pkcs12 -export -name alias -in server/src/main/resources/crypto/server.crt -inkey server/src/main/resources/crypto/server.key -out server/src/main/resources/crypto/keystore.p12
     ```
     2. Convert PKCS12 keystore into a JKS keystore
     ```
-    keytool -importkeystore -destkeystore server/src/main/resources/crypto/server1_keystore.jks -srckeystore server/src/main/resources/crypto/keystore.p12 -srcstoretype pkcs12 -alias ola
+    keytool -importkeystore -destkeystore server/src/main/resources/crypto/server1_keystore.jks -srckeystore server/src/main/resources/crypto/keystore.p12 -srcstoretype pkcs12 -alias alias
     ```
     3. Remove keys
     ```
     rm ../server/src/main/resources/crypto/server_pkcs8.key
     rm ../server/src/main/resources/crypto/server.key
     ```
+    4. Do the same for the Clients
 - List entries
 ```
 keytool -list -v -keystore [enter keystore name] -storepass [password]
