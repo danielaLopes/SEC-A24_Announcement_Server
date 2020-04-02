@@ -160,7 +160,7 @@ public class ClientUI {
             System.out.println("\n-------------- ANNOUNCEMENTS FROM " + board + " --------------");
             for (Announcement a: announcements){
                 System.out.println("\n---------------- BEGIN ANNOUNCEMENT ----------------");
-                System.out.println("*** From: " + a.getClientPublicKey().toString());
+                System.out.println("*** From: " + a.getClientPublicKey());
                 System.out.println("*** Message: " + a.getAnnouncement());
                 System.out.println("*** ID: " + a.getAnnouncementID());
                 System.out.println("\n------------------END ANNOUNCEMENT------------------");

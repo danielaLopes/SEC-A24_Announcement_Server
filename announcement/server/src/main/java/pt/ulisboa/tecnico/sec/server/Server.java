@@ -89,6 +89,7 @@ public class Server {
         for (GeneralBoardStructure i: gbs) {
             List<Integer> references = (List<Integer>) ProtocolMessageConverter.byteArrayToObj(i.getReferences());
             Announcement a = new Announcement(i.getAnnouncement(), references, i.getAnnouncementID(), i.getClientUUID());
+            a.setPublicKey(getUserUUID(i.getClientUUID()));
             
             int index;
             synchronized (_generalBoard) {
@@ -105,6 +106,7 @@ public class Server {
             List<Integer> references = (List<Integer>) ProtocolMessageConverter.byteArrayToObj(i.getReferences());
             Announcement a = new Announcement(i.getAnnouncement(), references, i.getAnnouncementID(), i.getClientUUID());
             PublicKey clientPubKey = getUserUUID(i.getClientUUID());
+            a.setPublicKey(clientPubKey);
 
             int index = _users.get(clientPubKey).postAnnouncementBoard(a);
             // client's public key is used to indicate it's stored in that client's PostOperation Board
