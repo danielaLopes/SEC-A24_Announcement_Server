@@ -1,3 +1,4 @@
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import pt.ulisboa.tecnico.sec.communication_lib.Announcement;
 import pt.ulisboa.tecnico.sec.communication_lib.ProtocolMessage;
@@ -37,6 +38,8 @@ public class BaseTest {
     public static PublicKey CLIENT3_PUBLIC_KEY;
     public static PrivateKey CLIENT3_PRIVATE_KEY;
 
+    public static Server _server;
+
     @BeforeAll
     public static void oneTimeSetup() {
 
@@ -53,7 +56,7 @@ public class BaseTest {
         CLIENT3_PRIVATE_KEY = client3KeyPair.getPrivate();
     }
 
-    VerifiableProtocolMessage forgeRegisterRequest(
+    static VerifiableProtocolMessage forgeRegisterRequest(
             Server server, int opUuid, PublicKey clientPubKey, PrivateKey clientPrivKey) throws Exception {
 
         ProtocolMessage pmRegister1 = new ProtocolMessage(

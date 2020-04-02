@@ -1,3 +1,5 @@
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import pt.ulisboa.tecnico.sec.communication_lib.ProtocolMessage;
 import pt.ulisboa.tecnico.sec.communication_lib.StatusCode;
@@ -11,31 +13,46 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class RegisterUserTest extends BaseTest {
 
-    public RegisterUserTest() {}
+    private static Server _server;
 
-    @Test
-    void success() throws Exception {
+    public RegisterUserTest() {
 
-        Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
+        _server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
+    }
+
+    @BeforeEach
+    void testSetup() {
+
+        _server.resetDatabase();
+
+        _server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
+                SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
+    }
+
+        @Test
+    void success() throws Exception {
 
         // registering client1
         VerifiableProtocolMessage vpm_responseRegister1 = forgeRegisterRequest(
-                server, UUIDGenerator.generateUUID(), CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
+                _server, UUIDGenerator.generateUUID(), CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.OK, scRegister1);
+    }
+
+    @AfterAll
+    public static void cleanDatabase() {
+
+        _server.resetDatabase();
     }
 
     // null Parameters
     @Test
     void publicKeyIsNull() throws Exception {
 
-        Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
-                SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
-
         // registering client1
         VerifiableProtocolMessage vpm_responseRegister1 = forgeRegisterRequest(
-                server, UUIDGenerator.generateUUID(), null, CLIENT1_PRIVATE_KEY);
+                _server, UUIDGenerator.generateUUID(), null, CLIENT1_PRIVATE_KEY);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.NULL_FIELD, scRegister1);
     }
@@ -43,21 +60,15 @@ public class RegisterUserTest extends BaseTest {
     @Test
     void opUuidIsNull() throws Exception {
 
-        Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
-                SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
-
         // registering client1
         VerifiableProtocolMessage vpm_responseRegister1 = forgeRegisterRequest(
-                server, 0, CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
+                _server, 0, CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.NULL_FIELD, scRegister1);
     }
 
     @Test
     void signatureIsNull() {
-
-        Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
-                SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
         int opUuidRegister1 = UUIDGenerator.generateUUID();
@@ -66,7 +77,7 @@ public class RegisterUserTest extends BaseTest {
         VerifiableProtocolMessage vpmRegister1 = new VerifiableProtocolMessage(
                 pmRegister1, null);
 
-        VerifiableProtocolMessage vpm_responseRegister1 = server.registerUser(vpmRegister1);
+        VerifiableProtocolMessage vpm_responseRegister1 = _server.registerUser(vpmRegister1);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.NULL_FIELD, scRegister1);
     }
@@ -74,9 +85,6 @@ public class RegisterUserTest extends BaseTest {
     // Replay attacks
     @Test
     void duplicatedOperation() throws Exception {
-
-        Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
-                SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
         int opUuidRepeated = UUIDGenerator.generateUUID();
@@ -87,12 +95,12 @@ public class RegisterUserTest extends BaseTest {
         VerifiableProtocolMessage vpmRegister1 = new VerifiableProtocolMessage(
                 pmRegister1, signedPmRegister1);
 
-        VerifiableProtocolMessage vpm_responseRegister1 = server.registerUser(vpmRegister1);
+        VerifiableProtocolMessage vpm_responseRegister1 = _server.registerUser(vpmRegister1);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.OK, scRegister1);
 
         // repeated operation
-        VerifiableProtocolMessage vpm_responseRegister2 =server.registerUser(vpmRegister1);
+        VerifiableProtocolMessage vpm_responseRegister2 = _server.registerUser(vpmRegister1);
         StatusCode scRegister2 = vpm_responseRegister2.getProtocolMessage().getStatusCode();
         assertEquals(scRegister1, scRegister2);
     }
@@ -100,9 +108,6 @@ public class RegisterUserTest extends BaseTest {
     // Message Integrity attacks
     @Test
     void tamperedMessage() throws Exception {
-
-        Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
-                SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
         int opUuidRegister1 = UUIDGenerator.generateUUID();
@@ -116,16 +121,13 @@ public class RegisterUserTest extends BaseTest {
         VerifiableProtocolMessage vpmRegister1 = new VerifiableProtocolMessage(
                 tampPmRegister1, signedPmRegister1);
 
-        VerifiableProtocolMessage vpm_responseRegister1 =server.registerUser(vpmRegister1);
+        VerifiableProtocolMessage vpm_responseRegister1 = _server.registerUser(vpmRegister1);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.INVALID_SIGNATURE, scRegister1);
     }
 
     @Test
     void invalidSignature() throws Exception {
-
-        Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
-                SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
         int opUuidRegister1 = UUIDGenerator.generateUUID();
@@ -136,7 +138,7 @@ public class RegisterUserTest extends BaseTest {
         VerifiableProtocolMessage vpmRegister1 = new VerifiableProtocolMessage(
                 pmRegister1, signedPmRegister1);
 
-        VerifiableProtocolMessage vpm_responseRegister1 =server.registerUser(vpmRegister1);
+        VerifiableProtocolMessage vpm_responseRegister1 = _server.registerUser(vpmRegister1);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.INVALID_SIGNATURE, scRegister1);
     }
@@ -144,18 +146,15 @@ public class RegisterUserTest extends BaseTest {
     @Test
     void userAlreadyRegistered() throws Exception {
 
-        Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
-                SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
-
         // registering client1
         VerifiableProtocolMessage vpm_responseRegister1 = forgeRegisterRequest(
-                server, UUIDGenerator.generateUUID(), CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
+                _server, UUIDGenerator.generateUUID(), CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.OK, scRegister1);
 
         // registering client1 twice
         VerifiableProtocolMessage vpm_responseRegister2 = forgeRegisterRequest(
-                server, UUIDGenerator.generateUUID(), CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
+                _server, UUIDGenerator.generateUUID(), CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
         StatusCode scRegister2 = vpm_responseRegister2.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.USER_ALREADY_REGISTERED, scRegister2);
     }
