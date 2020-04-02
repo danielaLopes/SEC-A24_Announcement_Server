@@ -44,7 +44,7 @@ public class ClientMessageHandler extends Thread {
                         break;
                     // Post to General Board
                     case "POSTGENERAL":
-                        Thread.sleep(10000);
+                        // Thread.sleep(10000);
                         postGeneral(vpm);
                         break;
                     // Read from specific user
@@ -64,8 +64,8 @@ public class ClientMessageHandler extends Thread {
                         break;
                 }
             }
-            catch (InterruptedException e) {
-            }
+            // catch (InterruptedException e) {
+            // }
             catch (IOException | ClassNotFoundException e) {
                 // System.out.println(e);
             }

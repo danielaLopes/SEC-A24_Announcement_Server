@@ -15,7 +15,7 @@ class RegisterTest extends BaseTest {
 
         StatusCode statusCode = _client1.register();
 
-        assertEquals(StatusCode.USER_ALREADY_REGISTERED.getCode(), statusCode);
+        assertEquals(StatusCode.USER_ALREADY_REGISTERED, statusCode);
     }
 
     @Test
@@ -26,8 +26,8 @@ class RegisterTest extends BaseTest {
         StatusCode statusCode1 = _client1.register();
         StatusCode statusCode2 = _client1.register();
 
-        assertEquals(StatusCode.USER_ALREADY_REGISTERED.getCode(), statusCode1);
-        assertEquals(StatusCode.USER_ALREADY_REGISTERED.getCode(), statusCode2);
+        assertEquals(StatusCode.USER_ALREADY_REGISTERED, statusCode1);
+        assertEquals(StatusCode.USER_ALREADY_REGISTERED, statusCode2);
     }
 
     @Test
@@ -40,9 +40,9 @@ class RegisterTest extends BaseTest {
         StatusCode statusCode2 = _client2.register();
         StatusCode statusCode3 = _client3.register();
 
-        assertEquals(StatusCode.USER_ALREADY_REGISTERED.getCode(), statusCode1);
-        assertEquals(StatusCode.USER_ALREADY_REGISTERED.getCode(), statusCode2);
-        assertEquals(StatusCode.USER_ALREADY_REGISTERED.getCode(), statusCode3);
+        assertEquals(StatusCode.USER_ALREADY_REGISTERED, statusCode1);
+        assertEquals(StatusCode.USER_ALREADY_REGISTERED, statusCode2);
+        assertEquals(StatusCode.USER_ALREADY_REGISTERED, statusCode3);
     }
 
 }
