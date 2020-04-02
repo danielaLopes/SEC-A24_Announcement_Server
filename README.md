@@ -26,12 +26,12 @@ Inside project root directory (announcement/):
     - For simple Client generation (will generate 3 pairs):
         ```
         ./generateClientKeys.sh < generateClientKeysInput.txt
-        ./generateClientKeyStore.sh
+        ./createClientKeyStore.sh
         ```
     - For simple Server generation:
         ```
         ./generateServerKeys.sh < generateServerKeysInput.txt
-        ./generateServerKeyStore.sh
+        ./createServerKeyStore.sh
         ```
 
 2. Build project:
