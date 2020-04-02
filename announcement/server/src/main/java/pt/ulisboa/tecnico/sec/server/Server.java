@@ -31,7 +31,7 @@ public class Server {
      * message that was originally formulated to answer that request.
      */
     private ConcurrentHashMap<Integer, VerifiableProtocolMessage> _operations;
-    private ConcurrentHashMap<PublicKey, User> _users; // TODO : is synchronization required inside userdata structures
+    private ConcurrentHashMap<PublicKey, User> _users;
     /**
      * maps the announcement unique id to the public key of the entity
      * where it's stored and the index on the PostOperation Board,
