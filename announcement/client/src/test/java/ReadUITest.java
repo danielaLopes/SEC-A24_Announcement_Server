@@ -9,11 +9,12 @@ import java.util.List;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
 class ReadUITest extends BaseTest {
 
-    private Client _client1, _client2, _client3;
+    static private Client _client1, _client2, _client3;
 
     public ReadUITest() {
         List<String> otherUsersPubKeyPaths = new ArrayList<String>();
@@ -98,6 +99,13 @@ class ReadUITest extends BaseTest {
         
         assertEquals(response.getKey(), StatusCode.USER_NOT_REGISTERED);
         assertEquals(response.getValue().size(), 0);
+    }
+
+    @AfterAll
+    static void closeCommunications() {
+        _client1.closeCommunication();
+        _client2.closeCommunication();
+        _client3.closeCommunication();
     }
 
 }

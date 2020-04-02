@@ -10,11 +10,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.security.PublicKey;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
 class VerifySignatureTest extends BaseTest {
 
-    private Client _client;
+    static private Client _client;
     private PublicKey _pubKey1;
 
     public VerifySignatureTest() throws Exception {
@@ -56,6 +57,11 @@ class VerifySignatureTest extends BaseTest {
         boolean success = _client.verifySignature(vpm);
 
         assertEquals(false, success);
+    }
+
+    @AfterAll
+    static void closeCommunications() {
+        _client.closeCommunication();
     }
 
 }

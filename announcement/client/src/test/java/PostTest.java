@@ -6,11 +6,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 class PostTest extends BaseTest {
 
-    private Client _client1, _client2, _client3;
+    static private Client _client1, _client2, _client3;
 
     public PostTest() {
         _client1 = new Client(PUBLICKEY_PATH1, KEYSTORE_PATH1, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH);
@@ -60,6 +62,13 @@ class PostTest extends BaseTest {
         StatusCode statusCode = _client1.post(MESSAGE, null);
         
         assertEquals(statusCode, StatusCode.NULL_FIELD);
+    }
+
+    @AfterAll
+    static void closeCommunications() {
+        _client1.closeCommunication();
+        _client2.closeCommunication();
+        _client3.closeCommunication();
     }
 
 }

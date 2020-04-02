@@ -10,11 +10,13 @@ import java.util.List;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 class ReadGeneralTest extends BaseTest {
 
-    private Client _client1, _client2, _client3;
+    static private Client _client1, _client2, _client3;
 
     public ReadGeneralTest() {
         _client1 = new Client(PUBLICKEY_PATH1, KEYSTORE_PATH1, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH);
@@ -86,13 +88,13 @@ class ReadGeneralTest extends BaseTest {
         AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response3 = _client3.readGeneral(15);
         
         assertEquals(response1.getKey(), StatusCode.OK);
-        assertTrue(response1.getValue().size() >= 15);
+        assertTrue(response1.getValue().size() == 15);
 
         assertEquals(response2.getKey(), StatusCode.OK);
-        assertTrue(response2.getValue().size() >= 15);
+        assertTrue(response2.getValue().size() == 15);
         
         assertEquals(response3.getKey(), StatusCode.OK);
-        assertTrue(response3.getValue().size() >= 15);
+        assertTrue(response3.getValue().size() == 15);
 
         for (Announcement a: response1.getValue()) {
             assertEquals(a.getAnnouncement(), MESSAGE);
@@ -103,6 +105,13 @@ class ReadGeneralTest extends BaseTest {
         for (Announcement a: response3.getValue()) {
             assertEquals(a.getAnnouncement(), MESSAGE);
         }
+    }
+
+    @AfterAll
+    static void closeCommunications() {
+        _client1.closeCommunication();
+        _client2.closeCommunication();
+        _client3.closeCommunication();
     }
 
 }

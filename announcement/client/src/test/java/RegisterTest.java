@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 
 class RegisterTest extends BaseTest {
 
-    private Client _client1, _client2, _client3;
+    static private Client _client1, _client2, _client3;
 
     @Test
     void success() {
@@ -16,6 +16,8 @@ class RegisterTest extends BaseTest {
         StatusCode statusCode = _client1.register();
 
         assertEquals(StatusCode.USER_ALREADY_REGISTERED, statusCode);
+
+        _client1.closeCommunication();
     }
 
     @Test
@@ -28,6 +30,9 @@ class RegisterTest extends BaseTest {
 
         assertEquals(StatusCode.USER_ALREADY_REGISTERED, statusCode1);
         assertEquals(StatusCode.USER_ALREADY_REGISTERED, statusCode2);
+
+        _client1.closeCommunication();
+        _client2.closeCommunication();
     }
 
     @Test
@@ -43,6 +48,10 @@ class RegisterTest extends BaseTest {
         assertEquals(StatusCode.USER_ALREADY_REGISTERED, statusCode1);
         assertEquals(StatusCode.USER_ALREADY_REGISTERED, statusCode2);
         assertEquals(StatusCode.USER_ALREADY_REGISTERED, statusCode3);
+
+        _client1.closeCommunication();
+        _client2.closeCommunication();
+        _client3.closeCommunication();
     }
 
 }
