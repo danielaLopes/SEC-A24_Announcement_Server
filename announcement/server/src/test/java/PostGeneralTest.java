@@ -323,6 +323,49 @@ public class PostGeneralTest extends BaseTest {
         assertEquals(scRegister1, sc1);
     }
 
+    @Test
+    void duplicatedReference() throws Exception {
+
+        Server server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
+                SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
+
+        // registering client1
+        int opUuid1 = UUIDGenerator.generateUUID();
+        VerifiableProtocolMessage vpm_responseRegister1 =  forgeRegisterRequest(
+                server, opUuid1, CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
+        StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
+        assertEquals(StatusCode.OK, scRegister1);
+
+        // posting announcement 1
+        int opUuid2 = UUIDGenerator.generateUUID();
+        List<Integer> references1 = new ArrayList<>();
+        Announcement announcement1 = new Announcement(MESSAGE1, references1);
+        ProtocolMessage pm1 = new ProtocolMessage(
+                "POSTGENERAL", CLIENT1_PUBLIC_KEY, opUuid2, announcement1);
+        byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);
+        byte[] signedpm1 = SignatureUtil.sign(bpm1, CLIENT1_PRIVATE_KEY);
+        VerifiableProtocolMessage vpm1 = new VerifiableProtocolMessage(pm1, signedpm1);
+
+        VerifiableProtocolMessage vpm_response1 = server.postGeneral(vpm1);
+        StatusCode sc1 = vpm_response1.getProtocolMessage().getStatusCode();
+        assertEquals(StatusCode.OK, sc1);
+
+        // posting announcement 2
+        int opUuid3 = UUIDGenerator.generateUUID();
+        int repeatedReference = vpm_response1.getProtocolMessage().getPostAnnouncement().getAnnouncementID();
+        List<Integer> references2 = new ArrayList<>(Arrays.asList(repeatedReference, repeatedReference));
+        Announcement announcement2 = new Announcement(MESSAGE1, references2);
+        ProtocolMessage pm2 = new ProtocolMessage(
+                "POSTGENERAL", CLIENT1_PUBLIC_KEY, opUuid3, announcement2);
+        byte[] bpm2 = ProtocolMessageConverter.objToByteArray(pm2);
+        byte[] signedpm2 = SignatureUtil.sign(bpm2, CLIENT1_PRIVATE_KEY);
+        VerifiableProtocolMessage vpm2 = new VerifiableProtocolMessage(pm2, signedpm2);
+
+        VerifiableProtocolMessage vpm_response2 = server.postGeneral(vpm2);
+        StatusCode sc2 = vpm_response2.getProtocolMessage().getStatusCode();
+        assertEquals(StatusCode.DUPLICATE_REFERENCE, sc2);
+    }
+
     // Message Integrity attacks
     @Test
     void tamperedMessage() throws Exception {
