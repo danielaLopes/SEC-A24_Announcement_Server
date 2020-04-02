@@ -64,7 +64,7 @@ mvn clean install -DskipTests
 cd client/
 mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="<pubKeyPath> <keyStorePath> <keyStorePassword> <entryPassword> <alias> <serverPubKeyPath> <numberOfOtherClients> <otherClientsPubKeyPaths>*"
 
-mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="src/main/resources/crypto/public1.key src/main/resources/crypto/client1_keystore.jks password password ola ../server/src/main/resources/crypto/public.key 2 src/main/resources/crypto/public2.key src/main/resources/crypto/public3.key"
+mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="src/main/resources/crypto/public1.key src/main/resources/crypto/client1_keystore.jks password password alias ../server/src/main/resources/crypto/public.key 2 src/main/resources/crypto/public2.key src/main/resources/crypto/public3.key"
 ```
 
 ## Interacting with the Client UI

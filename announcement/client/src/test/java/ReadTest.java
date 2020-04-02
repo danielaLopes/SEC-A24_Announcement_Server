@@ -6,97 +6,85 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
+import java.security.PublicKey;
 import java.util.AbstractMap;
-import java.util.ArrayList;
 
 import org.junit.jupiter.api.Test;
 
 class ReadTest extends BaseTest {
 
     private Client _client1, _client2, _client3;
+    private PublicKey _pubKey1, _pubKey2, _pubKey3;
 
-    public ReadTest() {
-        List<String> otherUsersPubKeyPaths = new ArrayList<String>();
-        otherUsersPubKeyPaths.add(PUBLICKEY_PATH2);
-        otherUsersPubKeyPaths.add(PUBLICKEY_PATH3);
-        _client1 = new Client(PUBLICKEY_PATH1, KEYSTORE_PATH1, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH, otherUsersPubKeyPaths);
+    public ReadTest() throws Exception {
+        _client1 = new Client(PUBLICKEY_PATH1, KEYSTORE_PATH1, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH);
+        _client2 = new Client(PUBLICKEY_PATH2, KEYSTORE_PATH2, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH);
+        _client3 = new Client(PUBLICKEY_PATH3, KEYSTORE_PATH3, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH);
 
-        otherUsersPubKeyPaths = new ArrayList<String>();
-        otherUsersPubKeyPaths.add(PUBLICKEY_PATH1);
-        otherUsersPubKeyPaths.add(PUBLICKEY_PATH3);
-        _client2 = new Client(PUBLICKEY_PATH2, KEYSTORE_PATH2, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH, otherUsersPubKeyPaths);
-
-        otherUsersPubKeyPaths = new ArrayList<String>();
-        otherUsersPubKeyPaths.add(PUBLICKEY_PATH1);
-        otherUsersPubKeyPaths.add(PUBLICKEY_PATH2);
-        _client3 = new Client(PUBLICKEY_PATH3, KEYSTORE_PATH3, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH, otherUsersPubKeyPaths);
+        _pubKey1 = loadPublicKey(PUBLICKEY_PATH1);
+        _pubKey2 = loadPublicKey(PUBLICKEY_PATH2);
+        _pubKey3 = loadPublicKey(PUBLICKEY_PATH3);
     }
 
     @Test
-    void success() {
+    void success() throws Exception {
         _client1.post(MESSAGE, REFERENCES);
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client2.read(1, 1);
+
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client2.read(_pubKey1, 1);
         
-        assertEquals(response.getKey(), StatusCode.OK.getCode());
+        assertEquals(response.getKey(), StatusCode.OK);
         assertEquals(response.getValue().size(), 1);
     }
 
     @Test
-    void tooManyUsers() {
-        _client1.postGeneral(MESSAGE, REFERENCES);
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response2 = _client2.read(1, 1);
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response3 = _client2.read(1, 1);
+    void tooManyUsers() throws Exception {
+        _client1.post(MESSAGE, REFERENCES);
 
-        assertEquals(response2.getKey(), StatusCode.OK.getCode());
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response2 = _client2.read(_pubKey1, 1);
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response3 = _client3.read(_pubKey1, 1);
+
+        assertEquals(response2.getKey(), StatusCode.OK);
         assertEquals(response2.getValue().size(), 1);
         
-        assertEquals(response3.getKey(), StatusCode.OK.getCode());
+        assertEquals(response3.getKey(), StatusCode.OK);
         assertEquals(response3.getValue().size(), 1);
     }
 
     @Test
     void negativeNumberOfAnnouncements() {
         _client1.post(MESSAGE, REFERENCES);
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client2.read(1, -1);
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client2.read(_pubKey1, -1);
         
-        assertEquals(response.getKey(), StatusCode.OK.getCode());
+        assertEquals(response.getKey(), StatusCode.OK);
         assertTrue(response.getValue().size() > 0);
     }
 
     @Test
     void zeroNumberOfAnnouncements() {
         _client1.post(MESSAGE, REFERENCES);
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client2.read(1, 0);
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client2.read(_pubKey1, 0);
         
-        assertEquals(response.getKey(), StatusCode.OK.getCode());
+        assertEquals(response.getKey(), StatusCode.OK);
         assertTrue(response.getValue().size() > 0);
     }
 
     @Test
     void tooManyAnnouncements() {
-        for (int i = 0; i < 15; i++) {
+        for (int i = 0; i < 5; i++) {
             _client1.post(MESSAGE, REFERENCES);
         }
         
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client2.read(1, 0);
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client2.read(_pubKey1, 0);
         
-        assertEquals(response.getKey(), StatusCode.OK.getCode());
-        assertTrue(response.getValue().size() >= 15);
+        assertEquals(response.getKey(), StatusCode.OK);
+        assertTrue(response.getValue().size() >= 5);
     }
 
     @Test
-    void userIsNegative() {
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client2.read(-1, 1);
+    void userIsNull() {
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client2.read(null, 1);
         
-        assertEquals(response.getKey(), StatusCode.USER_NOT_REGISTERED.getCode());
-        assertEquals(response.getValue().size(), 0);
-    }
-
-    @Test
-    void userDoesNotExist() {
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client2.read(3, 1);
-        
-        assertEquals(response.getKey(), StatusCode.USER_NOT_REGISTERED.getCode());
+        assertEquals(response.getKey(), StatusCode.NULL_FIELD);
         assertEquals(response.getValue().size(), 0);
     }
 

@@ -83,8 +83,8 @@ public class ClientUI {
 
         List<Integer> references = parseReferences(referencesIn);
 
-        int statusCode = _client.post(message, references);
-        if (statusCode == StatusCode.OK.getCode()) {
+        StatusCode statusCode = _client.post(message, references);
+        if (statusCode == StatusCode.OK) {
             System.out.println("Posted announcement.");
         }
         else {
@@ -105,8 +105,8 @@ public class ClientUI {
         }
         List<Integer> references = parseReferences(referencesIn);
 
-        int statusCode = _client.postGeneral(message, references);
-        if (statusCode == StatusCode.OK.getCode()) {
+        StatusCode statusCode = _client.postGeneral(message, references);
+        if (statusCode == StatusCode.OK) {
             System.out.println("Posted announcement.");
         }
         else {
@@ -121,8 +121,8 @@ public class ClientUI {
     public void read() {
         int user = promptUser();
         int number = promptNumber();
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client.read(user, number);
-        if (response.getKey() == StatusCode.OK.getCode()) {
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client.read(user, number);
+        if (response.getKey() == StatusCode.OK) {
             printAnnouncements(response.getValue(), "USER");
         }
         else {
@@ -138,8 +138,8 @@ public class ClientUI {
     public void readGeneral() {
         int number = promptNumber();
         _client.readGeneral(number);
-        AbstractMap.SimpleEntry<Integer, List<Announcement>> response = _client.readGeneral(number);
-        if (response.getKey() == StatusCode.OK.getCode()) {
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client.readGeneral(number);
+        if (response.getKey() == StatusCode.OK) {
             printAnnouncements(response.getValue(), "GENERAL");
         }
         else {

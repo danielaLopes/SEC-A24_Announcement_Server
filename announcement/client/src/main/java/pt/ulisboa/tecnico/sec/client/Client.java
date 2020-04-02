@@ -51,6 +51,18 @@ public class Client{
         startServerCommunication();
     }
 
+    public Client(String pubKeyPath, String keyStorePath,
+                  String keyStorePasswd, String entryPasswd, String alias,
+                  String serverPubKeyPath) {
+        loadPublicKey(pubKeyPath);
+        loadPrivateKey(keyStorePath, keyStorePasswd, entryPasswd, alias);
+        
+        loadServerPublicKey(serverPubKeyPath);
+
+        _communication = new Communication();
+        startServerCommunication();
+    }
+
     /**
      * Loads Client's public key to _pubKey.
      */
@@ -196,7 +208,7 @@ public class Client{
     public void printStatusCode(StatusCode sc) {
         if (sc == null) return;
 
-        System.out.println("Status Code: ====== " + sc.getCode() + ": " + sc.getDescription() + " ======");
+        System.out.println("Status Code: ====== " + sc + ": " + sc.getDescription() + " ======");
     }
 
     /**
@@ -310,7 +322,7 @@ public class Client{
      * Must be the first operation to be done in the Client-Server communication.
      * @return the StatusCode of the operation
      */
-    public int register() {
+    public StatusCode register() {
         int uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("REGISTER", _pubKey, uuid);
         VerifiableProtocolMessage vpm = requestServer(pm);
@@ -326,7 +338,7 @@ public class Client{
             rsc = getStatusCodeFromVPM(vpm);
         }
         
-        return rsc.getCode();
+        return rsc;
     }
 
     /**
@@ -336,18 +348,18 @@ public class Client{
      * @param references to previous announcements
      * @return the StatusCode of the operation
      */
-    public int post(String message, List<Integer> references) {
+    public StatusCode post(String message, List<Integer> references) {
         if (message == null) {
             System.out.println("Message cannot be null.");
-            return StatusCode.NULL_FIELD.getCode();
+            return StatusCode.NULL_FIELD;
         }
         if (references == null) {
             System.out.println("References cannot be null.");
-            return StatusCode.NULL_FIELD.getCode();
+            return StatusCode.NULL_FIELD;
         }
         if (invalidMessageLength(message)) {
             System.out.println("Maximum message length to post announcement is 255.");
-            return StatusCode.INVALID_MESSAGE_LENGTH.getCode();
+            return StatusCode.INVALID_MESSAGE_LENGTH;
         }
 
         Announcement a = new Announcement(message, references);
@@ -362,7 +374,7 @@ public class Client{
             rsc = getStatusCodeFromVPM(vpm);
         }
         
-        return rsc.getCode();
+        return rsc;
     }
 
     /**
@@ -372,18 +384,18 @@ public class Client{
      * @param references to previous announcements
      * @return the StatusCode of the operation
      */
-    public int postGeneral(String message, List<Integer> references) {
+    public StatusCode postGeneral(String message, List<Integer> references) {
         if (message == null) {
             System.out.println("Message cannot be null.");
-            return StatusCode.NULL_FIELD.getCode();
+            return StatusCode.NULL_FIELD;
         }
         if (references == null) {
             System.out.println("References cannot be null.");
-            return StatusCode.NULL_FIELD.getCode();
+            return StatusCode.NULL_FIELD;
         }
         if (invalidMessageLength(message)) {
             System.out.println("Maximum message length to post announcement is 255.");
-            return StatusCode.INVALID_MESSAGE_LENGTH.getCode();
+            return StatusCode.INVALID_MESSAGE_LENGTH;
         }
 
         Announcement a = new Announcement(message, references);
@@ -398,20 +410,49 @@ public class Client{
             rsc = getStatusCodeFromVPM(vpm);
         }
         
-        return rsc.getCode();
+        return rsc;
     }
 
     /**
      * Retrieves the number latest announcements from the user's Board.
-     * @param user 
+     * @param user public key
      * @param number of announcements to be retrieved
      * @return a pair containing a StatusCode of the operation
      * and the list of announcements received 
      */
-    public AbstractMap.SimpleEntry<Integer, List<Announcement>> read(int user, int number) {
+    public AbstractMap.SimpleEntry<StatusCode, List<Announcement>> read(PublicKey user, int number) {
+        if (user == null) {
+            System.out.println("Invalid user.");
+            return new AbstractMap.SimpleEntry<>(StatusCode.NULL_FIELD, new ArrayList<>());
+        }
+        int uuid = UUIDGenerator.generateUUID();
+        ProtocolMessage pm = new ProtocolMessage("READ", _pubKey, uuid, number, user);
+        VerifiableProtocolMessage vpm = requestServer(pm);
+        List<Announcement> announcements = null;
+
+        StatusCode rsc = null;
+        if (vpm == null) {
+            rsc = StatusCode.NO_RESPONSE;
+        }
+        else {
+            rsc = getStatusCodeFromVPM(vpm);
+            announcements = getAnnouncementsFromVPM(vpm);
+        }
+
+        return new AbstractMap.SimpleEntry<>(rsc, announcements);
+    }
+
+    /**
+     * Retrieves the number latest announcements from the user's Board.
+     * @param user position in _usersPubKeys
+     * @param number of announcements to be retrieved
+     * @return a pair containing a StatusCode of the operation
+     * and the list of announcements received 
+     */
+    public AbstractMap.SimpleEntry<StatusCode, List<Announcement>> read(int user, int number) {
         if (invalidUser(user)) {
             System.out.println("Invalid user.");
-            return new AbstractMap.SimpleEntry<>(StatusCode.USER_NOT_REGISTERED.getCode(), new ArrayList<>());
+            return new AbstractMap.SimpleEntry<>(StatusCode.USER_NOT_REGISTERED, new ArrayList<>());
         }
         PublicKey userToReadPB = _usersPubKeys.get(user);
         int uuid = UUIDGenerator.generateUUID();
@@ -428,7 +469,7 @@ public class Client{
             announcements = getAnnouncementsFromVPM(vpm);
         }
 
-        return new AbstractMap.SimpleEntry<>(rsc.getCode(), announcements);
+        return new AbstractMap.SimpleEntry<>(rsc, announcements);
     }
 
     /**
@@ -437,7 +478,7 @@ public class Client{
      * @return a pair containing a StatusCode of the operation
      * and the list of announcements received 
      */
-    public AbstractMap.SimpleEntry<Integer, List<Announcement>> readGeneral(int number) {
+    public AbstractMap.SimpleEntry<StatusCode, List<Announcement>> readGeneral(int number) {
         int uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("READGENERAL", _pubKey, uuid, number);
         VerifiableProtocolMessage vpm = requestServer(pm);
@@ -452,7 +493,7 @@ public class Client{
             announcements = getAnnouncementsFromVPM(vpm);
         }
 
-        return new AbstractMap.SimpleEntry<>(rsc.getCode(), announcements);
+        return new AbstractMap.SimpleEntry<>(rsc, announcements);
     }
 
     /**

@@ -44,7 +44,7 @@ public class ClientMessageHandler extends Thread {
                         break;
                     // Post to General Board
                     case "POSTGENERAL":
-                        // Thread.sleep(3000);
+                        // Thread.sleep(10000);
                         postGeneral(vpm);
                         break;
                     // Read from specific user

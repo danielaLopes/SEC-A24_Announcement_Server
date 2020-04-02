@@ -1,3 +1,6 @@
+mkdir server/src/main/resources
+mkdir server/src/main/resources/crypto
+
 openssl genrsa -out server/src/main/resources/crypto/server.key
 
 openssl pkcs8 -topk8 -inform PEM -outform DER -in server/src/main/resources/crypto/server.key  -nocrypt > server/src/main/resources/crypto/server_pkcs8.key

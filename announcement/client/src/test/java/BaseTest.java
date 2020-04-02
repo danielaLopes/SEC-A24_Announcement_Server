@@ -1,9 +1,11 @@
 import java.util.List;
 
+import pt.ulisboa.tecnico.sec.crypto_lib.KeyPairUtil;
 import pt.ulisboa.tecnico.sec.crypto_lib.KeyStorage;
 
 import java.security.KeyStore;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.ArrayList;
 
 class BaseTest {
@@ -30,32 +32,29 @@ class BaseTest {
     
     public final static String KEYSTORE_PASSWD = "password";
     public final static String ENTRY_PASSWD = "password";
-    public final static String ALIAS = "ola";
+    public final static String ALIAS = "alias";
 
 
-    public PrivateKey loadPrivateKey(String keyStorePath, String keyStorePasswd, String entryPasswd, String alias) {
+    public PrivateKey loadPrivateKey(String keyStorePath, String keyStorePasswd, String entryPasswd, String alias) throws Exception {
         if (keyStorePath == null || keyStorePasswd == null || entryPasswd == null || alias == null) {
             System.out.println("Error: Not possible to initialize client because it was not possible to load keystore.\n");
-            System.exit(-1);
+            return null;
         }
 
         PrivateKey privateKey = null;
         KeyStore keyStore = null;
-        try {
-            keyStore = KeyStorage.loadKeyStore(keyStorePasswd.toCharArray(), keyStorePath);
-        } catch(Exception e) {
-            System.out.println("Error: Not possible to load keystore.\n" + e);
-        }
-        try {
-            privateKey = KeyStorage.loadPrivateKey(entryPasswd.toCharArray(), alias, keyStore);
-        } catch (Exception e) {
-            System.out.println("Error: Not possible to load private key.\n" + e);
-        }
-        if (privateKey == null) {
-            System.out.println("Error: Private key is null.\n");
-        }
-
+        keyStore = KeyStorage.loadKeyStore(keyStorePasswd.toCharArray(), keyStorePath);
+        privateKey = KeyStorage.loadPrivateKey(entryPasswd.toCharArray(), alias, keyStore);
+        
         return privateKey;
+    }
+
+    public PublicKey loadPublicKey(String pubKeyPath) throws Exception {
+        if (pubKeyPath == null) {
+            System.out.println("Error: Not possible to initialize client because it was not possible to load public key.\n");
+            return null;
+        }
+        return KeyPairUtil.loadPublicKey(pubKeyPath);
     }
 
 }
