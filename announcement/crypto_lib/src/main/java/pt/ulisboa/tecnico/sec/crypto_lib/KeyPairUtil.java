@@ -44,7 +44,6 @@ public class KeyPairUtil {
             NoSuchAlgorithmException, InvalidKeySpecException {
 
         String keyStr = new String(Files.readAllBytes(Paths.get(filename)));
-
         PemObject pem = new PemReader(new StringReader(keyStr)).readPemObject();
         byte[] pubKeyBytes = pem.getContent();
 
