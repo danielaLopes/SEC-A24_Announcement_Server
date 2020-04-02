@@ -30,7 +30,7 @@ class BaseTest {
     
     public final static String KEYSTORE_PASSWD = "password";
     public final static String ENTRY_PASSWD = "password";
-    public final static String ALIAS = "ola";
+    public final static String ALIAS = "alias";
 
 
     public PrivateKey loadPrivateKey(String keyStorePath, String keyStorePasswd, String entryPasswd, String alias) {

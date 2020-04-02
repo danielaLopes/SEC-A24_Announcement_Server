@@ -15,7 +15,7 @@
         <module>crypto_lib</module>
         <module>communication_lib</module>
         <module>database_lib</module>
-        <module>client-server-testing</module>
+        <!-- <module>client-server-testing</module> -->
     </modules>
 
     <dependencies>
