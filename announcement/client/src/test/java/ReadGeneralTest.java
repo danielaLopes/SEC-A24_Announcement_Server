@@ -26,7 +26,6 @@ class ReadGeneralTest extends BaseTest {
     void success() {
         _client1.postGeneral(MESSAGE, REFERENCES);
         AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client1.readGeneral(1);
-        
         assertEquals(response.getKey(), StatusCode.OK);
         assertEquals(response.getValue().size(), 1);
         assertEquals(response.getValue().get(0).getAnnouncement(), MESSAGE);
@@ -82,9 +81,9 @@ class ReadGeneralTest extends BaseTest {
             _client3.postGeneral(MESSAGE, REFERENCES);
         }
         
-        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response1 = _client1.readGeneral(0);
-        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response2 = _client2.readGeneral(0);
-        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response3 = _client3.readGeneral(0);
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response1 = _client1.readGeneral(15);
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response2 = _client2.readGeneral(15);
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response3 = _client3.readGeneral(15);
         
         assertEquals(response1.getKey(), StatusCode.OK);
         assertTrue(response1.getValue().size() >= 15);

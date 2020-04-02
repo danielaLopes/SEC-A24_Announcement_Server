@@ -8,6 +8,7 @@ import java.io.*;
 import java.net.*;
 import java.security.*;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -35,7 +36,6 @@ public class Server {
      * General Board, otherwise it's in the respective User's PostOperation Board
      */
     private ConcurrentHashMap<Integer, AnnouncementLocation> _announcementMapper;
-    // TODO: in General Board, posts should remain accountable, so should the value be a signature(post) + post = PostOperation?
     private List<Announcement> _generalBoard;
     private Communication _communication;
 
@@ -50,6 +50,71 @@ public class Server {
         _generalBoard = new ArrayList<>();
         _communication = new Communication();
         _db = new Database();
+        
+        retrieveDataStructures();
+        //printDataStructures();
+    }
+
+    public PublicKey getUserUUID(String uuid) {
+        for(User u: _users.values()) {
+            if (u.getdbTableName().equals(uuid)) {
+                return u.getPublicKey();
+            }
+        }
+        return null;
+    }
+
+    public void printDataStructures() {
+        System.out.println("_users: " + _users + "END");
+        System.out.println("_generalBoard: " + _generalBoard + "END");
+        System.out.println("_announcementMapper: " + _announcementMapper + "END");
+        System.out.println("_operations: " + _operations + "END");
+    }
+
+    public void retrieveDataStructures() {
+        DBStructure dbs = _db.retrieveStructure();
+        //Retrieve _users from database
+        List<UserStructure> us = dbs.getUsers();
+        for (UserStructure i: us) {
+            PublicKey pk = (PublicKey) ProtocolMessageConverter.byteArrayToObj(i.getPublicKey());
+            User u = new User(pk, i.getClientUUID());
+            _users.put(pk, u);
+        }
+
+        //Retrieve _generalBoard from database
+        List<GeneralBoardStructure> gbs = dbs.getGeneralBoard();
+        for (GeneralBoardStructure i: gbs) {
+            List<Integer> references = (List<Integer>) ProtocolMessageConverter.byteArrayToObj(i.getReferences());
+            Announcement a = new Announcement(i.getAnnouncement(), references, i.getAnnouncementID(), i.getClientUUID());
+            
+            int index;
+            synchronized (_generalBoard) {
+                index = _generalBoard.size();
+                _generalBoard.add(a);
+            }
+            // server's public key is used to indicate it's stored in the General Board
+            _announcementMapper.put(i.getAnnouncementID(), new AnnouncementLocation(_pubKey, index));
+        }
+
+        //Retrieve _announcementMapper from database
+        List<UserBoardStructure> ubs = dbs.getUserBoard();
+        for (UserBoardStructure i: ubs) {
+            List<Integer> references = (List<Integer>) ProtocolMessageConverter.byteArrayToObj(i.getReferences());
+            Announcement a = new Announcement(i.getAnnouncement(), references, i.getAnnouncementID(), i.getClientUUID());
+            PublicKey clientPubKey = getUserUUID(i.getClientUUID());
+
+            int index = _users.get(clientPubKey).postAnnouncementBoard(a);
+            // client's public key is used to indicate it's stored in that client's PostOperation Board
+            _announcementMapper.put(i.getAnnouncementID(), new AnnouncementLocation(clientPubKey, index));
+        }
+
+        //Retrieve _operations from database
+        List<OperationsBoardStructure> obs = dbs.getOperations();
+        for (OperationsBoardStructure i: obs) {
+            VerifiableProtocolMessage vpm = (VerifiableProtocolMessage) ProtocolMessageConverter.byteArrayToObj(i.getOperation());
+            _operations.put(i.getOpUUID(), vpm);
+        }
+        
     }
 
     public void loadPublicKey(String pubKeyPath) {
@@ -296,6 +361,10 @@ public class Server {
             response = createVerifiableMessage(new ProtocolMessage(
                     "REGISTER", StatusCode.NULL_FIELD, _pubKey, opUuid));
             _operations.put(opUuid, response);
+
+            byte[] operation = ProtocolMessageConverter.objToByteArray(response);
+            _db.insertOperation(opUuid, operation);
+
             return response;
         }
 
@@ -309,6 +378,10 @@ public class Server {
             response = createVerifiableMessage(new ProtocolMessage(
                     "REGISTER", sc, _pubKey, opUuid));
             _operations.put(opUuid, response);
+
+            byte[] operation = ProtocolMessageConverter.objToByteArray(response);
+            _db.insertOperation(opUuid, operation);
+
             return response;
         }
 
@@ -321,27 +394,28 @@ public class Server {
             _db.createUserTable(uuid);
 
             byte[] b = ProtocolMessageConverter.objToByteArray(clientPubKey);
-            byte[] encodedhash = null;
-            try {
-                MessageDigest digest = MessageDigest.getInstance("SHA-256");
-                encodedhash = digest.digest(b);
-            }
-            catch(NoSuchAlgorithmException e) {
-                System.out.println(e);
-            }
 
-            _db.insertUser(encodedhash, uuid);
+            _db.insertUser(b, uuid);
+
         }
         else {
             response = createVerifiableMessage(new ProtocolMessage(
                     "REGISTER", sc, _pubKey, vpm.getProtocolMessage().getOpUuid()));
             _operations.put(opUuid, response);
+
+            byte[] operation = ProtocolMessageConverter.objToByteArray(response);
+            _db.insertOperation(opUuid, operation);
+
             return response;
         }
 
         response = createVerifiableMessage(new ProtocolMessage(
                 "REGISTER", StatusCode.OK, _pubKey, vpm.getProtocolMessage().getOpUuid()));
         _operations.put(opUuid, response);
+
+        byte[] operation = ProtocolMessageConverter.objToByteArray(response);
+        _db.insertOperation(opUuid, operation);
+
         return response;
     }
 
@@ -374,6 +448,10 @@ public class Server {
             response = createVerifiableMessage(new ProtocolMessage(
                     "POST", sc, _pubKey, vpm.getProtocolMessage().getOpUuid()));
             _operations.put(opUuid, response);
+
+            byte[] operation = ProtocolMessageConverter.objToByteArray(response);
+            _db.insertOperation(opUuid, operation);
+
             return response;
         }
 
@@ -386,7 +464,9 @@ public class Server {
         a.setPublicKey(pm.getPublicKey());
         byte[] ref = ProtocolMessageConverter.objToByteArray(a.getReferences());
 
-        _db.insertAnnouncement(a.getAnnouncement(), ref, announcementUuid, getUserUUID(pm.getPublicKey()));
+        byte[] b = ProtocolMessageConverter.objToByteArray(vpm);
+
+        _db.insertAnnouncement(a.getAnnouncement(), ref, announcementUuid, getUserUUID(pm.getPublicKey()),b);
 
         int index = _users.get(clientPubKey).postAnnouncementBoard(a);
         // client's public key is used to indicate it's stored in that client's PostOperation Board
@@ -395,6 +475,12 @@ public class Server {
         response = createVerifiableMessage(new ProtocolMessage(
                 "POST", StatusCode.OK, _pubKey, vpm.getProtocolMessage().getOpUuid(), a));
         _operations.put(opUuid, response);
+
+        byte[] operation = ProtocolMessageConverter.objToByteArray(response);
+        _db.insertOperation(opUuid, operation);
+
+        printDataStructures();
+
         return response;
     }
 
@@ -424,6 +510,8 @@ public class Server {
             response = createVerifiableMessage(new ProtocolMessage(
                     "POST", sc, _pubKey, vpm.getProtocolMessage().getOpUuid()));
             _operations.put(opUuid, response);
+            byte[] operation = ProtocolMessageConverter.objToByteArray(response);
+            _db.insertOperation(opUuid, operation);
             return response;
         }
 
@@ -449,6 +537,8 @@ public class Server {
         response = createVerifiableMessage(new ProtocolMessage(
                 "POSTGENERAL", StatusCode.OK, _pubKey, vpm.getProtocolMessage().getOpUuid(), a));
         _operations.put(opUuid, response);
+        byte[] operation = ProtocolMessageConverter.objToByteArray(response);
+        _db.insertOperation(opUuid, operation);
         return response;
     }
 
@@ -488,6 +578,8 @@ public class Server {
             response = createVerifiableMessage(new ProtocolMessage(
                     "READ", sc, _pubKey, vpm.getProtocolMessage().getOpUuid()));
             _operations.put(opUuid, response);
+            byte[] operation = ProtocolMessageConverter.objToByteArray(response);
+            _db.insertOperation(opUuid, operation);
             return response;
         }
 
@@ -517,6 +609,8 @@ public class Server {
         response = createVerifiableMessage(new ProtocolMessage(
                 "READ", StatusCode.OK, _pubKey, pm.getOpUuid(), announcements));
         _operations.put(opUuid, response);
+        byte[] operation = ProtocolMessageConverter.objToByteArray(response);
+        _db.insertOperation(opUuid, operation);
         return response;
     }
 
@@ -545,6 +639,8 @@ public class Server {
             response = createVerifiableMessage(new ProtocolMessage(
                     "READGENERAL", sc, _pubKey, vpm.getProtocolMessage().getOpUuid()));
             _operations.put(opUuid, response);
+            byte[] operation = ProtocolMessageConverter.objToByteArray(response);
+            _db.insertOperation(opUuid, operation);
             return response;
         }
         // TODO : this if is wrong!
@@ -565,6 +661,8 @@ public class Server {
         response = createVerifiableMessage(new ProtocolMessage(
                 "READGENERAL", StatusCode.OK, _pubKey, pm.getOpUuid(), announcements));
         _operations.put(opUuid, response);
+        byte[] operation = ProtocolMessageConverter.objToByteArray(response);
+        _db.insertOperation(opUuid, operation);
         return response;
     }
 

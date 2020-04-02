@@ -2,6 +2,9 @@ import java.util.List;
 
 import pt.ulisboa.tecnico.sec.crypto_lib.KeyPairUtil;
 import pt.ulisboa.tecnico.sec.crypto_lib.KeyStorage;
+import pt.ulisboa.tecnico.sec.database_lib.Database;
+
+import org.junit.jupiter.api.BeforeEach;
 
 import java.security.KeyStore;
 import java.security.PrivateKey;
@@ -35,6 +38,12 @@ public class BaseTest {
 
     public final static String PUBLICKEY_PATH3 = "../client/src/main/resources/crypto/public3.key";
     public final static String KEYSTORE_PATH3 = "../client/src/main/resources/crypto/client3_keystore.jks";
+
+    @BeforeEach
+    void init() {
+        Database _db = new Database();
+        _db.resetDatabaseTest();
+    }
 
     public PrivateKey loadPrivateKey(String keyStorePath, String keyStorePasswd, String entryPasswd, String alias) throws Exception {
         if (keyStorePath == null || keyStorePasswd == null || entryPasswd == null || alias == null) {

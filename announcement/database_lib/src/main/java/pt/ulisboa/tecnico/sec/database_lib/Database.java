@@ -18,6 +18,7 @@ public class Database {
             resetDatabase();
             createGeneralBoardTable();
             createUsersTable();
+            createOperationsTable();
         }
         catch(Exception e) {
             System.out.println(e);
@@ -37,7 +38,7 @@ public class Database {
 
     public void createUsersTable() {
         try {
-            String usersTable = "CREATE TABLE IF NOT EXISTS Users (PublicKey VARBINARY(256) NOT NULL, ClientUUID VARCHAR(256) NOT NULL, PRIMARY KEY(PublicKey, ClientUUID)) CHARACTER SET utf8";
+            String usersTable = "CREATE TABLE IF NOT EXISTS Users (PublicKey VARBINARY(2000) NOT NULL, ClientUUID VARCHAR(256) NOT NULL, PRIMARY KEY(PublicKey, ClientUUID)) CHARACTER SET utf8";
             PreparedStatement statement = _con.prepareStatement(usersTable);
             statement.executeUpdate();
         }
@@ -49,8 +50,19 @@ public class Database {
 
     public void createUserTable(String uuid) {
         try {
-            String userTable = "CREATE TABLE IF NOT EXISTS " + uuid + " (Announcement VARCHAR(256) NOT NULL, Reference VARBINARY(256), AnnouncementID INT(8) NOT NULL, Seq INT AUTO_INCREMENT, PRIMARY KEY(Seq)) CHARACTER SET utf8";
+            String userTable = "CREATE TABLE IF NOT EXISTS " + uuid + " (Announcement VARCHAR(256) NOT NULL, Reference VARBINARY(256), AnnouncementID INT(8) NOT NULL, Accountability VARBINARY(2500) NOT NULL, Seq INT AUTO_INCREMENT, PRIMARY KEY(Seq)) CHARACTER SET utf8";
             PreparedStatement statement = _con.prepareStatement(userTable);
+            statement.executeUpdate();
+        }
+        catch(Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    public void createOperationsTable() {
+        try {
+            String operationsTable = "CREATE TABLE IF NOT EXISTS Operations (OpUUID INT(8) NOT NULL, Operation VARBINARY(2500), PRIMARY KEY(OpUUID)) CHARACTER SET utf8";
+            PreparedStatement statement = _con.prepareStatement(operationsTable);
             statement.executeUpdate();
         }
         catch(Exception e) {
@@ -93,6 +105,23 @@ public class Database {
 
     public void resetDatabase() {
         try {
+            // String dropDatabase = "DROP DATABASE IF EXISTS announcement";
+            String createDatabase = "CREATE DATABASE IF NOT EXISTS announcement";
+            String useDatabase = "USE announcement";
+            // PreparedStatement statement = _con.prepareStatement(dropDatabase);
+            // statement.executeUpdate();
+            PreparedStatement statement = _con.prepareStatement(createDatabase);
+            statement.executeUpdate();
+            statement = _con.prepareStatement(useDatabase);
+            statement.executeUpdate();
+        }
+        catch(Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    public void resetDatabaseTest() {
+        try {
             String dropDatabase = "DROP DATABASE IF EXISTS announcement";
             String createDatabase = "CREATE DATABASE IF NOT EXISTS announcement";
             String useDatabase = "USE announcement";
@@ -106,6 +135,9 @@ public class Database {
         catch(Exception e) {
             System.out.println(e);
         }
+        createGeneralBoardTable();
+        createUsersTable();
+        createOperationsTable();
     }
 
     public int insertAnnouncementGB(String announcememnt, byte[] reference, int announcementID, String clientUUID) {
@@ -125,13 +157,14 @@ public class Database {
         }
     }
 
-    public int insertAnnouncement(String announcememnt, byte[] reference, int announcementID, String clientTableName) {
+    public int insertAnnouncement(String announcememnt, byte[] reference, int announcementID, String clientTableName, byte[] accountability) {
         try {
-            String messageGB = "INSERT INTO " + clientTableName + "(Announcement, Reference, AnnouncementID) VALUES (?, ?, ?)";
+            String messageGB = "INSERT INTO " + clientTableName + "(Announcement, Reference, AnnouncementID, Accountability) VALUES (?, ?, ?, ?)";
             PreparedStatement statement = _con.prepareStatement(messageGB);
             statement.setString(1, announcememnt);
             statement.setBytes(2, reference);
             statement.setInt(3, announcementID);
+            statement.setBytes(4, accountability);
             statement.executeUpdate();  
             return 1;
         }
@@ -154,6 +187,37 @@ public class Database {
             System.out.println(e);
             return 0;
         }
+    }
+
+    public int insertOperation(int opUUID, byte[] operation) {
+        try {
+            String users = "INSERT INTO Operations(OpUUID, Operation) VALUES (?, ?)";
+            PreparedStatement statement = _con.prepareStatement(users);
+            statement.setInt(1, opUUID);
+            statement.setBytes(2, operation);
+            statement.executeUpdate();  
+            return 1;
+        }
+        catch(Exception e) {
+            System.out.println(e);
+            return 0;
+        }
+    }
+
+    public List<byte[]> getUsersPublicKeys() {
+        List<byte[]> l = new ArrayList<byte[]>();
+        try {
+            String query = "SELECT PublicKey FROM Users";
+            PreparedStatement preparedStatement = _con.prepareStatement(query);
+            ResultSet rs = preparedStatement.executeQuery();
+            while (rs.next()){
+                l.add(rs.getBytes(1));
+            }
+        }
+        catch (SQLException e) {
+            System.out.println(e);
+        }
+        return l;
     }
 
     public List<Announcement> getUserAnnouncements(int n, byte[] b) {
@@ -222,6 +286,7 @@ public class Database {
         List<GeneralBoardStructure> generalBoard = new ArrayList<GeneralBoardStructure>();
         List<UserBoardStructure> userBoard = new ArrayList<UserBoardStructure>();
         List<UserStructure> users = new ArrayList<UserStructure>();
+        List<OperationsBoardStructure> operations = new ArrayList<OperationsBoardStructure>();
 
         try {
             String query = "SELECT * FROM GeneralBoard ORDER BY Seq ASC";
@@ -230,6 +295,14 @@ public class Database {
             while (rs.next()){
                 GeneralBoardStructure gbs = new GeneralBoardStructure(rs.getString(1), rs.getBytes(2), rs.getInt(3), rs.getString(4));
                 generalBoard.add(gbs);
+            }
+
+            query = "SELECT * FROM Operations";
+            preparedStatement = _con.prepareStatement(query);
+            rs = preparedStatement.executeQuery();
+            while (rs.next()){
+                OperationsBoardStructure obs = new OperationsBoardStructure(rs.getInt(1), rs.getBytes(2));
+                operations.add(obs);
             }
 
             query = "SELECT * FROM Users";
@@ -245,7 +318,7 @@ public class Database {
                 PreparedStatement userPreparedStatement = _con.prepareStatement(userQuery);
                 ResultSet userRS = userPreparedStatement.executeQuery();
                 while (userRS.next()){
-                    UserBoardStructure ubs = new UserBoardStructure(userRS.getString(1), userRS.getBytes(2), userRS.getInt(3));
+                    UserBoardStructure ubs = new UserBoardStructure(userRS.getString(1), userRS.getBytes(2), userRS.getInt(3), tableName);
                     userBoard.add(ubs);
                 }
             }
@@ -254,7 +327,7 @@ public class Database {
             System.out.println(e);
         }
 
-        return new DBStructure(generalBoard, userBoard, users);
+        return new DBStructure(generalBoard, userBoard, users, operations);
     }
 
 }
