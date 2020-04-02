@@ -23,6 +23,10 @@ public class User {
         return _dbTableName;
     }
 
+    public PublicKey getPublicKey() {
+        return _pubKey;
+    }
+
     public int postAnnouncementBoard(Announcement announcement) {
         _announcementBoard.add(announcement);
         return getNumAnnouncements() - 1;
