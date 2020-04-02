@@ -9,11 +9,13 @@ import java.util.List;
 import java.security.PublicKey;
 import java.util.AbstractMap;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 class ReadTest extends BaseTest {
 
-    private Client _client1, _client2, _client3;
+    static private Client _client1, _client2, _client3;
     private PublicKey _pubKey1, _pubKey2, _pubKey3;
 
     public ReadTest() throws Exception {
@@ -77,10 +79,10 @@ class ReadTest extends BaseTest {
             _client1.post(MESSAGE, REFERENCES);
         }
         
-        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client2.read(_pubKey1, 0);
+        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client2.read(_pubKey1, 5);
         
         assertEquals(response.getKey(), StatusCode.OK);
-        assertTrue(response.getValue().size() >= 5);
+        assertTrue(response.getValue().size() == 5);
         for (Announcement a: response.getValue()) {
             assertEquals(a.getAnnouncement(), MESSAGE);
         }
@@ -92,6 +94,13 @@ class ReadTest extends BaseTest {
         
         assertEquals(response.getKey(), StatusCode.NULL_FIELD);
         assertEquals(response.getValue().size(), 0);
+    }
+
+    @AfterAll
+    static void closeCommunications() {
+        _client1.closeCommunication();
+        _client2.closeCommunication();
+        _client3.closeCommunication();
     }
 
 }

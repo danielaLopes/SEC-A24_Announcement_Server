@@ -1,3 +1,4 @@
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import pt.ulisboa.tecnico.sec.client.Client;
 import pt.ulisboa.tecnico.sec.client.ClientTest;
@@ -14,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ReadTest extends BaseTest {
 
-    ClientTest _clientTest;
+    static ClientTest _clientTest;
 
     ReadTest() {
         _clientTest = new ClientTest(PUBLICKEY_PATH1, KEYSTORE_PATH1, CLIENT_KEYSTORE_PASSWD,
@@ -95,6 +96,11 @@ public class ReadTest extends BaseTest {
 
         StatusCode sc2 = _clientTest.readInvalid(_clientTest.getPubKey(), 1).getKey();
         assertEquals(StatusCode.INVALID_COMMAND, sc2);
+    }
+
+    @AfterAll
+    static void closeCommunications() {
+        _clientTest.closeCommunication();
     }
 
 }
