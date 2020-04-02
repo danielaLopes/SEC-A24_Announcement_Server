@@ -51,6 +51,18 @@ public class Client{
         startServerCommunication();
     }
 
+    public Client(String pubKeyPath, String keyStorePath,
+                  String keyStorePasswd, String entryPasswd, String alias,
+                  String serverPubKeyPath) {
+        loadPublicKey(pubKeyPath);
+        loadPrivateKey(keyStorePath, keyStorePasswd, entryPasswd, alias);
+        
+        loadServerPublicKey(serverPubKeyPath);
+
+        _communication = new Communication();
+        startServerCommunication();
+    }
+
     /**
      * Loads Client's public key to _pubKey.
      */
@@ -403,7 +415,36 @@ public class Client{
 
     /**
      * Retrieves the number latest announcements from the user's Board.
-     * @param user 
+     * @param user public key
+     * @param number of announcements to be retrieved
+     * @return a pair containing a StatusCode of the operation
+     * and the list of announcements received 
+     */
+    public AbstractMap.SimpleEntry<Integer, List<Announcement>> read(PublicKey user, int number) {
+        if (user == null) {
+            System.out.println("Invalid user.");
+            return new AbstractMap.SimpleEntry<>(StatusCode.NULL_FIELD.getCode(), new ArrayList<>());
+        }
+        int uuid = UUIDGenerator.generateUUID();
+        ProtocolMessage pm = new ProtocolMessage("READ", _pubKey, uuid, number, user);
+        VerifiableProtocolMessage vpm = requestServer(pm);
+        List<Announcement> announcements = null;
+
+        StatusCode rsc = null;
+        if (vpm == null) {
+            rsc = StatusCode.NO_RESPONSE;
+        }
+        else {
+            rsc = getStatusCodeFromVPM(vpm);
+            announcements = getAnnouncementsFromVPM(vpm);
+        }
+
+        return new AbstractMap.SimpleEntry<>(rsc.getCode(), announcements);
+    }
+
+    /**
+     * Retrieves the number latest announcements from the user's Board.
+     * @param user position in _usersPubKeys
      * @param number of announcements to be retrieved
      * @return a pair containing a StatusCode of the operation
      * and the list of announcements received 

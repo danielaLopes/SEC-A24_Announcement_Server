@@ -8,27 +8,24 @@ import pt.ulisboa.tecnico.sec.crypto_lib.UUIDGenerator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.security.PublicKey;
 
 import org.junit.jupiter.api.Test;
 
 class VerifySignatureTest extends BaseTest {
 
     private Client _client;
+    private PublicKey _pubKey1;
 
-    public VerifySignatureTest() {
-        List<String> otherUsersPubKeyPaths = new ArrayList<String>();
-        otherUsersPubKeyPaths.add(PUBLICKEY_PATH2);
-        otherUsersPubKeyPaths.add(PUBLICKEY_PATH3);
-        _client = new Client(PUBLICKEY_PATH1, KEYSTORE_PATH1, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH, otherUsersPubKeyPaths);
-
+    public VerifySignatureTest() throws Exception {
+        _client = new Client(PUBLICKEY_PATH1, KEYSTORE_PATH1, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH);
+        _pubKey1 = loadPublicKey(PUBLICKEY_PATH1);
     }
 
     @Test
     void success() throws Exception {
         int uuid = UUIDGenerator.generateUUID();
-        ProtocolMessage requestPM = new ProtocolMessage("REGISTER", _client.getPublicKeyFromUser(0), uuid);
+        ProtocolMessage requestPM = new ProtocolMessage("REGISTER", _pubKey1, uuid);
 
         ProtocolMessage responsePM = new ProtocolMessage(
                 "REGISTER", StatusCode.OK, _client.getServerPubKey(), requestPM.getOpUuid());
@@ -46,7 +43,7 @@ class VerifySignatureTest extends BaseTest {
     @Test
     void invalidSignature() throws Exception {
         int uuid = UUIDGenerator.generateUUID();
-        ProtocolMessage requestPM = new ProtocolMessage("REGISTER", _client.getPublicKeyFromUser(0), uuid);
+        ProtocolMessage requestPM = new ProtocolMessage("REGISTER", _pubKey1, uuid);
 
         ProtocolMessage responsePM = new ProtocolMessage(
                 "REGISTER", StatusCode.OK, _client.getServerPubKey(), requestPM.getOpUuid());
