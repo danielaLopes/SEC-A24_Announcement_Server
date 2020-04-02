@@ -1,6 +1,7 @@
 import org.junit.jupiter.api.Test;
 import pt.ulisboa.tecnico.sec.client.Client;
 import pt.ulisboa.tecnico.sec.communication_lib.VerifiableProtocolMessage;
+import pt.ulisboa.tecnico.sec.communication_lib.StatusCode;
 import pt.ulisboa.tecnico.sec.server.Server;
 
 import java.util.ArrayList;
@@ -30,7 +31,7 @@ public class PostTest extends BaseTest {
 
     @Test
     void success() {
-        int sc = _client1.post("message1", new ArrayList<>());
-        assertEquals(1, sc);
+        StatusCode sc = _client1.post("message1", new ArrayList<>());
+        assertEquals(StatusCode.OK, sc);
     }
 }
