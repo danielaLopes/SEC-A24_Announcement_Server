@@ -1,3 +1,4 @@
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import pt.ulisboa.tecnico.sec.communication_lib.Announcement;
 import pt.ulisboa.tecnico.sec.communication_lib.ProtocolMessage;
@@ -36,6 +37,8 @@ public class BaseTest {
     public static PrivateKey CLIENT2_PRIVATE_KEY;
     public static PublicKey CLIENT3_PUBLIC_KEY;
     public static PrivateKey CLIENT3_PRIVATE_KEY;
+
+    public static Server _server;
 
     @BeforeAll
     public static void oneTimeSetup() {

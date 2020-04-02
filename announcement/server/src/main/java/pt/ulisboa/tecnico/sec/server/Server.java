@@ -53,9 +53,8 @@ public class Server {
         _generalBoard = new ArrayList<>();
         _communication = new Communication();
         _db = new Database();
-        
+
         retrieveDataStructures();
-        //printDataStructures();
     }
 
     public PublicKey getUserUUID(String uuid) {
@@ -68,7 +67,7 @@ public class Server {
     }
 
     public void resetDatabase() {
-        _db.resetDatabase();
+        _db.resetDatabaseTest();
     }
 
     public void printDataStructures() {
@@ -326,7 +325,6 @@ public class Server {
         }
 
         sc = verifyUserRegistered(clientPubKey);
-        System.out.println("SC: " + sc);
         if (!sc.equals(StatusCode.USER_NOT_REGISTERED)) {
             return StatusCode.OK;
         }
@@ -359,7 +357,6 @@ public class Server {
 
     public VerifiableProtocolMessage registerUser(VerifiableProtocolMessage vpm) {
 
-        System.out.println("===register user===");
         StatusCode sc;
 
         int opUuid = vpm.getProtocolMessage().getOpUuid();
@@ -429,8 +426,6 @@ public class Server {
         byte[] operation = ProtocolMessageConverter.objToByteArray(response);
         _db.insertOperation(opUuid, operation);
 
-        System.out.println("===user registered ok===");
-
         return response;
     }
 
@@ -444,7 +439,6 @@ public class Server {
         StatusCode sc;
 
         int opUuid = vpm.getProtocolMessage().getOpUuid();
-        //System.out.println("opUuid: " + opUuid);
 
         VerifiableProtocolMessage response;
 
@@ -455,8 +449,6 @@ public class Server {
         // verifications
         sc = verifyPost(opUuid, vpm, message, references, clientPubKey);
         if (sc.equals(StatusCode.DUPLICATE_OPERATION)) {
-            //System.out.println("duplicate operation!");
-            //System.out.println("operation: " + _operations.get(opUuid));
             return _operations.get(opUuid);
         }
         if (!sc.equals(StatusCode.OK)) {
@@ -471,7 +463,6 @@ public class Server {
         }
 
         // Save Operation
-        System.out.println("User posting announcement in user table");
         int announcementUuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = vpm.getProtocolMessage();
         Announcement a = pm.getPostAnnouncement();
@@ -530,7 +521,6 @@ public class Server {
             return response;
         }
 
-        System.out.println("User posting announcement in general board");
         int announcementUuid = UUIDGenerator.generateUUID();
 
         ProtocolMessage pm = vpm.getProtocolMessage();
@@ -598,8 +588,6 @@ public class Server {
             return response;
         }
 
-        System.out.println("User reading announcement from user board");
-
         byte[] b = ProtocolMessageConverter.objToByteArray(toReadPublicKey);
         byte[] encodedhash = null;
         try {
@@ -658,9 +646,7 @@ public class Server {
             _db.insertOperation(opUuid, operation);
             return response;
         }
-        // TODO : this if is wrong!
-        // TODO : access memmory
-        System.out.println("User reading announcement from general board");
+
         ProtocolMessage pm = vpm.getProtocolMessage();
         // List<Announcement> announcements = _db.getGBAnnouncements(number);
         List<Announcement> announcements;

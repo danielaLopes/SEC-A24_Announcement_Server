@@ -1,7 +1,4 @@
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import pt.ulisboa.tecnico.sec.communication_lib.Announcement;
 import pt.ulisboa.tecnico.sec.communication_lib.ProtocolMessage;
 import pt.ulisboa.tecnico.sec.communication_lib.StatusCode;
@@ -19,13 +16,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class PostGeneralTest extends BaseTest {
 
-    static Server _server;
+    private static Server _server;
 
-    public PostGeneralTest() {}
+    public PostGeneralTest() {
 
-    @BeforeAll
-    static void init() throws Exception {
-        System.out.println("before all");
+        _server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
+                SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
+    }
+
+    @BeforeEach
+    void testSetup() throws Exception {
+
+        _server.resetDatabase();
+
         _server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
@@ -42,11 +45,14 @@ public class PostGeneralTest extends BaseTest {
         assertEquals(StatusCode.OK, scRegister2);
     }
 
-    @BeforeEach
-    void testSetup() throws Exception {
-        System.out.println("Before each");
+    @AfterAll
+    public static void cleanDatabase() {
 
         _server.resetDatabase();
+    }
+
+    @Test
+    void success() throws Exception {
 
         // posting first announcement
         List<Integer> references1 = new ArrayList<>();
@@ -115,12 +121,6 @@ public class PostGeneralTest extends BaseTest {
     @Test
     void messageLengthIsInvalid() throws Exception {
 
-        // registering client1
-        VerifiableProtocolMessage vpm_responseRegister1 = forgeRegisterRequest(
-                _server, UUIDGenerator.generateUUID(), CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
-        StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
-        assertEquals(StatusCode.OK, scRegister1);
-
         // posting announcement
         List<Integer> references1 = new ArrayList<>();
         Announcement announcement1 = new Announcement(INVALID_LENGTH_MESSAGE, references1);
@@ -138,12 +138,6 @@ public class PostGeneralTest extends BaseTest {
 
     @Test
     void InvalidReferences() throws Exception {
-
-        // registering client1
-        VerifiableProtocolMessage vpm_responseRegister1 = forgeRegisterRequest(
-                _server, UUIDGenerator.generateUUID(), CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
-        StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
-        assertEquals(StatusCode.OK, scRegister1);
 
         // posting announcement
         int invalid_opUuid = UUIDGenerator.generateUUID();
@@ -165,12 +159,6 @@ public class PostGeneralTest extends BaseTest {
     @Test
     void publicKeyIsNull() throws Exception {
 
-        // registering client1
-        VerifiableProtocolMessage vpm_responseRegister1 = forgeRegisterRequest(
-                _server, UUIDGenerator.generateUUID(), CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
-        StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
-        assertEquals(StatusCode.OK, scRegister1);
-
         // posting announcement
         List<Integer> references1 = new ArrayList<>();
         Announcement announcement1 = new Announcement(MESSAGE1, references1);
@@ -188,12 +176,6 @@ public class PostGeneralTest extends BaseTest {
 
     @Test
     void messageIsNull() throws Exception {
-
-        // registering client1
-        VerifiableProtocolMessage vpm_responseRegister1 = forgeRegisterRequest(
-                _server, UUIDGenerator.generateUUID(), CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
-        StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
-        assertEquals(StatusCode.OK, scRegister1);
 
         // posting announcement
         List<Integer> references1 = new ArrayList<>();
@@ -213,12 +195,6 @@ public class PostGeneralTest extends BaseTest {
     @Test
     void referencesIsNull() throws Exception {
 
-        // registering client1
-        VerifiableProtocolMessage vpm_responseRegister1 = forgeRegisterRequest(
-                _server, UUIDGenerator.generateUUID(), CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
-        StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
-        assertEquals(StatusCode.OK, scRegister1);
-
         // posting announcement
         Announcement announcement1 = new Announcement(MESSAGE1, null);
         int opUuid1 = UUIDGenerator.generateUUID();
@@ -235,12 +211,6 @@ public class PostGeneralTest extends BaseTest {
 
     @Test
     void opUuidIsNull() throws Exception {
-
-        // registering client1
-        VerifiableProtocolMessage vpm_responseRegister1 = forgeRegisterRequest(
-                _server, UUIDGenerator.generateUUID(), CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
-        StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
-        assertEquals(StatusCode.OK, scRegister1);
 
         // posting announcement
         List<Integer> references1 = new ArrayList<>();
@@ -261,12 +231,6 @@ public class PostGeneralTest extends BaseTest {
     @Test
     void signatureIsNull() throws Exception {
 
-        // registering client1
-        VerifiableProtocolMessage vpm_responseRegister1 = forgeRegisterRequest(
-                _server, UUIDGenerator.generateUUID(), CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
-        StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
-        assertEquals(StatusCode.OK, scRegister1);
-
         // posting announcement
         List<Integer> references1 = new ArrayList<>();
         Announcement announcement1 = new Announcement(MESSAGE1, references1);
@@ -284,14 +248,8 @@ public class PostGeneralTest extends BaseTest {
     @Test
     void duplicatedOperation() throws Exception {
 
-        // registering client1
+        // posting announcement 1
         int opUuidRepeated = UUIDGenerator.generateUUID();
-        VerifiableProtocolMessage vpm_responseRegister1 =  forgeRegisterRequest(
-                _server, opUuidRepeated, CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
-        StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
-        assertEquals(StatusCode.OK, scRegister1);
-
-        // posting announcement
         List<Integer> references1 = new ArrayList<>();
         Announcement announcement1 = new Announcement(MESSAGE1, references1);
         ProtocolMessage pm1 = new ProtocolMessage(
@@ -302,18 +260,23 @@ public class PostGeneralTest extends BaseTest {
 
         VerifiableProtocolMessage vpm_response1 = _server.postGeneral(vpm1);
         StatusCode sc1 = vpm_response1.getProtocolMessage().getStatusCode();
-        assertEquals(scRegister1, sc1);
+
+        // posting announcement with repeated opUuid
+        List<Integer> references2 = new ArrayList<>();
+        Announcement announcement2 = new Announcement(MESSAGE2, references2);
+        ProtocolMessage pm2 = new ProtocolMessage(
+                "POSTGENERAL", CLIENT1_PUBLIC_KEY, opUuidRepeated, announcement2);
+        byte[] bpm2 = ProtocolMessageConverter.objToByteArray(pm2);
+        byte[] signedpm2 = SignatureUtil.sign(bpm1, CLIENT1_PRIVATE_KEY);
+        VerifiableProtocolMessage vpm2 = new VerifiableProtocolMessage(pm2, signedpm2);
+
+        VerifiableProtocolMessage vpm_response2 = _server.postGeneral(vpm2);
+        StatusCode sc2 = vpm_response2.getProtocolMessage().getStatusCode();
+        assertEquals(sc1, sc2);
     }
 
     @Test
     void duplicatedReference() throws Exception {
-
-        // registering client1
-        int opUuid1 = UUIDGenerator.generateUUID();
-        VerifiableProtocolMessage vpm_responseRegister1 =  forgeRegisterRequest(
-                _server, opUuid1, CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
-        StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
-        assertEquals(StatusCode.OK, scRegister1);
 
         // posting announcement 1
         int opUuid2 = UUIDGenerator.generateUUID();
@@ -349,12 +312,6 @@ public class PostGeneralTest extends BaseTest {
     @Test
     void tamperedMessage() throws Exception {
 
-        // registering client1
-        VerifiableProtocolMessage vpm_responseRegister1 = forgeRegisterRequest(
-                _server, UUIDGenerator.generateUUID(), CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
-        StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
-        assertEquals(StatusCode.OK, scRegister1);
-
         // posting announcement
         List<Integer> references1 = new ArrayList<>();
         Announcement announcement1 = new Announcement(MESSAGE1, references1);
@@ -375,12 +332,6 @@ public class PostGeneralTest extends BaseTest {
 
     @Test
     void invalidSignature() throws Exception {
-
-        // registering client1
-        VerifiableProtocolMessage vpm_responseRegister1 = forgeRegisterRequest(
-                _server, UUIDGenerator.generateUUID(), CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
-        StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
-        assertEquals(StatusCode.OK, scRegister1);
 
         // posting announcement
         List<Integer> references1 = new ArrayList<>();
