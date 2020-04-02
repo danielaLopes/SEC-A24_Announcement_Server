@@ -10,29 +10,17 @@ public class Announcement implements Serializable{
     private int _announcementID;
     private String _clientUUID;
     private PublicKey _clientPublicKey;
-    private byte[] _signature;
 
-    // TODO: every announcement needs a signature
     public Announcement(String announcement, List<Integer> references) {
         _announcement = announcement;
         _references = references;
     }
 
-    // TODO: every announcement needs a signature
     public Announcement(String announcement, List<Integer> references, int announcementID, String clientUUID) {
         _announcement = announcement;
         _references = references;
         _announcementID = announcementID;
         _clientUUID = clientUUID;
-    }
-
-    public Announcement(String announcement, List<Integer> references,
-                        int announcementID, String clientUUID, byte[] signature) {
-        _announcement = announcement;
-        _references = references;
-        _announcementID = announcementID;
-        _clientUUID = clientUUID;
-        _signature = signature;
     }
 
     public void setClientUUID(String clientUUID) { _clientUUID = clientUUID; }
