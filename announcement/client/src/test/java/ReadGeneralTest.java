@@ -29,6 +29,7 @@ class ReadGeneralTest extends BaseTest {
         
         assertEquals(response.getKey(), StatusCode.OK);
         assertEquals(response.getValue().size(), 1);
+        assertEquals(response.getValue().get(0).getAnnouncement(), MESSAGE);
     }
 
     @Test
@@ -40,12 +41,15 @@ class ReadGeneralTest extends BaseTest {
         
         assertEquals(response1.getKey(), StatusCode.OK);
         assertEquals(response1.getValue().size(), 1);
+        assertEquals(response1.getValue().get(0).getAnnouncement(), MESSAGE);
 
         assertEquals(response2.getKey(), StatusCode.OK);
         assertEquals(response2.getValue().size(), 1);
+        assertEquals(response2.getValue().get(0).getAnnouncement(), MESSAGE);
         
         assertEquals(response3.getKey(), StatusCode.OK);
         assertEquals(response3.getValue().size(), 1);
+        assertEquals(response3.getValue().get(0).getAnnouncement(), MESSAGE);
     }
 
     @Test
@@ -90,6 +94,16 @@ class ReadGeneralTest extends BaseTest {
         
         assertEquals(response3.getKey(), StatusCode.OK);
         assertTrue(response3.getValue().size() >= 15);
+
+        for (Announcement a: response1.getValue()) {
+            assertEquals(a.getAnnouncement(), MESSAGE);
+        }
+        for (Announcement a: response2.getValue()) {
+            assertEquals(a.getAnnouncement(), MESSAGE);
+        }
+        for (Announcement a: response3.getValue()) {
+            assertEquals(a.getAnnouncement(), MESSAGE);
+        }
     }
 
 }

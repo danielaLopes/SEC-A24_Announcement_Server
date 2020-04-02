@@ -34,6 +34,7 @@ class ReadTest extends BaseTest {
         
         assertEquals(response.getKey(), StatusCode.OK);
         assertEquals(response.getValue().size(), 1);
+        assertEquals(response.getValue().get(0).getAnnouncement(), MESSAGE);
     }
 
     @Test
@@ -45,9 +46,11 @@ class ReadTest extends BaseTest {
 
         assertEquals(response2.getKey(), StatusCode.OK);
         assertEquals(response2.getValue().size(), 1);
+        assertEquals(response2.getValue().get(0).getAnnouncement(), MESSAGE);
         
         assertEquals(response3.getKey(), StatusCode.OK);
         assertEquals(response3.getValue().size(), 1);
+        assertEquals(response3.getValue().get(0).getAnnouncement(), MESSAGE);
     }
 
     @Test
@@ -78,6 +81,9 @@ class ReadTest extends BaseTest {
         
         assertEquals(response.getKey(), StatusCode.OK);
         assertTrue(response.getValue().size() >= 5);
+        for (Announcement a: response.getValue()) {
+            assertEquals(a.getAnnouncement(), MESSAGE);
+        }
     }
 
     @Test
