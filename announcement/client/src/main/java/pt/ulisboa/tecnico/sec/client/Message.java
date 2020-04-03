@@ -12,7 +12,7 @@ public enum Message {
     MESSAGE("Message: "),
     REFERENCE("Announcements referenced (format: announcementId1,announcementId2,...): "),
     USER_BOARD("Read announcements from user: "),
-    READ_NUMBER("Number of posts to read: "),
+    READ_NUMBER("Number of announcements to read: "),
 
     EXIT("Exit");
 

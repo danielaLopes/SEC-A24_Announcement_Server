@@ -97,9 +97,4 @@ public class ReadGeneralTest extends BaseTest {
         assertEquals(StatusCode.INVALID_COMMAND, sc2);
     }
 
-    @AfterAll
-    static void closeCommunications() {
-        _clientTest.closeCommunication();
-    }
-
 }

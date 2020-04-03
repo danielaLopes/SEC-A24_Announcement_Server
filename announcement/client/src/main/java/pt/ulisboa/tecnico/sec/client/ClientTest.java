@@ -63,8 +63,6 @@ public class ClientTest extends Client {
                 }
                 else {
                     System.out.println("Could not register: could not verify server signature");
-                    closeCommunication();
-                    System.exit(-1);
                 }
             }
             catch(SocketTimeoutException e) {
