@@ -58,7 +58,7 @@ Inside project root directory (announcement/):
         cd server/
         mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="<keyStorePassword> <entryPassword> <alias> <pubKeyPath> <keyStorePath>"
         ```
-    - 1 client:
+    - Example:
         ```
         cd server/
         mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="password password alias src/main/resources/crypto/public.key src/main/resources/crypto/server_keystore.jks"
@@ -72,14 +72,64 @@ Inside project root directory (announcement/):
     - 3 clients:
         ```
         mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="src/main/resources/crypto/public1.key src/main/resources/crypto/client1_keystore.jks password password alias ../server/src/main/resources/crypto/public.key 2 src/main/resources/crypto/public2.key src/main/resources/crypto/public3.key"
-        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="src/main/resources/crypto/public2.key src/main/resources/crypto/client1_keystore.jks password password alias ../server/src/main/resources/crypto/public.key 2 src/main/resources/crypto/public1.key src/main/resources/crypto/public3.key"
-        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="src/main/resources/crypto/public3.key src/main/resources/crypto/client1_keystore.jks password password alias ../server/src/main/resources/crypto/public.key 2 src/main/resources/crypto/public1.key src/main/resources/crypto/public2.key"
+        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="src/main/resources/crypto/public2.key src/main/resources/crypto/client2_keystore.jks password password alias ../server/src/main/resources/crypto/public.key 2 src/main/resources/crypto/public1.key src/main/resources/crypto/public3.key"
+        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="src/main/resources/crypto/public3.key src/main/resources/crypto/client3_keystore.jks password password alias ../server/src/main/resources/crypto/public.key 2 src/main/resources/crypto/public1.key src/main/resources/crypto/public2.key"
         ```
 
 ## Interacting with the Client UI
 
 ### Posting an announcement:
 * When posting an announcement, the announcements referenced must be in the format: id1,id2,id3,...
+
+## Tests Structure
+
+### Requirements to run tests:
+- server/src/main/resources/crypto/public.key
+- server/src/main/resources/crypto/server_keystore.jks
+- client/src/main/resources/crypto/public1.key
+- client/src/main/resources/crypto/client1_keystore.jks
+- client/src/main/resources/crypto/public2.key
+- client/src/main/resources/crypto/client2_keystore.jks
+- client/src/main/resources/crypto/public3.key
+- client/src/main/resources/crypto/client3_keystore.jks
+
+- All KeyStore and Entry password to be "password"
+- All Entry alias to be "ola"
+
+### Client Unit tests
+- focus on the client application functionalities and UI
+- require running a server in a different window
+```
+cd server/
+mvn clean install -DskipTests
+mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="password password alias src/main/resources/crypto/public.key src/main/resources/crypto/server_keystore.jks"
+```
+In another window:
+```
+cd client/
+mvn clean test
+```
+
+### Server Unit tests
+- focus on the server application functionalities
+```
+cd server/
+mvn clean test
+```
+
+### Client-Server Communication tests
+- focus on the possible attacks that can happen in the communication between a server and the client
+- require running a server in a different window
+```
+cd server/
+mvn clean install -DskipTests
+mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="password password alias src/main/resources/crypto/public.key src/main/resources/crypto/server_keystore.jks"
+```
+In another window:
+```
+cd client_server_testing
+mvn clean test
+```
 
 ## Generating keypairs and certificates (required for each server)
 1. Private key:
@@ -148,21 +198,7 @@ openssl genrsa -out client/src/main/resources/crypto/client.key
     openssl x509 -req -days 365 -in client/src/main/resources/crypto/client1.csr -signkey client/src/main/resources/crypto/client1.key -out client/src/main/resources/crypto/client1.crt
     ```
 
-## Create new keystore
-```
-cd crypto_lib/
-mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.crypto_lib.CreateKeyStorage" -Dexec.args="keyStorePassword keystore_entity_name"
-```
-Server example:
-```
-mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.crypto_lib.CreateKeyStorage" -Dexec.args="password ../server/src/main/resources/crypto/server1_keystore.jks"
-```
-
 ## KeyStore commands
-In Windows:
-```
-set OPENSSL_CONF=C:\Program Files\OpenSSL-Win64\bin\openssl.cfg
-```
 - Import server's private key into the KeyStore (in Windows, requires Administrator)
     1. Create PKCS12 keystore from private key and public certificate.
     ```
