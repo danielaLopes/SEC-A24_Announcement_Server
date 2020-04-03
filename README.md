@@ -94,7 +94,7 @@ Inside project root directory (announcement/):
 - client/src/main/resources/crypto/client3_keystore.jks
 
 - All KeyStore and Entry password to be "password"
-- All Entry alias to be "ola"
+- All Entry alias to be "alias"
 
 ### Client Unit tests
 - focus on the client application functionalities and UI
