@@ -1,3 +1,6 @@
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import pt.ulisboa.tecnico.sec.communication_lib.Announcement;
 import pt.ulisboa.tecnico.sec.communication_lib.ProtocolMessage;
@@ -17,12 +20,15 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class ReadTest extends BaseTest {
 
-    private Server _server;
-    private Announcement _ann1Client1;
-    private Announcement _ann2Client2;
-    private Announcement _ann3Client2;
+    private static Server _server;
+    private static Announcement _ann1Client1;
+    private static Announcement _ann2Client2;
+    private static Announcement _ann3Client2;
 
-    public ReadTest() throws Exception {
+    public ReadTest() {}
+
+    @BeforeAll
+    static void setup() throws Exception {
 
         _server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
@@ -82,6 +88,13 @@ public class ReadTest extends BaseTest {
         VerifiableProtocolMessage vpm_response3 = _server.post(vpm3);
         StatusCode sc3 = vpm_response3.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.OK, sc3);
+    }
+
+
+    @AfterAll
+    public static void cleanDatabase() {
+
+        _server.resetDatabase();
     }
 
     @Test
@@ -225,7 +238,7 @@ public class ReadTest extends BaseTest {
     @Test
     void userNotRegistered() throws Exception {
 
-        // read one announcement from user2 board
+        // read one announcement from user3 board
         String opUuid2 = UUIDGenerator.generateUUID();
         ProtocolMessage pm2 = new ProtocolMessage(
                 "READ", CLIENT3_PUBLIC_KEY, opUuid2, 0, CLIENT2_PUBLIC_KEY);
@@ -422,7 +435,6 @@ public class ReadTest extends BaseTest {
         StatusCode scRegister3 = vpm_responseRegister3.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.OK, scRegister3);
 
-
         // repeat after client 3 being registered
         ProtocolMessage pm2 = new ProtocolMessage(
                 "READ", CLIENT1_PUBLIC_KEY, opUuid1, 1, CLIENT3_PUBLIC_KEY);
@@ -435,5 +447,10 @@ public class ReadTest extends BaseTest {
         assertEquals(StatusCode.OK, sc2);
         List<Announcement> announcements2 = vpm_response2.getProtocolMessage().getAnnouncements();
         assertEquals(0, announcements2.size());
+
+        // delete client3 from server and database
+        _server.resetDatabase();
+
+        setup();
     }
 }
