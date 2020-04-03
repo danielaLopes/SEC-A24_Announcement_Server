@@ -372,10 +372,11 @@ public class Server {
                 vpm.getSignedProtocolMessage() == null) {
             response = createVerifiableMessage(new ProtocolMessage(
                     "REGISTER", StatusCode.NULL_FIELD, _pubKey, opUuid));
-            _operations.put(opUuid, response);
-
-            byte[] operation = ProtocolMessageConverter.objToByteArray(response);
-            _db.insertOperation(opUuid, operation);
+            if (!verifyOpUuid(opUuid).equals(StatusCode.NULL_FIELD)) {
+                _operations.put(opUuid, response);
+                byte[] operation = ProtocolMessageConverter.objToByteArray(response);
+                _db.insertOperation(opUuid, operation);
+            }
 
             return response;
         }
@@ -458,11 +459,11 @@ public class Server {
         if (!sc.equals(StatusCode.OK)) {
             response = createVerifiableMessage(new ProtocolMessage(
                     "POST", sc, _pubKey, vpm.getProtocolMessage().getOpUuid()));
-            _operations.put(opUuid, response);
-
-            byte[] operation = ProtocolMessageConverter.objToByteArray(response);
-            _db.insertOperation(opUuid, operation);
-
+            if (!sc.equals(StatusCode.NULL_FIELD)) {
+                _operations.put(opUuid, response);
+                byte[] operation = ProtocolMessageConverter.objToByteArray(response);
+                _db.insertOperation(opUuid, operation);
+            }
             return response;
         }
 
@@ -519,9 +520,11 @@ public class Server {
         if (!sc.equals(StatusCode.OK)) {
             response = createVerifiableMessage(new ProtocolMessage(
                     "POST", sc, _pubKey, vpm.getProtocolMessage().getOpUuid()));
-            _operations.put(opUuid, response);
-            byte[] operation = ProtocolMessageConverter.objToByteArray(response);
-            _db.insertOperation(opUuid, operation);
+            if (!sc.equals(StatusCode.NULL_FIELD)) {
+                _operations.put(opUuid, response);
+                byte[] operation = ProtocolMessageConverter.objToByteArray(response);
+                _db.insertOperation(opUuid, operation);
+            }
             return response;
         }
 
@@ -586,9 +589,11 @@ public class Server {
         if (!sc.equals(StatusCode.OK)) {
             response = createVerifiableMessage(new ProtocolMessage(
                     "READ", sc, _pubKey, vpm.getProtocolMessage().getOpUuid()));
-            _operations.put(opUuid, response);
-            byte[] operation = ProtocolMessageConverter.objToByteArray(response);
-            _db.insertOperation(opUuid, operation);
+            if (!sc.equals(StatusCode.NULL_FIELD)) {
+                _operations.put(opUuid, response);
+                byte[] operation = ProtocolMessageConverter.objToByteArray(response);
+                _db.insertOperation(opUuid, operation);
+            }
             return response;
         }
 
@@ -645,9 +650,11 @@ public class Server {
         if (!sc.equals(StatusCode.OK)) {
             response = createVerifiableMessage(new ProtocolMessage(
                     "READGENERAL", sc, _pubKey, vpm.getProtocolMessage().getOpUuid()));
-            _operations.put(opUuid, response);
-            byte[] operation = ProtocolMessageConverter.objToByteArray(response);
-            _db.insertOperation(opUuid, operation);
+            if (!sc.equals(StatusCode.NULL_FIELD)) {
+                _operations.put(opUuid, response);
+                byte[] operation = ProtocolMessageConverter.objToByteArray(response);
+                _db.insertOperation(opUuid, operation);
+            }
             return response;
         }
 
