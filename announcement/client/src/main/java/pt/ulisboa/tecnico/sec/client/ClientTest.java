@@ -158,7 +158,7 @@ public class ClientTest extends Client {
      * @param references to previous announcements
      * @return a list of the StatusCode of the two consecutive operations
      */
-    public List<StatusCode> postTwice(String message, List<Integer> references) {
+    public List<StatusCode> postTwice(String message, List<String> references) {
         List<StatusCode> rsc = new ArrayList<StatusCode>();
         
         if (message == null) {
@@ -178,7 +178,7 @@ public class ClientTest extends Client {
         }
 
         Announcement a = new Announcement(message, references);
-        int uuid = UUIDGenerator.generateUUID();
+        String uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("POST", _pubKey, uuid, a);
 
         for (int i = 0; i < 2; i ++) {
@@ -202,7 +202,7 @@ public class ClientTest extends Client {
      * @param references to previous announcements
      * @return the StatusCode of the operation
      */
-    public StatusCode postTampered(String message, List<Integer> references) {
+    public StatusCode postTampered(String message, List<String> references) {
         if (message == null) {
             System.out.println("Message cannot be null.");
             return StatusCode.NULL_FIELD;
@@ -217,7 +217,7 @@ public class ClientTest extends Client {
         }
 
         Announcement a = new Announcement(message, references);
-        int uuid = UUIDGenerator.generateUUID();
+        String uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("POST", _pubKey, uuid, a);
         VerifiableProtocolMessage vpm = requestServerTampered(pm);
         StatusCode rsc = null;
@@ -238,7 +238,7 @@ public class ClientTest extends Client {
      * @param references to previous announcements
      * @return the StatusCode of the operation
      */
-    public StatusCode postDropped(String message, List<Integer> references) {
+    public StatusCode postDropped(String message, List<String> references) {
         if (message == null) {
             System.out.println("Message cannot be null.");
             return StatusCode.NULL_FIELD;
@@ -253,7 +253,7 @@ public class ClientTest extends Client {
         }
 
         Announcement a = new Announcement(message, references);
-        int uuid = UUIDGenerator.generateUUID();
+        String uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("POST", _pubKey, uuid, a);
         VerifiableProtocolMessage vpm = requestServerDropped(pm);
         StatusCode rsc = null;
@@ -274,7 +274,7 @@ public class ClientTest extends Client {
      * @param references to previous announcements
      * @return the StatusCode of the operation
      */
-    public StatusCode postNull(String message, List<Integer> references) {
+    public StatusCode postNull(String message, List<String> references) {
         if (message == null) {
             System.out.println("Message cannot be null.");
             return StatusCode.NULL_FIELD;
@@ -289,7 +289,7 @@ public class ClientTest extends Client {
         }
 
         Announcement a = new Announcement(message, references);
-        int uuid = UUIDGenerator.generateUUID();
+        String uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("POST", _pubKey, uuid, a);
         VerifiableProtocolMessage vpm = requestServerNull(pm);
         StatusCode rsc = null;
@@ -310,7 +310,7 @@ public class ClientTest extends Client {
      * @param references to previous announcements
      * @return the StatusCode of the operation
      */
-    public StatusCode postInvalid(String message, List<Integer> references) {
+    public StatusCode postInvalid(String message, List<String> references) {
         if (message == null) {
             System.out.println("Message cannot be null.");
             return StatusCode.NULL_FIELD;
@@ -325,7 +325,7 @@ public class ClientTest extends Client {
         }
 
         Announcement a = new Announcement(message, references);
-        int uuid = UUIDGenerator.generateUUID();
+        String uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("POSTS", _pubKey, uuid, a);
         VerifiableProtocolMessage vpm = requestServer(pm);
         StatusCode rsc = null;
@@ -345,7 +345,7 @@ public class ClientTest extends Client {
      * @param references to previous announcements
      * @return a list of the StatusCode of the two consecutive operations
      */
-    public List<StatusCode> postGeneralTwice(String message, List<Integer> references) {
+    public List<StatusCode> postGeneralTwice(String message, List<String> references) {
         List<StatusCode> rsc = new ArrayList<StatusCode>();
         
         if (message == null) {
@@ -365,7 +365,7 @@ public class ClientTest extends Client {
         }
 
         Announcement a = new Announcement(message, references);
-        int uuid = UUIDGenerator.generateUUID();
+        String uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("POSTGENERAL", _pubKey, uuid, a);
 
         for (int i = 0; i < 2; i ++) {
@@ -389,7 +389,7 @@ public class ClientTest extends Client {
      * @param references to previous announcements
      * @return the StatusCode of the operation
      */
-    public StatusCode postGeneralTampered(String message, List<Integer> references) {
+    public StatusCode postGeneralTampered(String message, List<String> references) {
         if (message == null) {
             System.out.println("Message cannot be null.");
             return StatusCode.NULL_FIELD;
@@ -404,7 +404,7 @@ public class ClientTest extends Client {
         }
 
         Announcement a = new Announcement(message, references);
-        int uuid = UUIDGenerator.generateUUID();
+        String uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("POSTGENERAL", _pubKey, uuid, a);
         VerifiableProtocolMessage vpm = requestServerTampered(pm);
         StatusCode rsc = null;
@@ -425,7 +425,7 @@ public class ClientTest extends Client {
      * @param references to previous announcements
      * @return the StatusCode of the operation
      */
-    public StatusCode postGeneralDropped(String message, List<Integer> references) {
+    public StatusCode postGeneralDropped(String message, List<String> references) {
         if (message == null) {
             System.out.println("Message cannot be null.");
             return StatusCode.NULL_FIELD;
@@ -440,7 +440,7 @@ public class ClientTest extends Client {
         }
 
         Announcement a = new Announcement(message, references);
-        int uuid = UUIDGenerator.generateUUID();
+        String uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("POSTGENERAL", _pubKey, uuid, a);
         VerifiableProtocolMessage vpm = requestServerDropped(pm);
         StatusCode rsc = null;
@@ -461,7 +461,7 @@ public class ClientTest extends Client {
      * @param references to previous announcements
      * @return the StatusCode of the operation
      */
-    public StatusCode postGeneralNull(String message, List<Integer> references) {
+    public StatusCode postGeneralNull(String message, List<String> references) {
         if (message == null) {
             System.out.println("Message cannot be null.");
             return StatusCode.NULL_FIELD;
@@ -476,7 +476,7 @@ public class ClientTest extends Client {
         }
 
         Announcement a = new Announcement(message, references);
-        int uuid = UUIDGenerator.generateUUID();
+        String uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("POSTGENERAL", _pubKey, uuid, a);
         VerifiableProtocolMessage vpm = requestServerNull(pm);
         StatusCode rsc = null;
@@ -497,7 +497,7 @@ public class ClientTest extends Client {
      * @param references to previous announcements
      * @return the StatusCode of the operation
      */
-    public StatusCode postGeneralInvalid(String message, List<Integer> references) {
+    public StatusCode postGeneralInvalid(String message, List<String> references) {
         if (message == null) {
             System.out.println("Message cannot be null.");
             return StatusCode.NULL_FIELD;
@@ -512,7 +512,7 @@ public class ClientTest extends Client {
         }
 
         Announcement a = new Announcement(message, references);
-        int uuid = UUIDGenerator.generateUUID();
+        String uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("POSTSGENERAL", _pubKey, uuid, a);
         VerifiableProtocolMessage vpm = requestServer(pm);
         StatusCode rsc = null;
@@ -543,7 +543,7 @@ public class ClientTest extends Client {
             rsc.add(StatusCode.NULL_FIELD);
             return new AbstractMap.SimpleEntry<>(rsc, announcements);
         }
-        int uuid = UUIDGenerator.generateUUID();
+        String uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("READ", _pubKey, uuid, number, user);
 
         
@@ -574,7 +574,7 @@ public class ClientTest extends Client {
             System.out.println("Invalid user.");
             return new AbstractMap.SimpleEntry<>(StatusCode.NULL_FIELD, new ArrayList<>());
         }
-        int uuid = UUIDGenerator.generateUUID();
+        String uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("READ", _pubKey, uuid, number, user);
         VerifiableProtocolMessage vpm = requestServerTampered(pm);
         List<Announcement> announcements = null;
@@ -604,7 +604,7 @@ public class ClientTest extends Client {
             System.out.println("Invalid user.");
             return new AbstractMap.SimpleEntry<>(StatusCode.NULL_FIELD, new ArrayList<>());
         }
-        int uuid = UUIDGenerator.generateUUID();
+        String uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("READ", _pubKey, uuid, number, user);
         VerifiableProtocolMessage vpm = requestServerDropped(pm);
         List<Announcement> announcements = null;
@@ -634,7 +634,7 @@ public class ClientTest extends Client {
             System.out.println("Invalid user.");
             return new AbstractMap.SimpleEntry<>(StatusCode.NULL_FIELD, new ArrayList<>());
         }
-        int uuid = UUIDGenerator.generateUUID();
+        String uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("READ", _pubKey, uuid, number, user);
         VerifiableProtocolMessage vpm = requestServerNull(pm);
         List<Announcement> announcements = null;
@@ -664,7 +664,7 @@ public class ClientTest extends Client {
             System.out.println("Invalid user.");
             return new AbstractMap.SimpleEntry<>(StatusCode.NULL_FIELD, new ArrayList<>());
         }
-        int uuid = UUIDGenerator.generateUUID();
+        String uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("READS", _pubKey, uuid, number, user);
         VerifiableProtocolMessage vpm = requestServer(pm);
         List<Announcement> announcements = null;
@@ -691,7 +691,7 @@ public class ClientTest extends Client {
         List<StatusCode> rsc = new ArrayList<StatusCode>();
         List<Announcement> announcements = new ArrayList<>();
 
-        int uuid = UUIDGenerator.generateUUID();
+        String uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("READGENERAL", _pubKey, uuid, number);
 
         
@@ -717,7 +717,7 @@ public class ClientTest extends Client {
      * and the list of announcements received 
      */
     public AbstractMap.SimpleEntry<StatusCode, List<Announcement>> readGeneralTampered(int number) {
-        int uuid = UUIDGenerator.generateUUID();
+        String uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("READGENERAL", _pubKey, uuid, number);
         VerifiableProtocolMessage vpm = requestServerTampered(pm);
         List<Announcement> announcements = new ArrayList<Announcement>();
@@ -742,7 +742,7 @@ public class ClientTest extends Client {
      * and the list of announcements received 
      */
     public AbstractMap.SimpleEntry<StatusCode, List<Announcement>> readGeneralDropped(int number) {
-        int uuid = UUIDGenerator.generateUUID();
+        String uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("READGENERAL", _pubKey, uuid, number);
         VerifiableProtocolMessage vpm = requestServerDropped(pm);
         List<Announcement> announcements = new ArrayList<Announcement>();
@@ -767,7 +767,7 @@ public class ClientTest extends Client {
      * and the list of announcements received 
      */
     public AbstractMap.SimpleEntry<StatusCode, List<Announcement>> readGeneralNull(int number) {
-        int uuid = UUIDGenerator.generateUUID();
+        String uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("READGENERAL", _pubKey, uuid, number);
         VerifiableProtocolMessage vpm = requestServerNull(pm);
         List<Announcement> announcements = new ArrayList<Announcement>();
@@ -791,7 +791,7 @@ public class ClientTest extends Client {
      * and the list of announcements received 
      */
     public AbstractMap.SimpleEntry<StatusCode, List<Announcement>> readGeneralInvalid(int number) {
-        int uuid = UUIDGenerator.generateUUID();
+        String uuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage("READSGENERAL", _pubKey, uuid, number);
         VerifiableProtocolMessage vpm = requestServer(pm);
         List<Announcement> announcements = new ArrayList<Announcement>();

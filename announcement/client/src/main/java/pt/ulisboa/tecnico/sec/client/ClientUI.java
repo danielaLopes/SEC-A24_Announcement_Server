@@ -77,12 +77,12 @@ public class ClientUI {
     public void post() {
         String message = promptMessage();
         String referencesIn = promptReference();
-        if (!referencesIn.trim().equals("") && !Pattern.matches("[\\d+,]*\\d+", referencesIn)) {
+        if (!referencesIn.trim().equals("") && !Pattern.matches("[\\w+,]*\\w+", referencesIn)) {
             System.out.println("Invalid references sequence.");
             return;
         }
 
-        List<Integer> references = parseReferences(referencesIn);
+        List<String> references = parseReferences(referencesIn);
 
         StatusCode statusCode = _client.post(message, references);
         if (statusCode == StatusCode.OK) {
@@ -104,7 +104,7 @@ public class ClientUI {
             System.out.println("Invalid references sequence.");
             return;
         }
-        List<Integer> references = parseReferences(referencesIn);
+        List<String> references = parseReferences(referencesIn);
 
         StatusCode statusCode = _client.postGeneral(message, references);
         if (statusCode == StatusCode.OK) {
@@ -245,13 +245,13 @@ public class ClientUI {
      *                   separated by commas
      * @return an array of references (one entry for each id)
      */
-    public List<Integer> parseReferences(String references) {
+    public List<String> parseReferences(String references) {
         String[] referencesArray = references.split(",");
-        List<Integer> referencesList = new ArrayList<Integer>();
+        List<String> referencesList = new ArrayList<String>();
 
         if (!references.equals("")) {
             for (String r : referencesArray) {
-                referencesList.add(Integer.parseInt(r.trim()));
+                referencesList.add(r.trim());
             }
         }
     

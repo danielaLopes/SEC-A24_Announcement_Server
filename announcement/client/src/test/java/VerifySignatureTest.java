@@ -25,7 +25,7 @@ class VerifySignatureTest extends BaseTest {
 
     @Test
     void success() throws Exception {
-        int uuid = UUIDGenerator.generateUUID();
+        String uuid = UUIDGenerator.generateUUID();
         ProtocolMessage requestPM = new ProtocolMessage("REGISTER", _pubKey1, uuid);
 
         ProtocolMessage responsePM = new ProtocolMessage(
@@ -43,7 +43,7 @@ class VerifySignatureTest extends BaseTest {
 
     @Test
     void invalidSignature() throws Exception {
-        int uuid = UUIDGenerator.generateUUID();
+        String uuid = UUIDGenerator.generateUUID();
         ProtocolMessage requestPM = new ProtocolMessage("REGISTER", _pubKey1, uuid);
 
         ProtocolMessage responsePM = new ProtocolMessage(

@@ -55,9 +55,9 @@ public class PostGeneralTest extends BaseTest {
     void success() throws Exception {
 
         // posting first announcement
-        List<Integer> references1 = new ArrayList<>();
+        List<String> references1 = new ArrayList<>();
         Announcement announcement1 = new Announcement(MESSAGE1, references1);
-        int opUuid1 = UUIDGenerator.generateUUID();
+        String opUuid1 = UUIDGenerator.generateUUID();
         ProtocolMessage pm1 = new ProtocolMessage(
                 "POSTGENERAL", CLIENT1_PUBLIC_KEY, opUuid1, announcement1);
         byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);
@@ -69,10 +69,10 @@ public class PostGeneralTest extends BaseTest {
         assertEquals(StatusCode.OK, sc1);
 
         // posting second announcement
-        int ref1Uuid = vpm_response1.getProtocolMessage().getPostAnnouncement().getAnnouncementID();
-        List<Integer> references2 = new ArrayList<>(Arrays.asList(ref1Uuid));
+        String ref1Uuid = vpm_response1.getProtocolMessage().getPostAnnouncement().getAnnouncementID();
+        List<String> references2 = new ArrayList<>(Arrays.asList(ref1Uuid));
         Announcement announcement2 = new Announcement(MESSAGE2, references2);
-        int opUuid2 = UUIDGenerator.generateUUID();
+        String opUuid2 = UUIDGenerator.generateUUID();
         ProtocolMessage pm2 = new ProtocolMessage(
                 "POSTGENERAL", CLIENT2_PUBLIC_KEY, opUuid2, announcement2);
         byte[] bpm2 = ProtocolMessageConverter.objToByteArray(pm2);
@@ -84,10 +84,10 @@ public class PostGeneralTest extends BaseTest {
         assertEquals(StatusCode.OK, sc2);
 
         // posting third announcement
-        int ref2Uuid = vpm_response2.getProtocolMessage().getPostAnnouncement().getAnnouncementID();
-        List<Integer> references3 = new ArrayList<>(Arrays.asList(ref1Uuid, ref2Uuid));
+        String ref2Uuid = vpm_response2.getProtocolMessage().getPostAnnouncement().getAnnouncementID();
+        List<String> references3 = new ArrayList<>(Arrays.asList(ref1Uuid, ref2Uuid));
         Announcement announcement3 = new Announcement(MESSAGE3, references3);
-        int opUuid3 = UUIDGenerator.generateUUID();
+        String opUuid3 = UUIDGenerator.generateUUID();
         ProtocolMessage pm3 = new ProtocolMessage(
                 "POSTGENERAL", CLIENT1_PUBLIC_KEY, opUuid3, announcement3);
         byte[] bpm3 = ProtocolMessageConverter.objToByteArray(pm3);
@@ -103,9 +103,9 @@ public class PostGeneralTest extends BaseTest {
     @Test
     void userNotRegistered() throws Exception {
 
-        List<Integer> references1 = new ArrayList<>();
+        List<String> references1 = new ArrayList<>();
         Announcement announcement1 = new Announcement(MESSAGE1, references1);
-        int opUuid1 = UUIDGenerator.generateUUID();
+        String opUuid1 = UUIDGenerator.generateUUID();
         ProtocolMessage pm1 = new ProtocolMessage(
                 "POSTGENERAL", CLIENT3_PUBLIC_KEY, opUuid1, announcement1);
         byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);
@@ -122,9 +122,9 @@ public class PostGeneralTest extends BaseTest {
     void messageLengthIsInvalid() throws Exception {
 
         // posting announcement
-        List<Integer> references1 = new ArrayList<>();
+        List<String> references1 = new ArrayList<>();
         Announcement announcement1 = new Announcement(INVALID_LENGTH_MESSAGE, references1);
-        int opUuid1 = UUIDGenerator.generateUUID();
+        String opUuid1 = UUIDGenerator.generateUUID();
         ProtocolMessage pm1 = new ProtocolMessage(
                 "POSTGENERAL", CLIENT1_PUBLIC_KEY, opUuid1, announcement1);
         byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);
@@ -140,10 +140,10 @@ public class PostGeneralTest extends BaseTest {
     void InvalidReferences() throws Exception {
 
         // posting announcement
-        int invalid_opUuid = UUIDGenerator.generateUUID();
-        List<Integer> references1 = new ArrayList<>(Arrays.asList(invalid_opUuid));
+        String invalid_opUuid = UUIDGenerator.generateUUID();
+        List<String> references1 = new ArrayList<>(Arrays.asList(invalid_opUuid));
         Announcement announcement1 = new Announcement(MESSAGE1, references1);
-        int opUuid1 = UUIDGenerator.generateUUID();
+        String opUuid1 = UUIDGenerator.generateUUID();
         ProtocolMessage pm1 = new ProtocolMessage(
                 "POSTGENERAL", CLIENT1_PUBLIC_KEY, opUuid1, announcement1);
         byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);
@@ -160,9 +160,9 @@ public class PostGeneralTest extends BaseTest {
     void publicKeyIsNull() throws Exception {
 
         // posting announcement
-        List<Integer> references1 = new ArrayList<>();
+        List<String> references1 = new ArrayList<>();
         Announcement announcement1 = new Announcement(MESSAGE1, references1);
-        int opUuid1 = UUIDGenerator.generateUUID();
+        String opUuid1 = UUIDGenerator.generateUUID();
         ProtocolMessage pm1 = new ProtocolMessage(
                 "POSTGENERAL", null, opUuid1, announcement1);
         byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);
@@ -178,9 +178,9 @@ public class PostGeneralTest extends BaseTest {
     void messageIsNull() throws Exception {
 
         // posting announcement
-        List<Integer> references1 = new ArrayList<>();
+        List<String> references1 = new ArrayList<>();
         Announcement announcement1 = new Announcement(null, references1);
-        int opUuid1 = UUIDGenerator.generateUUID();
+        String opUuid1 = UUIDGenerator.generateUUID();
         ProtocolMessage pm1 = new ProtocolMessage(
                 "POSTGENERAL", CLIENT1_PUBLIC_KEY, opUuid1, announcement1);
         byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);
@@ -197,7 +197,7 @@ public class PostGeneralTest extends BaseTest {
 
         // posting announcement
         Announcement announcement1 = new Announcement(MESSAGE1, null);
-        int opUuid1 = UUIDGenerator.generateUUID();
+        String opUuid1 = UUIDGenerator.generateUUID();
         ProtocolMessage pm1 = new ProtocolMessage(
                 "POSTGENERAL", CLIENT1_PUBLIC_KEY, opUuid1, announcement1);
         byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);
@@ -213,10 +213,10 @@ public class PostGeneralTest extends BaseTest {
     void opUuidIsNull() throws Exception {
 
         // posting announcement
-        List<Integer> references1 = new ArrayList<>();
+        List<String> references1 = new ArrayList<>();
         Announcement announcement1 = new Announcement(MESSAGE1, references1);
         //Integer opUuid1 = null;
-        int opUuid1 = 0;
+        String opUuid1 = null;
         ProtocolMessage pm1 = new ProtocolMessage(
                 "POSTGENERAL", CLIENT1_PUBLIC_KEY, opUuid1, announcement1);
         byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);
@@ -232,9 +232,9 @@ public class PostGeneralTest extends BaseTest {
     void signatureIsNull() throws Exception {
 
         // posting announcement
-        List<Integer> references1 = new ArrayList<>();
+        List<String> references1 = new ArrayList<>();
         Announcement announcement1 = new Announcement(MESSAGE1, references1);
-        int opUuid = UUIDGenerator.generateUUID();
+        String opUuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage(
                 "POSTGENERAL", CLIENT1_PUBLIC_KEY, opUuid, announcement1);
         VerifiableProtocolMessage vpm1 = new VerifiableProtocolMessage(pm, null);
@@ -249,8 +249,8 @@ public class PostGeneralTest extends BaseTest {
     void duplicatedOperation() throws Exception {
 
         // posting announcement 1
-        int opUuidRepeated = UUIDGenerator.generateUUID();
-        List<Integer> references1 = new ArrayList<>();
+        String opUuidRepeated = UUIDGenerator.generateUUID();
+        List<String> references1 = new ArrayList<>();
         Announcement announcement1 = new Announcement(MESSAGE1, references1);
         ProtocolMessage pm1 = new ProtocolMessage(
                 "POSTGENERAL", CLIENT1_PUBLIC_KEY, opUuidRepeated, announcement1);
@@ -262,7 +262,7 @@ public class PostGeneralTest extends BaseTest {
         StatusCode sc1 = vpm_response1.getProtocolMessage().getStatusCode();
 
         // posting announcement with repeated opUuid
-        List<Integer> references2 = new ArrayList<>();
+        List<String> references2 = new ArrayList<>();
         Announcement announcement2 = new Announcement(MESSAGE2, references2);
         ProtocolMessage pm2 = new ProtocolMessage(
                 "POSTGENERAL", CLIENT1_PUBLIC_KEY, opUuidRepeated, announcement2);
@@ -279,8 +279,8 @@ public class PostGeneralTest extends BaseTest {
     void duplicatedReference() throws Exception {
 
         // posting announcement 1
-        int opUuid2 = UUIDGenerator.generateUUID();
-        List<Integer> references1 = new ArrayList<>();
+        String opUuid2 = UUIDGenerator.generateUUID();
+        List<String> references1 = new ArrayList<>();
         Announcement announcement1 = new Announcement(MESSAGE1, references1);
         ProtocolMessage pm1 = new ProtocolMessage(
                 "POSTGENERAL", CLIENT1_PUBLIC_KEY, opUuid2, announcement1);
@@ -293,9 +293,9 @@ public class PostGeneralTest extends BaseTest {
         assertEquals(StatusCode.OK, sc1);
 
         // posting announcement 2
-        int opUuid3 = UUIDGenerator.generateUUID();
-        int repeatedReference = vpm_response1.getProtocolMessage().getPostAnnouncement().getAnnouncementID();
-        List<Integer> references2 = new ArrayList<>(Arrays.asList(repeatedReference, repeatedReference));
+        String opUuid3 = UUIDGenerator.generateUUID();
+        String repeatedReference = vpm_response1.getProtocolMessage().getPostAnnouncement().getAnnouncementID();
+        List<String> references2 = new ArrayList<>(Arrays.asList(repeatedReference, repeatedReference));
         Announcement announcement2 = new Announcement(MESSAGE1, references2);
         ProtocolMessage pm2 = new ProtocolMessage(
                 "POSTGENERAL", CLIENT1_PUBLIC_KEY, opUuid3, announcement2);
@@ -313,9 +313,9 @@ public class PostGeneralTest extends BaseTest {
     void tamperedMessage() throws Exception {
 
         // posting announcement
-        List<Integer> references1 = new ArrayList<>();
+        List<String> references1 = new ArrayList<>();
         Announcement announcement1 = new Announcement(MESSAGE1, references1);
-        int opUuid = UUIDGenerator.generateUUID();
+        String opUuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = new ProtocolMessage(
                 "POSTGENERAL", CLIENT1_PUBLIC_KEY, opUuid, announcement1);
         Announcement tampAnnouncement = new Announcement(MESSAGE2, references1);
@@ -334,9 +334,9 @@ public class PostGeneralTest extends BaseTest {
     void invalidSignature() throws Exception {
 
         // posting announcement
-        List<Integer> references1 = new ArrayList<>();
+        List<String> references1 = new ArrayList<>();
         Announcement announcement1 = new Announcement(MESSAGE1, references1);
-        Integer opUuid1 = UUIDGenerator.generateUUID();
+        String opUuid1 = UUIDGenerator.generateUUID();
         ProtocolMessage pm1 = new ProtocolMessage(
                 "POSTGENERAL", CLIENT1_PUBLIC_KEY, opUuid1, announcement1);
         byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);

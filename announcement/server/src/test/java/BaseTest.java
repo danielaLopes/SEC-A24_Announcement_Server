@@ -57,7 +57,7 @@ public class BaseTest {
     }
 
     static VerifiableProtocolMessage forgeRegisterRequest(
-            Server server, int opUuid, PublicKey clientPubKey, PrivateKey clientPrivKey) throws Exception {
+            Server server, String opUuid, PublicKey clientPubKey, PrivateKey clientPrivKey) throws Exception {
 
         ProtocolMessage pmRegister1 = new ProtocolMessage(
                 "REGISTER", clientPubKey, opUuid);

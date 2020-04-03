@@ -6,17 +6,17 @@ import java.util.List;
 
 public class Announcement implements Serializable{
     private String _announcement;
-    private List<Integer> _references;
-    private int _announcementID;
+    private List<String> _references;
+    private String _announcementID;
     private String _clientUUID;
     private PublicKey _clientPublicKey;
 
-    public Announcement(String announcement, List<Integer> references) {
+    public Announcement(String announcement, List<String> references) {
         _announcement = announcement;
         _references = references;
     }
 
-    public Announcement(String announcement, List<Integer> references, int announcementID, String clientUUID) {
+    public Announcement(String announcement, List<String> references, String announcementID, String clientUUID) {
         _announcement = announcement;
         _references = references;
         _announcementID = announcementID;
@@ -29,11 +29,11 @@ public class Announcement implements Serializable{
 
     public String getAnnouncement() { return _announcement; }
 
-    public List<Integer> getReferences() { return _references; }
+    public List<String> getReferences() { return _references; }
 
-    public int getAnnouncementID() { return _announcementID; }
+    public String getAnnouncementID() { return _announcementID; }
 
-    public void setAnnouncementID(int id) { _announcementID = id; }
+    public void setAnnouncementID(String id) { _announcementID = id; }
 
     public String getClientUUID() { return _clientUUID; }
 

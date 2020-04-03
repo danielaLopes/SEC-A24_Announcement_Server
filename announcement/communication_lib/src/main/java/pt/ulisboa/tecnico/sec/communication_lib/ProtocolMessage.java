@@ -12,7 +12,7 @@ public class ProtocolMessage implements Serializable {
     private List<Announcement> _announcements;
     private Announcement _postAnnouncement;
     // Post response
-    private int _opUuid;
+    private String _opUuid;
     //Read operation: Number of announcements to be read.
     private int _numberAnnouncements;
     //Read operation: Public key of user to read
@@ -34,20 +34,20 @@ public class ProtocolMessage implements Serializable {
         _postAnnouncement = announcement;
     }
 
-    public ProtocolMessage(String command, PublicKey publicKey, int opUuid) {
+    public ProtocolMessage(String command, PublicKey publicKey, String opUuid) {
         _opUuid = opUuid;
         _command = command;
         _publicKey = publicKey;
     }
 
-    public ProtocolMessage(String command, PublicKey publicKey, int opUuid, Announcement announcement) {
+    public ProtocolMessage(String command, PublicKey publicKey, String opUuid, Announcement announcement) {
         _opUuid = opUuid;
         _command = command;
         _publicKey = publicKey;
         _postAnnouncement = announcement;
     }
 
-    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, int opUuid, Announcement announcement) {
+    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, String opUuid, Announcement announcement) {
         _opUuid = opUuid;
         _command = command;
         _statusCode = statusCode;
@@ -56,13 +56,13 @@ public class ProtocolMessage implements Serializable {
     }
 
     // Post Response or Register Response
-    /*public ProtocolMessage(String command, StatusCode statusCode, int opUuid) {
+    /*public ProtocolMessage(String command, StatusCode statusCode, String opUuid) {
         _command = command;
         _statusCode = statusCode;
         _opUuid = opUuid;
     }*/
 
-    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, int opUuid) {
+    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, String opUuid) {
         _command = command;
         _statusCode = statusCode;
         _opUuid = opUuid;
@@ -70,7 +70,7 @@ public class ProtocolMessage implements Serializable {
     }
 
     //Read Operation Client -> Server
-    public ProtocolMessage(String command, PublicKey publicKey, int opUuid, int numberAnnouncements, PublicKey toReadPublicKey) {
+    public ProtocolMessage(String command, PublicKey publicKey, String opUuid, int numberAnnouncements, PublicKey toReadPublicKey) {
         _opUuid = opUuid;
         _command = command;
         _publicKey = publicKey;
@@ -79,7 +79,7 @@ public class ProtocolMessage implements Serializable {
     }
 
     //ReadGeneral Operation Client -> Server
-    public ProtocolMessage(String command, PublicKey publicKey, int opUuid, int numberAnnouncements) {
+    public ProtocolMessage(String command, PublicKey publicKey, String opUuid, int numberAnnouncements) {
         _opUuid = opUuid;
         _command = command;
         _publicKey = publicKey;
@@ -87,7 +87,7 @@ public class ProtocolMessage implements Serializable {
     }
 
     //Read Operations Server -> Client
-    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, int opUuid, List<Announcement> announcements) {
+    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, String opUuid, List<Announcement> announcements) {
         _command = command;
         _statusCode = statusCode;
         _opUuid = opUuid;
@@ -105,7 +105,7 @@ public class ProtocolMessage implements Serializable {
 
     public StatusCode getStatusCode() { return _statusCode; }
 
-    public int getOpUuid() { return _opUuid; }
+    public String getOpUuid() { return _opUuid; }
 
     public List<Announcement> getAnnouncements() { return _announcements; }
 
