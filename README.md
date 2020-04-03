@@ -12,14 +12,6 @@ GRANT ALL PRIVILEGES ON * . * TO 'sec'@'localhost';
 FLUSH PRIVILEGES;
 create database announcement;
 ```
-
-## Using MySQL in bash (password is 1234)
-```bash
-mysql -u sec -p announcement
-show tables;
-```
-
-
 ## Instructions
 Inside project root directory (announcement/):
 1. Generate Client and Server keys and keystore.
