@@ -20,7 +20,7 @@ class BaseTest {
     public final static String SERVER_PUBLICKEY_PATH = "../server/src/main/resources/crypto/public.key";
     public final static String SERVER_KEYSTORE_PATH1 = "../server/src/main/resources/crypto/server_keystore.jks";
     public final static String SERVER_PASSWD = "password";
-    public final static String SERVER_ALIAS = "ola";
+    public final static String SERVER_ALIAS = "alias";
 
 
     public final static String PUBLICKEY_PATH1 = "src/main/resources/crypto/public1.key";
