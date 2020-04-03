@@ -28,8 +28,8 @@ public class ClientMessageHandler extends Thread {
             try {
                 
                 VerifiableProtocolMessage vpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
-                System.out.println("Received [" + vpm.getProtocolMessage().getCommand() + "] from: " + _socket);
-                System.out.println("Received [" + vpm.getProtocolMessage().getPublicKey() + "] from: " + _socket);
+                //System.out.println("Received [" + vpm.getProtocolMessage().getCommand() + "] from: " + _socket);
+                //System.out.println("Received [" + vpm.getProtocolMessage().getPublicKey() + "] from: " + _socket);
                 command = vpm.getProtocolMessage().getCommand();
 
                 switch (command) {
