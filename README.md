@@ -23,7 +23,7 @@ show tables;
 ## Instructions
 Inside project root directory (announcement/):
 1. Generate Client and Server keys and keystore.
-    - For simple Client generation (will generate 3 pairs):
+    - For simple Client generation (will generate 3 key pairs):
         ```
         ./generateClientKeys.sh < generateClientKeysInput.txt
         ./createClientKeyStore.sh
@@ -80,6 +80,8 @@ Inside project root directory (announcement/):
     - 3 clients:
         ```
         mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="src/main/resources/crypto/public1.key src/main/resources/crypto/client1_keystore.jks password password alias ../server/src/main/resources/crypto/public.key 2 src/main/resources/crypto/public2.key src/main/resources/crypto/public3.key"
+        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="src/main/resources/crypto/public2.key src/main/resources/crypto/client1_keystore.jks password password alias ../server/src/main/resources/crypto/public.key 2 src/main/resources/crypto/public1.key src/main/resources/crypto/public3.key"
+        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="src/main/resources/crypto/public3.key src/main/resources/crypto/client1_keystore.jks password password alias ../server/src/main/resources/crypto/public.key 2 src/main/resources/crypto/public1.key src/main/resources/crypto/public2.key"
         ```
 
 ## Interacting with the Client UI
