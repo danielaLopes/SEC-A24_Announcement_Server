@@ -37,14 +37,6 @@ class BaseTest {
     public final static String ENTRY_PASSWD = "password";
     public final static String ALIAS = "alias";
 
-
-
-    @BeforeEach
-    void init() {
-        Database _db = new Database();
-        _db.resetDatabaseTest();
-    }
-
     public PrivateKey loadPrivateKey(String keyStorePath, String keyStorePasswd, String entryPasswd, String alias) throws Exception {
         if (keyStorePath == null || keyStorePasswd == null || entryPasswd == null || alias == null) {
             System.out.println("Error: Not possible to initialize client because it was not possible to load keystore.\n");

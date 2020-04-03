@@ -39,12 +39,6 @@ public class BaseTest {
     public final static String PUBLICKEY_PATH3 = "../client/src/main/resources/crypto/public3.key";
     public final static String KEYSTORE_PATH3 = "../client/src/main/resources/crypto/client3_keystore.jks";
 
-    @BeforeEach
-    void init() {
-        Database _db = new Database();
-        _db.resetDatabaseTest();
-    }
-
     public PrivateKey loadPrivateKey(String keyStorePath, String keyStorePasswd, String entryPasswd, String alias) throws Exception {
         if (keyStorePath == null || keyStorePasswd == null || entryPasswd == null || alias == null) {
             System.out.println("Error: Not possible to initialize client because it was not possible to load keystore.\n");
