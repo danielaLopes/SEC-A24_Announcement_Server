@@ -61,7 +61,7 @@ public class Database {
 
     public void createOperationsTable() {
         try {
-            String operationsTable = "CREATE TABLE IF NOT EXISTS Operations (OpUUID VARCHAR(255) NOT NULL, Operation VARBINARY(2500), PRIMARY KEY(OpUUID)) CHARACTER SET utf8";
+            String operationsTable = "CREATE TABLE IF NOT EXISTS Operations (OpUUID VARCHAR(255) NOT NULL, Operation VARBINARY(60000), PRIMARY KEY(OpUUID)) CHARACTER SET utf8";
             PreparedStatement statement = _con.prepareStatement(operationsTable);
             statement.executeUpdate();
         }
