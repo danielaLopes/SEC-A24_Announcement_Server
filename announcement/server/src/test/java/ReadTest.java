@@ -40,9 +40,9 @@ public class ReadTest extends BaseTest {
         assertEquals(StatusCode.OK, scRegister2);
 
         // posting first announcement
-        List<Integer> references1 = new ArrayList<>();
+        List<String> references1 = new ArrayList<>();
         _ann1Client1 = new Announcement(MESSAGE1, references1);
-        int opUuid1 = UUIDGenerator.generateUUID();
+        String opUuid1 = UUIDGenerator.generateUUID();
         ProtocolMessage pm1 = new ProtocolMessage(
                 "POST", CLIENT1_PUBLIC_KEY, opUuid1, _ann1Client1);
         byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);
@@ -54,10 +54,10 @@ public class ReadTest extends BaseTest {
         assertEquals(StatusCode.OK, sc1);
 
         // posting second announcement
-        int ref1Uuid = vpm_response1.getProtocolMessage().getPostAnnouncement().getAnnouncementID();
-        List<Integer> references2 = new ArrayList<>(Arrays.asList(ref1Uuid));
+        String ref1Uuid = vpm_response1.getProtocolMessage().getPostAnnouncement().getAnnouncementID();
+        List<String> references2 = new ArrayList<>(Arrays.asList(ref1Uuid));
         _ann2Client2 = new Announcement(MESSAGE2, references2);
-        int opUuid2 = UUIDGenerator.generateUUID();
+        String opUuid2 = UUIDGenerator.generateUUID();
         ProtocolMessage pm2 = new ProtocolMessage(
                 "POST", CLIENT2_PUBLIC_KEY, opUuid2, _ann2Client2);
         byte[] bpm2 = ProtocolMessageConverter.objToByteArray(pm2);
@@ -69,10 +69,10 @@ public class ReadTest extends BaseTest {
         assertEquals(StatusCode.OK, sc2);
 
         // posting third announcement
-        int ref2Uuid = vpm_response2.getProtocolMessage().getPostAnnouncement().getAnnouncementID();
-        List<Integer> references3 = new ArrayList<>(Arrays.asList(ref1Uuid, ref2Uuid));
+        String ref2Uuid = vpm_response2.getProtocolMessage().getPostAnnouncement().getAnnouncementID();
+        List<String> references3 = new ArrayList<>(Arrays.asList(ref1Uuid, ref2Uuid));
         _ann3Client2 = new Announcement(MESSAGE3, references3);
-        int opUuid3 = UUIDGenerator.generateUUID();
+        String opUuid3 = UUIDGenerator.generateUUID();
         ProtocolMessage pm3 = new ProtocolMessage(
                 "POST", CLIENT2_PUBLIC_KEY, opUuid3, _ann3Client2);
         byte[] bpm3 = ProtocolMessageConverter.objToByteArray(pm3);
@@ -88,7 +88,7 @@ public class ReadTest extends BaseTest {
     void successReadZero() throws Exception {
 
         // read all announcements from user1 board
-        int opUuid1 = UUIDGenerator.generateUUID();
+        String opUuid1 = UUIDGenerator.generateUUID();
         ProtocolMessage pm1 = new ProtocolMessage(
                 "READ", CLIENT1_PUBLIC_KEY, opUuid1, 0, CLIENT1_PUBLIC_KEY);
         byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);
@@ -104,7 +104,7 @@ public class ReadTest extends BaseTest {
         assertEqualAnnouncement(_ann1Client1, annsClient1.get(0));
 
         // read all announcements from user2 board
-        int opUuid2 = UUIDGenerator.generateUUID();
+        String opUuid2 = UUIDGenerator.generateUUID();
         ProtocolMessage pm2 = new ProtocolMessage(
                 "READ", CLIENT1_PUBLIC_KEY, opUuid2, 0, CLIENT2_PUBLIC_KEY);
         byte[] bpm2 = ProtocolMessageConverter.objToByteArray(pm2);
@@ -125,7 +125,7 @@ public class ReadTest extends BaseTest {
     void successReadOne() throws Exception {
 
         // read one announcement from user1 board
-        int opUuid1 = UUIDGenerator.generateUUID();
+        String opUuid1 = UUIDGenerator.generateUUID();
         ProtocolMessage pm1 = new ProtocolMessage(
                 "READ", CLIENT1_PUBLIC_KEY, opUuid1, 1, CLIENT1_PUBLIC_KEY);
         byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);
@@ -141,7 +141,7 @@ public class ReadTest extends BaseTest {
         assertEqualAnnouncement(_ann1Client1, annsClient1.get(0));
 
         // read one announcement from user2 board
-        int opUuid2 = UUIDGenerator.generateUUID();
+        String opUuid2 = UUIDGenerator.generateUUID();
         ProtocolMessage pm2 = new ProtocolMessage(
                 "READ", CLIENT1_PUBLIC_KEY, opUuid2, 1, CLIENT2_PUBLIC_KEY);
         byte[] bpm2 = ProtocolMessageConverter.objToByteArray(pm2);
@@ -161,7 +161,7 @@ public class ReadTest extends BaseTest {
     void successReadTwo() throws Exception {
 
         // read one announcement from user2 board
-        int opUuid2 = UUIDGenerator.generateUUID();
+        String opUuid2 = UUIDGenerator.generateUUID();
         ProtocolMessage pm2 = new ProtocolMessage(
                 "READ", CLIENT1_PUBLIC_KEY, opUuid2, 2, CLIENT2_PUBLIC_KEY);
         byte[] bpm2 = ProtocolMessageConverter.objToByteArray(pm2);
@@ -183,7 +183,7 @@ public class ReadTest extends BaseTest {
     void successReadNegative() throws Exception {
 
         // read one announcement from user2 board
-        int opUuid2 = UUIDGenerator.generateUUID();
+        String opUuid2 = UUIDGenerator.generateUUID();
         ProtocolMessage pm2 = new ProtocolMessage(
                 "READ", CLIENT1_PUBLIC_KEY, opUuid2, -999999999 - 999999999, CLIENT2_PUBLIC_KEY);
         byte[] bpm2 = ProtocolMessageConverter.objToByteArray(pm2);
@@ -204,7 +204,7 @@ public class ReadTest extends BaseTest {
     void successReadTooMany() throws Exception {
 
         // read one announcement from user2 board
-        int opUuid2 = UUIDGenerator.generateUUID();
+        String opUuid2 = UUIDGenerator.generateUUID();
         ProtocolMessage pm2 = new ProtocolMessage(
                 "READ", CLIENT1_PUBLIC_KEY, opUuid2, +999999999 + 999999999, CLIENT2_PUBLIC_KEY);
         byte[] bpm2 = ProtocolMessageConverter.objToByteArray(pm2);
@@ -226,7 +226,7 @@ public class ReadTest extends BaseTest {
     void userNotRegistered() throws Exception {
 
         // read one announcement from user2 board
-        int opUuid2 = UUIDGenerator.generateUUID();
+        String opUuid2 = UUIDGenerator.generateUUID();
         ProtocolMessage pm2 = new ProtocolMessage(
                 "READ", CLIENT3_PUBLIC_KEY, opUuid2, 0, CLIENT2_PUBLIC_KEY);
         byte[] bpm2 = ProtocolMessageConverter.objToByteArray(pm2);
@@ -245,7 +245,7 @@ public class ReadTest extends BaseTest {
     void toReadPublicKeyIsNull() throws Exception {
 
         // read one announcement from user1 board
-        int opUuid1 = UUIDGenerator.generateUUID();
+        String opUuid1 = UUIDGenerator.generateUUID();
         ProtocolMessage pm1 = new ProtocolMessage(
                 "READ", CLIENT1_PUBLIC_KEY, opUuid1, 1, null);
         byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);
@@ -263,7 +263,7 @@ public class ReadTest extends BaseTest {
     void publicKeyIsNull() throws Exception {
 
         // read one announcement from user1 board
-        int opUuid1 = UUIDGenerator.generateUUID();
+        String opUuid1 = UUIDGenerator.generateUUID();
         ProtocolMessage pm1 = new ProtocolMessage(
                 "READ", null, opUuid1, 1, CLIENT1_PUBLIC_KEY);
         byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);
@@ -282,7 +282,7 @@ public class ReadTest extends BaseTest {
 
         // read 1 announcement
         ProtocolMessage pm1 = new ProtocolMessage(
-                "READ", CLIENT1_PUBLIC_KEY, 0, 1, CLIENT1_PUBLIC_KEY);
+                "READ", CLIENT1_PUBLIC_KEY, null, 1, CLIENT1_PUBLIC_KEY);
         byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);
         byte[] signedpm1 = SignatureUtil.sign(bpm1, CLIENT1_PRIVATE_KEY);
         VerifiableProtocolMessage vpm1 = new VerifiableProtocolMessage(pm1, signedpm1);
@@ -298,7 +298,7 @@ public class ReadTest extends BaseTest {
     void signatureIsNull() {
 
         // read 1 announcement
-        int opUuid1 = UUIDGenerator.generateUUID();
+        String opUuid1 = UUIDGenerator.generateUUID();
         ProtocolMessage pm1 = new ProtocolMessage(
                 "READ", CLIENT1_PUBLIC_KEY, opUuid1, 1, CLIENT1_PUBLIC_KEY);
         VerifiableProtocolMessage vpm1 = new VerifiableProtocolMessage(pm1, null);
@@ -315,7 +315,7 @@ public class ReadTest extends BaseTest {
     void duplicatedOperation() throws Exception {
 
         // read 1 announcement
-        int opUuid1 = UUIDGenerator.generateUUID();
+        String opUuid1 = UUIDGenerator.generateUUID();
         ProtocolMessage pm1 = new ProtocolMessage(
                 "READ", CLIENT1_PUBLIC_KEY, opUuid1, 1, CLIENT1_PUBLIC_KEY);
         byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);
@@ -345,7 +345,7 @@ public class ReadTest extends BaseTest {
     void tamperedMessage() throws Exception {
 
         // read 1 announcement
-        int opUuid1 = UUIDGenerator.generateUUID();
+        String opUuid1 = UUIDGenerator.generateUUID();
         ProtocolMessage pm1 = new ProtocolMessage(
                 "READ", CLIENT1_PUBLIC_KEY, opUuid1, 1, CLIENT1_PUBLIC_KEY);
         ProtocolMessage tampPm1 = new ProtocolMessage(
@@ -365,7 +365,7 @@ public class ReadTest extends BaseTest {
     void tamperedCommand() throws Exception {
 
         // read 1 announcement
-        int opUuid1 = UUIDGenerator.generateUUID();
+        String opUuid1 = UUIDGenerator.generateUUID();
         ProtocolMessage pm1 = new ProtocolMessage(
                 "READ", CLIENT1_PUBLIC_KEY, opUuid1, 1, CLIENT1_PUBLIC_KEY);
         ProtocolMessage tampPm1 = new ProtocolMessage(
@@ -385,7 +385,7 @@ public class ReadTest extends BaseTest {
     void invalidSignature() throws Exception {
 
         // read 1 announcement
-        int opUuid1 = UUIDGenerator.generateUUID();
+        String opUuid1 = UUIDGenerator.generateUUID();
         ProtocolMessage pm1 = new ProtocolMessage(
                 "READ", CLIENT1_PUBLIC_KEY, opUuid1, 1, CLIENT1_PUBLIC_KEY);
         byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);
@@ -403,7 +403,7 @@ public class ReadTest extends BaseTest {
     void invalidToReadKey() throws Exception {
 
         // read 1 announcement
-        int opUuid1 = UUIDGenerator.generateUUID();
+        String opUuid1 = UUIDGenerator.generateUUID();
         ProtocolMessage pm1 = new ProtocolMessage(
                 "READ", CLIENT1_PUBLIC_KEY, opUuid1, 1, CLIENT3_PUBLIC_KEY);
         byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);

@@ -48,7 +48,7 @@ public class RegisterUserTest extends BaseTest {
 
         // registering client1
         VerifiableProtocolMessage vpm_responseRegister1 = forgeRegisterRequest(
-                server, 0, CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
+                server, null, CLIENT1_PUBLIC_KEY, CLIENT1_PRIVATE_KEY);
         StatusCode scRegister1 = vpm_responseRegister1.getProtocolMessage().getStatusCode();
         assertEquals(StatusCode.NULL_FIELD, scRegister1);
     }
@@ -60,7 +60,7 @@ public class RegisterUserTest extends BaseTest {
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
-        int opUuidRegister1 = UUIDGenerator.generateUUID();
+        String opUuidRegister1 = UUIDGenerator.generateUUID();
         ProtocolMessage pmRegister1 = new ProtocolMessage(
                 "REGISTER", CLIENT1_PUBLIC_KEY, opUuidRegister1);
         VerifiableProtocolMessage vpmRegister1 = new VerifiableProtocolMessage(
@@ -79,7 +79,7 @@ public class RegisterUserTest extends BaseTest {
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
-        int opUuidRepeated = UUIDGenerator.generateUUID();
+        String opUuidRepeated = UUIDGenerator.generateUUID();
         ProtocolMessage pmRegister1 = new ProtocolMessage(
                 "REGISTER", CLIENT1_PUBLIC_KEY, opUuidRepeated);
         byte[] bpmRegister1 = ProtocolMessageConverter.objToByteArray(pmRegister1);
@@ -105,8 +105,8 @@ public class RegisterUserTest extends BaseTest {
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
-        int opUuidRegister1 = UUIDGenerator.generateUUID();
-        int tampOpUuidRegister1 = UUIDGenerator.generateUUID();
+        String opUuidRegister1 = UUIDGenerator.generateUUID();
+        String tampOpUuidRegister1 = UUIDGenerator.generateUUID();
         ProtocolMessage pmRegister1 = new ProtocolMessage(
                 "REGISTER", CLIENT1_PUBLIC_KEY, opUuidRegister1);
         ProtocolMessage tampPmRegister1 = new ProtocolMessage(
@@ -128,7 +128,7 @@ public class RegisterUserTest extends BaseTest {
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
 
         // registering client1
-        int opUuidRegister1 = UUIDGenerator.generateUUID();
+        String opUuidRegister1 = UUIDGenerator.generateUUID();
         ProtocolMessage pmRegister1 = new ProtocolMessage(
                 "REGISTER", CLIENT1_PUBLIC_KEY, opUuidRegister1);
         byte[] bpmRegister1 = ProtocolMessageConverter.objToByteArray(pmRegister1);

@@ -30,7 +30,7 @@ public class Server {
      * operations in case a client resends it due to loss of message. Sends the
      * message that was originally formulated to answer that request.
      */
-    private ConcurrentHashMap<Integer, VerifiableProtocolMessage> _operations;
+    private ConcurrentHashMap<String, VerifiableProtocolMessage> _operations;
     private ConcurrentHashMap<PublicKey, User> _users; // TODO : is synchronization required inside userdata structures
     /**
      * maps the announcement unique id to the public key of the entity
@@ -38,7 +38,7 @@ public class Server {
      * if it's the server's public key it's in the
      * General Board, otherwise it's in the respective User's PostOperation Board
      */
-    private ConcurrentHashMap<Integer, AnnouncementLocation> _announcementMapper;
+    private ConcurrentHashMap<String, AnnouncementLocation> _announcementMapper;
     private List<Announcement> _generalBoard;
     private Communication _communication;
 
@@ -87,7 +87,7 @@ public class Server {
         //Retrieve _generalBoard from database
         List<GeneralBoardStructure> gbs = dbs.getGeneralBoard();
         for (GeneralBoardStructure i: gbs) {
-            List<Integer> references = (List<Integer>) ProtocolMessageConverter.byteArrayToObj(i.getReferences());
+            List<String> references = (List<String>) ProtocolMessageConverter.byteArrayToObj(i.getReferences());
             Announcement a = new Announcement(i.getAnnouncement(), references, i.getAnnouncementID(), i.getClientUUID());
             a.setPublicKey(getUserUUID(i.getClientUUID()));
             
@@ -103,7 +103,7 @@ public class Server {
         //Retrieve _announcementMapper from database
         List<UserBoardStructure> ubs = dbs.getUserBoard();
         for (UserBoardStructure i: ubs) {
-            List<Integer> references = (List<Integer>) ProtocolMessageConverter.byteArrayToObj(i.getReferences());
+            List<String> references = (List<String>) ProtocolMessageConverter.byteArrayToObj(i.getReferences());
             Announcement a = new Announcement(i.getAnnouncement(), references, i.getAnnouncementID(), i.getClientUUID());
             PublicKey clientPubKey = getUserUUID(i.getClientUUID());
             a.setPublicKey(clientPubKey);
@@ -207,7 +207,7 @@ public class Server {
      * @param opUuid
      * @return StatusCode
      */
-    public StatusCode verifyDupOperation(int opUuid) {
+    public StatusCode verifyDupOperation(String opUuid) {
         // checks if this operation was already performed
         if (_operations.containsKey(opUuid)) return StatusCode.DUPLICATE_OPERATION;
         else return StatusCode.OK;
@@ -232,15 +232,16 @@ public class Server {
      * @param references to be verified
      * @return StatusCode
      */
-    public StatusCode verifyReferences(List<Integer> references) {
+    public StatusCode verifyReferences(List<String> references) {
+        if (references == null) return StatusCode.NULL_FIELD;
 
-        for (int reference : references) {
+        for (String reference : references) {
             if (!_announcementMapper.containsKey(reference)) {
                 return StatusCode.INVALID_REFERENCE;
             }
         }
         // server eliminates repeated references
-        Set<Integer> set = new HashSet<>(references);
+        Set<String> set = new HashSet<>(references);
         if (set.size() != references.size())
             return StatusCode.DUPLICATE_REFERENCE;
         return StatusCode.OK;
@@ -258,8 +259,8 @@ public class Server {
         return StatusCode.USER_NOT_REGISTERED;
     }
 
-    public StatusCode verifyOpUuid(int opUuid) {
-        if (opUuid <= 0) {
+    public StatusCode verifyOpUuid(String opUuid) {
+        if (opUuid == null) {
             return StatusCode.NULL_FIELD;
         }
         else {
@@ -267,8 +268,8 @@ public class Server {
         }
     }
 
-    public StatusCode verifyPost(int opUuid, VerifiableProtocolMessage vpm, String message,
-                                 List<Integer> references, PublicKey clientPubKey) {
+    public StatusCode verifyPost(String opUuid, VerifiableProtocolMessage vpm, String message,
+                                 List<String> references, PublicKey clientPubKey) {
         StatusCode sc;
 
         if (verifyOpUuid(opUuid).equals(StatusCode.NULL_FIELD) || vpm == null || message == null ||
@@ -305,7 +306,7 @@ public class Server {
         return sc;
     }
 
-    public StatusCode verifyRead(int opUuid, VerifiableProtocolMessage vpm, PublicKey clientPubKey) {
+    public StatusCode verifyRead(String opUuid, VerifiableProtocolMessage vpm, PublicKey clientPubKey) {
         StatusCode sc;
 
         if (verifyOpUuid(opUuid).equals(StatusCode.NULL_FIELD) || vpm == null || clientPubKey == null ||
@@ -357,7 +358,7 @@ public class Server {
     public VerifiableProtocolMessage registerUser(VerifiableProtocolMessage vpm) {
         StatusCode sc;
 
-        int opUuid = vpm.getProtocolMessage().getOpUuid();
+        String opUuid = vpm.getProtocolMessage().getOpUuid();
 
         VerifiableProtocolMessage response;
         PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
@@ -394,8 +395,8 @@ public class Server {
 
         sc = verifyUserRegistered(clientPubKey);
         if (sc.equals(StatusCode.USER_NOT_REGISTERED)) {
-            int i = UUIDGenerator.generateUUID();
-            String uuid = "T" + Integer.toString(i);
+            String i = UUIDGenerator.generateUUID();
+            String uuid = "T" + i;
             User user = new User(clientPubKey, uuid);
             _users.put(clientPubKey, user);
             _db.createUserTable(uuid);
@@ -435,14 +436,14 @@ public class Server {
     public VerifiableProtocolMessage post(VerifiableProtocolMessage vpm) {
         StatusCode sc;
 
-        int opUuid = vpm.getProtocolMessage().getOpUuid();
+        String opUuid = vpm.getProtocolMessage().getOpUuid();
         //System.out.println("opUuid: " + opUuid);
 
         VerifiableProtocolMessage response;
 
         PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
         String message = vpm.getProtocolMessage().getPostAnnouncement().getAnnouncement();
-        List<Integer> references = vpm.getProtocolMessage().getPostAnnouncement().getReferences();
+        List<String> references = vpm.getProtocolMessage().getPostAnnouncement().getReferences();
 
         // verifications
         sc = verifyPost(opUuid, vpm, message, references, clientPubKey);
@@ -464,7 +465,7 @@ public class Server {
 
         // Save Operation
         System.out.println("User posting announcement in user table");
-        int announcementUuid = UUIDGenerator.generateUUID();
+        String announcementUuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = vpm.getProtocolMessage();
         Announcement a = pm.getPostAnnouncement();
         a.setAnnouncementID(announcementUuid);
@@ -501,12 +502,12 @@ public class Server {
 
         StatusCode sc;
 
-        int opUuid = vpm.getProtocolMessage().getOpUuid();
+        String opUuid = vpm.getProtocolMessage().getOpUuid();
 
         VerifiableProtocolMessage response;
         PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
         String message = vpm.getProtocolMessage().getPostAnnouncement().getAnnouncement();
-        List<Integer> references = vpm.getProtocolMessage().getPostAnnouncement().getReferences();
+        List<String> references = vpm.getProtocolMessage().getPostAnnouncement().getReferences();
 
         // verifications
         sc = verifyPost(opUuid, vpm, message, references, clientPubKey);
@@ -523,7 +524,7 @@ public class Server {
         }
 
         System.out.println("User posting announcement in general board");
-        int announcementUuid = UUIDGenerator.generateUUID();
+        String announcementUuid = UUIDGenerator.generateUUID();
 
         ProtocolMessage pm = vpm.getProtocolMessage();
         Announcement a = pm.getPostAnnouncement();
@@ -563,7 +564,7 @@ public class Server {
     public VerifiableProtocolMessage read(VerifiableProtocolMessage vpm) {
         StatusCode sc;
 
-        int opUuid = vpm.getProtocolMessage().getOpUuid();
+        String opUuid = vpm.getProtocolMessage().getOpUuid();
 
         VerifiableProtocolMessage response;
 
@@ -630,7 +631,7 @@ public class Server {
     public VerifiableProtocolMessage readGeneral(VerifiableProtocolMessage vpm) {
         StatusCode sc;
 
-        int opUuid = vpm.getProtocolMessage().getOpUuid();
+        String opUuid = vpm.getProtocolMessage().getOpUuid();
 
         VerifiableProtocolMessage response;
 
@@ -676,7 +677,7 @@ public class Server {
     // does not make changes to the system, so it does not need to taken into account in _operations
     public VerifiableProtocolMessage invalidCommand(VerifiableProtocolMessage vpm) {
 
-        int opUuid = vpm.getProtocolMessage().getOpUuid();
+        String opUuid = vpm.getProtocolMessage().getOpUuid();
 
         // TODO: make something in client to support this
         return createVerifiableMessage(new ProtocolMessage(
