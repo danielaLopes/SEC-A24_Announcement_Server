@@ -502,7 +502,6 @@ public class Server {
      * @return ProtocolMessage
      */
     public VerifiableProtocolMessage postGeneral(VerifiableProtocolMessage vpm) {
-
         StatusCode sc;
 
         String opUuid = vpm.getProtocolMessage().getOpUuid();
