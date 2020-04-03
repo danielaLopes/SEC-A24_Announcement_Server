@@ -57,3 +57,6 @@ settings.gradle
 # Resources - Crypto #
 ############
 **/crypto
+.classpath
+.project
+.settings
