@@ -47,9 +47,9 @@ public class ServerCrashTest extends BaseTest {
         assertEquals(StatusCode.OK, scRegister2);
 
         // posting first announcement Client1
-        List<Integer> references1 = new ArrayList<>();
+        List<String> references1 = new ArrayList<>();
         _userAnn1 = new Announcement(MESSAGE1, references1);
-        int opUuid1 = UUIDGenerator.generateUUID();
+        String opUuid1 = UUIDGenerator.generateUUID();
         ProtocolMessage pm1 = new ProtocolMessage(
                 "POST", CLIENT1_PUBLIC_KEY, opUuid1, _userAnn1);
         byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);
@@ -61,10 +61,10 @@ public class ServerCrashTest extends BaseTest {
         assertEquals(StatusCode.OK, sc1);
 
         // posting second announcement Client1
-        int ref1Uuid = vpm_response1.getProtocolMessage().getPostAnnouncement().getAnnouncementID();
-        List<Integer> references2 = new ArrayList<>(Arrays.asList(ref1Uuid));
+        String ref1Uuid = vpm_response1.getProtocolMessage().getPostAnnouncement().getAnnouncementID();
+        List<String> references2 = new ArrayList<>(Arrays.asList(ref1Uuid));
         _userAnn2 = new Announcement(MESSAGE2, references2);
-        int opUuid2 = UUIDGenerator.generateUUID();
+        String opUuid2 = UUIDGenerator.generateUUID();
         ProtocolMessage pm2 = new ProtocolMessage(
                 "POST", CLIENT1_PUBLIC_KEY, opUuid2, _userAnn2);
         byte[] bpm2 = ProtocolMessageConverter.objToByteArray(pm2);
@@ -76,10 +76,10 @@ public class ServerCrashTest extends BaseTest {
         assertEquals(StatusCode.OK, sc2);
 
         // posting firs announcement Client2
-        int ref2Uuid = vpm_response2.getProtocolMessage().getPostAnnouncement().getAnnouncementID();
-        List<Integer> references3 = new ArrayList<>(Arrays.asList(ref1Uuid, ref2Uuid));
+        String ref2Uuid = vpm_response2.getProtocolMessage().getPostAnnouncement().getAnnouncementID();
+        List<String> references3 = new ArrayList<>(Arrays.asList(ref1Uuid, ref2Uuid));
         _userAnn3 = new Announcement(MESSAGE2, references2);
-        int opUuid3 = UUIDGenerator.generateUUID();
+        String opUuid3 = UUIDGenerator.generateUUID();
         ProtocolMessage pm3 = new ProtocolMessage(
                 "POST", CLIENT2_PUBLIC_KEY, opUuid3, _userAnn3);
         byte[] bpm3 = ProtocolMessageConverter.objToByteArray(pm3);
@@ -91,10 +91,10 @@ public class ServerCrashTest extends BaseTest {
         assertEquals(StatusCode.OK, sc3);
 
         // posting first announcement GeneralBoard
-        int ref3Uuid = vpm_response3.getProtocolMessage().getPostAnnouncement().getAnnouncementID();
-        List<Integer> references4 = new ArrayList<>(Arrays.asList(ref1Uuid, ref2Uuid, ref3Uuid));
+        String ref3Uuid = vpm_response3.getProtocolMessage().getPostAnnouncement().getAnnouncementID();
+        List<String> references4 = new ArrayList<>(Arrays.asList(ref1Uuid, ref2Uuid, ref3Uuid));
         _generalAnn1 = new Announcement(MESSAGE3, references4);
-        int opUuid4 = UUIDGenerator.generateUUID();
+        String opUuid4 = UUIDGenerator.generateUUID();
         ProtocolMessage pm4 = new ProtocolMessage(
                 "POSTGENERAL", CLIENT1_PUBLIC_KEY, opUuid4, _generalAnn1);
         byte[] bpm4 = ProtocolMessageConverter.objToByteArray(pm4);
@@ -106,10 +106,10 @@ public class ServerCrashTest extends BaseTest {
         assertEquals(StatusCode.OK, sc4);
 
         // posting second announcement GeneralBoard
-        int ref4Uuid = vpm_response4.getProtocolMessage().getPostAnnouncement().getAnnouncementID();
-        List<Integer> references5 = new ArrayList<>(Arrays.asList(ref1Uuid, ref2Uuid, ref3Uuid, ref4Uuid));
+        String ref4Uuid = vpm_response4.getProtocolMessage().getPostAnnouncement().getAnnouncementID();
+        List<String> references5 = new ArrayList<>(Arrays.asList(ref1Uuid, ref2Uuid, ref3Uuid, ref4Uuid));
         _generalAnn2 = new Announcement(MESSAGE3, references5);
-        int opUuid5 = UUIDGenerator.generateUUID();
+        String opUuid5 = UUIDGenerator.generateUUID();
         ProtocolMessage pm5 = new ProtocolMessage(
                 "POSTGENERAL", CLIENT1_PUBLIC_KEY, opUuid5, _generalAnn2);
         byte[] bpm5 = ProtocolMessageConverter.objToByteArray(pm5);
@@ -137,7 +137,7 @@ public class ServerCrashTest extends BaseTest {
 
     public void readAllAnnouncements() throws Exception {
         // read all announcements from user1 board
-        int opUuid1 = UUIDGenerator.generateUUID();
+        String opUuid1 = UUIDGenerator.generateUUID();
         ProtocolMessage pm1 = new ProtocolMessage(
                 "READ", CLIENT1_PUBLIC_KEY, opUuid1, 0, CLIENT1_PUBLIC_KEY);
         byte[] bpm1 = ProtocolMessageConverter.objToByteArray(pm1);
@@ -154,7 +154,7 @@ public class ServerCrashTest extends BaseTest {
         assertEqualAnnouncement(_userAnn2, annsClient1.get(1));
 
         // read all announcements from user2 board
-        int opUuid2 = UUIDGenerator.generateUUID();
+        String opUuid2 = UUIDGenerator.generateUUID();
         ProtocolMessage pm2 = new ProtocolMessage(
                 "READ", CLIENT1_PUBLIC_KEY, opUuid2, 0, CLIENT2_PUBLIC_KEY);
         byte[] bpm2 = ProtocolMessageConverter.objToByteArray(pm2);
@@ -170,7 +170,7 @@ public class ServerCrashTest extends BaseTest {
         assertEqualAnnouncement(_userAnn3, annsClient2.get(0));
 
         // read all announcements from GeneralBoard
-        int opUuid3 = UUIDGenerator.generateUUID();
+        String opUuid3 = UUIDGenerator.generateUUID();
         ProtocolMessage pm3 = new ProtocolMessage(
                 "READGENERAL", CLIENT1_PUBLIC_KEY, opUuid3, 0);
         byte[] bpm3 = ProtocolMessageConverter.objToByteArray(pm3);
