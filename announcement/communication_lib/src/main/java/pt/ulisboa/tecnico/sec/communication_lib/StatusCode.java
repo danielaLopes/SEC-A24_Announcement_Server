@@ -5,7 +5,7 @@ public enum StatusCode {
     USER_ALREADY_REGISTERED(1, "User is already registered."),
     INVALID_KEY(2, "Public Key is invalid."),
     INVALID_SIGNATURE(3, "Signature is invalid, message might be tampered or signed with another private key."),
-    DUPLICATE_OPERATION(4, "Operation with given UUID was already processed."),
+    INVALID_TOKEN(4, "Token is invalid."),
     INVALID_MESSAGE_LENGTH(5, "Maximum message length to post announcement is 255."),
     USER_NOT_REGISTERED(6, "User is not registed."),
     INVALID_REFERENCE(7, "Invalid Reference: referenced announcement does not exist."),

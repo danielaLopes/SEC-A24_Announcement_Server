@@ -26,10 +26,10 @@ class VerifySignatureTest extends BaseTest {
     @Test
     void success() throws Exception {
         String uuid = UUIDGenerator.generateUUID();
-        ProtocolMessage requestPM = new ProtocolMessage("REGISTER", _pubKey1, uuid);
+        ProtocolMessage requestPM = new ProtocolMessage("REGISTER", _pubKey1);
 
         ProtocolMessage responsePM = new ProtocolMessage(
-                "REGISTER", StatusCode.OK, _client.getServerPubKey(), requestPM.getOpUuid());
+                "REGISTER", StatusCode.OK, _client.getServerPubKey(), requestPM.getToken());
         
 
         byte[] bpm = ProtocolMessageConverter.objToByteArray(responsePM);
@@ -44,10 +44,10 @@ class VerifySignatureTest extends BaseTest {
     @Test
     void invalidSignature() throws Exception {
         String uuid = UUIDGenerator.generateUUID();
-        ProtocolMessage requestPM = new ProtocolMessage("REGISTER", _pubKey1, uuid);
+        ProtocolMessage requestPM = new ProtocolMessage("REGISTER", _pubKey1);
 
         ProtocolMessage responsePM = new ProtocolMessage(
-                "REGISTER", StatusCode.OK, _client.getServerPubKey(), requestPM.getOpUuid());
+                "REGISTER", StatusCode.OK, _client.getServerPubKey(), requestPM.getToken());
         
 
         byte[] bpm = ProtocolMessageConverter.objToByteArray(responsePM);
