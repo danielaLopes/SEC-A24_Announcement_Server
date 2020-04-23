@@ -12,7 +12,8 @@ public class ProtocolMessage implements Serializable {
     private List<Announcement> _announcements;
     private Announcement _postAnnouncement;
     // Post response
-    private String _opUuid;
+    private byte[] _token;
+    private byte[] _oldToken;
     //Read operation: Number of announcements to be read.
     private int _numberAnnouncements;
     //Read operation: Public key of user to read
@@ -34,21 +35,49 @@ public class ProtocolMessage implements Serializable {
         _postAnnouncement = announcement;
     }
 
-    public ProtocolMessage(String command, PublicKey publicKey, String opUuid) {
-        _opUuid = opUuid;
+    public ProtocolMessage(String command, PublicKey publicKey) {
         _command = command;
         _publicKey = publicKey;
     }
 
-    public ProtocolMessage(String command, PublicKey publicKey, String opUuid, Announcement announcement) {
-        _opUuid = opUuid;
+    public ProtocolMessage(String command, PublicKey publicKey, byte[] token) {
+        _token = token;
+        _command = command;
+        _publicKey = publicKey;
+    }
+
+    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, byte[] token, byte[] oldToken) {
+        _command = command;
+        _statusCode = statusCode;
+        _publicKey = publicKey;
+        _token = token;
+        _oldToken = oldToken;
+    }
+
+    public ProtocolMessage(String command, PublicKey publicKey, Announcement announcement, byte[] token) {
         _command = command;
         _publicKey = publicKey;
         _postAnnouncement = announcement;
+        _token = token;
     }
 
-    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, String opUuid, Announcement announcement) {
-        _opUuid = opUuid;
+    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, Announcement announcement, byte[] token, byte[] oldToken) {
+        _command = command;
+        _statusCode = statusCode;
+        _publicKey = publicKey;
+        _postAnnouncement = announcement;
+        _token = token;
+        _oldToken = oldToken;
+    }
+
+    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey) {
+        _command = command;
+        _statusCode = statusCode;
+        _publicKey = publicKey;
+    }
+
+    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, byte[] token, Announcement announcement) {
+        _token = token;
         _command = command;
         _statusCode = statusCode;
         _publicKey = publicKey;
@@ -56,22 +85,22 @@ public class ProtocolMessage implements Serializable {
     }
 
     // Post Response or Register Response
-    /*public ProtocolMessage(String command, StatusCode statusCode, String opUuid) {
+    /*public ProtocolMessage(String command, StatusCode statusCode, byte[] token) {
         _command = command;
         _statusCode = statusCode;
-        _opUuid = opUuid;
+        _token = token;
     }*/
 
-    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, String opUuid) {
+    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, byte[] token) {
         _command = command;
         _statusCode = statusCode;
-        _opUuid = opUuid;
+        _token = token;
         _publicKey = publicKey;
     }
 
     //Read Operation Client -> Server
-    public ProtocolMessage(String command, PublicKey publicKey, String opUuid, int numberAnnouncements, PublicKey toReadPublicKey) {
-        _opUuid = opUuid;
+    public ProtocolMessage(String command, PublicKey publicKey, byte[] token, int numberAnnouncements, PublicKey toReadPublicKey) {
+        _token = token;
         _command = command;
         _publicKey = publicKey;
         _numberAnnouncements = numberAnnouncements;
@@ -79,18 +108,18 @@ public class ProtocolMessage implements Serializable {
     }
 
     //ReadGeneral Operation Client -> Server
-    public ProtocolMessage(String command, PublicKey publicKey, String opUuid, int numberAnnouncements) {
-        _opUuid = opUuid;
+    public ProtocolMessage(String command, PublicKey publicKey, byte[] token, int numberAnnouncements) {
+        _token = token;
         _command = command;
         _publicKey = publicKey;
         _numberAnnouncements = numberAnnouncements;
     }
 
     //Read Operations Server -> Client
-    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, String opUuid, List<Announcement> announcements) {
+    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, byte[] token, List<Announcement> announcements) {
         _command = command;
         _statusCode = statusCode;
-        _opUuid = opUuid;
+        _token = token;
         _publicKey = publicKey;
         _announcements = announcements;
     }
@@ -105,7 +134,9 @@ public class ProtocolMessage implements Serializable {
 
     public StatusCode getStatusCode() { return _statusCode; }
 
-    public String getOpUuid() { return _opUuid; }
+    public byte[] getToken() { return _token; }
+
+    public byte[] getOldToken() { return _oldToken; }
 
     public List<Announcement> getAnnouncements() { return _announcements; }
 
