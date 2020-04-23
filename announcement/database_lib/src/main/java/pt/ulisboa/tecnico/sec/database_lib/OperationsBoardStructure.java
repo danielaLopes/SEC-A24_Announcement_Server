@@ -1,15 +1,15 @@
 package pt.ulisboa.tecnico.sec.database_lib;
 
 public class OperationsBoardStructure {
+    private String _clientUUID;
     private String _opUUID;
-    private byte[] _operation;
 
-    public OperationsBoardStructure(String opUUID, byte[] operation) {
+    public OperationsBoardStructure(String clientUUID, String opUUID) {
+        _clientUUID = clientUUID;
         _opUUID = opUUID;
-        _operation = operation;
     }
 
-    public String getOpUUID() { return _opUUID; }
+    public String getClientUUID() { return _clientUUID; }
 
-    public byte[] getOperation() { return _operation; }
+    public String getOpUUID() { return _opUUID; }
 }

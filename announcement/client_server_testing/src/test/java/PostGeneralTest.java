@@ -66,9 +66,4 @@ public class PostGeneralTest extends BaseTest {
         assertEquals(StatusCode.INVALID_COMMAND, sc);
     }
 
-    @AfterAll
-    static void closeCommunications() {
-        _clientTest.closeCommunication();
-    }
-
 }

@@ -27,7 +27,7 @@ public class ClientTest extends Client {
                   String serverPubKeyPath) {
         super(pubKeyPath, keyStorePath, keyStorePasswd, entryPasswd, alias, serverPubKeyPath);
     }
-
+  
     // // ---------------------------------------------------------------------
     // // ------------------- METHODS USED FOR TESTING ONLY -------------------
     // // ---------------------------------------------------------------------
@@ -159,8 +159,7 @@ public class ClientTest extends Client {
     //  * @return a list of the StatusCode of the two consecutive operations
     //  */
     // public List<StatusCode> postTwice(String message, List<String> references) {
-    //     List<StatusCode> rsc = new ArrayList<StatusCode>();
-        
+    //     List<StatusCode> rsc = new ArrayList<StatusCode>();        
     //     if (message == null) {
     //         System.out.println("Message cannot be null.");
     //         rsc.add(StatusCode.NULL_FIELD);

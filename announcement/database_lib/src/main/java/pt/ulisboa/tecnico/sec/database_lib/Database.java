@@ -61,7 +61,7 @@ public class Database {
 
     public void createOperationsTable() {
         try {
-            String operationsTable = "CREATE TABLE IF NOT EXISTS Operations (OpUUID VARCHAR(255) NOT NULL, Operation VARBINARY(60000), PRIMARY KEY(OpUUID)) CHARACTER SET utf8";
+            String operationsTable = "CREATE TABLE IF NOT EXISTS Operations (ClientUUID VARCHAR(256) NOT NULL, OpUUID VARCHAR(255) NOT NULL, PRIMARY KEY(ClientUUID)) CHARACTER SET utf8";
             PreparedStatement statement = _con.prepareStatement(operationsTable);
             statement.executeUpdate();
         }
@@ -189,12 +189,12 @@ public class Database {
         }
     }
 
-    public int insertOperation(String opUUID, byte[] operation) {
+    public int insertOperation(String clientUUID, String opUUID) {
         try {
-            String users = "INSERT INTO Operations(OpUUID, Operation) VALUES (?, ?)";
+            String users = "INSERT INTO Operations(ClientUUID, OpUUID) VALUES (?, ?)";
             PreparedStatement statement = _con.prepareStatement(users);
-            statement.setString(1, opUUID);
-            statement.setBytes(2, operation);
+            statement.setString(1, clientUUID);
+            statement.setString(2, opUUID);
             statement.executeUpdate();  
             return 1;
         }
@@ -301,7 +301,7 @@ public class Database {
             preparedStatement = _con.prepareStatement(query);
             rs = preparedStatement.executeQuery();
             while (rs.next()){
-                OperationsBoardStructure obs = new OperationsBoardStructure(rs.getString(1), rs.getBytes(2));
+                OperationsBoardStructure obs = new OperationsBoardStructure(rs.getString(1), rs.getString(2));
                 operations.add(obs);
             }
 
