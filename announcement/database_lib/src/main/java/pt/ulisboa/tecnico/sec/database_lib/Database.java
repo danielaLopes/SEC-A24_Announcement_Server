@@ -10,12 +10,12 @@ import java.util.List;
 public class Database {
     private Connection _con;
 
-    public Database() {  
+    public Database(String db) {  
         try{  
             Class.forName("com.mysql.cj.jdbc.Driver");
             _con=DriverManager.getConnection("jdbc:mysql://localhost:3306/announcement?verifyServerCertificate=false&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true","sec","1234");
 
-            resetDatabase();
+            resetDatabase(db);
             createGeneralBoardTable();
             createUsersTable();
             createOperationsTable();
@@ -103,15 +103,18 @@ public class Database {
         }
     }
 
-    public void resetDatabase() {
+    public void resetDatabase(String db) {
         try {
-            // String dropDatabase = "DROP DATABASE IF EXISTS announcement";
-            String createDatabase = "CREATE DATABASE IF NOT EXISTS announcement";
-            String useDatabase = "USE announcement";
-            // PreparedStatement statement = _con.prepareStatement(dropDatabase);
-            // statement.executeUpdate();
-            PreparedStatement statement = _con.prepareStatement(createDatabase);
+            String dropDatabase = "DROP DATABASE IF EXISTS " + db;
+            String createDatabase = "CREATE DATABASE IF NOT EXISTS " + db;
+            String useDatabase = "USE " + db;
+
+            PreparedStatement statement = _con.prepareStatement(dropDatabase);
             statement.executeUpdate();
+
+            statement = _con.prepareStatement(createDatabase);
+            statement.executeUpdate();
+
             statement = _con.prepareStatement(useDatabase);
             statement.executeUpdate();
         }
@@ -189,7 +192,22 @@ public class Database {
         }
     }
 
-    public int insertOperation(String clientUUID, String opUUID) {
+    public int updateOperationUserRow(String clientUUID, String opUUID) {
+        try {
+            String users = "UPDATE Operations SET OpUUID = ? WHERE ClientUUID = ?";
+            PreparedStatement statement = _con.prepareStatement(users);
+            statement.setString(1, opUUID);
+            statement.setString(2, clientUUID);
+            statement.executeUpdate();  
+            return 1;
+        }
+        catch(Exception e) {
+            System.out.println(e);
+            return 0;
+        }
+    }
+
+    public int createOperationUserRow(String clientUUID, String opUUID) {
         try {
             String users = "INSERT INTO Operations(ClientUUID, OpUUID) VALUES (?, ?)";
             PreparedStatement statement = _con.prepareStatement(users);
