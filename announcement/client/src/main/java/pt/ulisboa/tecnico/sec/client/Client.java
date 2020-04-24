@@ -28,14 +28,14 @@ public class Client{
     private PrivateKey _privateKey;
 
     private List<PublicKey> _usersPubKeys;
-    private PublicKey _serverPubKey;
+    protected PublicKey _serverPubKey;
 
     protected final Communication _communication;
     protected ObjectOutputStream _oos;
     protected ObjectInputStream _ois;
     private Socket _clientSocket;
 
-    private String _token;
+    protected String _token;
 
     protected static final int TIMEOUT = 1000;
     protected static final int MAX_REQUESTS = 5;
@@ -441,33 +441,39 @@ public class Client{
      * @return the StatusCode of the operation
      */
     public StatusCode postGeneral(String message, List<String> references) {
-        // if (message == null) {
-        //     System.out.println("Message cannot be null.");
-        //     return StatusCode.NULL_FIELD;
-        // }
-        // if (references == null) {
-        //     System.out.println("References cannot be null.");
-        //     return StatusCode.NULL_FIELD;
-        // }
-        // if (invalidMessageLength(message)) {
-        //     System.out.println("Maximum message length to post announcement is 255.");
-        //     return StatusCode.INVALID_MESSAGE_LENGTH;
-        // }
+        if (message == null) {
+            System.out.println("Message cannot be null.");
+            return StatusCode.NULL_FIELD;
+        }
+        if (references == null) {
+            System.out.println("References cannot be null.");
+            return StatusCode.NULL_FIELD;
+        }
+        if (invalidMessageLength(message)) {
+            System.out.println("Maximum message length to post announcement is 255.");
+            return StatusCode.INVALID_MESSAGE_LENGTH;
+        }
 
-        // Announcement a = new Announcement(message, references);
-        // String uuid = UUIDGenerator.generateUUID();
-        // ProtocolMessage pm = new ProtocolMessage("POSTGENERAL", _pubKey, uuid, a);
-        // VerifiableProtocolMessage vpm = requestServer(pm);
-        // StatusCode rsc = null;
-        // if (vpm == null) {
-        //     rsc = StatusCode.NO_RESPONSE;
-        // }
-        // else {
-        //     rsc = getStatusCodeFromVPM(vpm);
-        // }
+        Announcement a = new Announcement(message, references);
+        ProtocolMessage pm = new ProtocolMessage("POSTGENERAL", _pubKey, a, encryptToken(_token, _serverPubKey));
+        VerifiableProtocolMessage vpm = requestServer(pm);
+        StatusCode rsc = null;
+        if (vpm == null) {
+            rsc = StatusCode.NO_RESPONSE;
+        }
+        else {
+            rsc = getStatusCodeFromVPM(vpm);
+            System.out.println("old token: " + getOldTokenFromVPM(vpm));
+            System.out.println("_token: " + _token);
+            if (!getOldTokenFromVPM(vpm).equals(_token)) {
+                rsc = StatusCode.INVALID_TOKEN;
+            }
+            else {
+                _token = getTokenFromVPM(vpm);
+            }
+        }
         
-        // return rsc;
-        return null;
+        return rsc;
     }
 
     /**
@@ -478,26 +484,32 @@ public class Client{
      * and the list of announcements received 
      */
     public AbstractMap.SimpleEntry<StatusCode, List<Announcement>> read(PublicKey user, int number) {
-        // if (user == null) {
-        //     System.out.println("Invalid user.");
-        //     return new AbstractMap.SimpleEntry<>(StatusCode.NULL_FIELD, new ArrayList<>());
-        // }
-        // String uuid = UUIDGenerator.generateUUID();
-        // ProtocolMessage pm = new ProtocolMessage("READ", _pubKey, uuid, number, user);
-        // VerifiableProtocolMessage vpm = requestServer(pm);
-        // List<Announcement> announcements = null;
+        if (user == null) {
+            System.out.println("Invalid user.");
+            return new AbstractMap.SimpleEntry<>(StatusCode.NULL_FIELD, new ArrayList<>());
+        }
+        ProtocolMessage pm = new ProtocolMessage("READ", _pubKey, encryptToken(_token, _serverPubKey), number, user);
+        VerifiableProtocolMessage vpm = requestServer(pm);
+        List<Announcement> announcements = null;
 
-        // StatusCode rsc = null;
-        // if (vpm == null) {
-        //     rsc = StatusCode.NO_RESPONSE;
-        // }
-        // else {
-        //     rsc = getStatusCodeFromVPM(vpm);
-        //     announcements = getAnnouncementsFromVPM(vpm);
-        // }
+        StatusCode rsc = null;
+        if (vpm == null) {
+            rsc = StatusCode.NO_RESPONSE;
+        }
+        else {
+            rsc = getStatusCodeFromVPM(vpm);
+            System.out.println("old token: " + getOldTokenFromVPM(vpm));
+            System.out.println("_token: " + _token);
+            if (!getOldTokenFromVPM(vpm).equals(_token)) {
+                rsc = StatusCode.INVALID_TOKEN;
+            }
+            else {
+                _token = getTokenFromVPM(vpm);
+                announcements = getAnnouncementsFromVPM(vpm);
+            }
+        }
 
-        // return new AbstractMap.SimpleEntry<>(rsc, announcements);
-        return null;
+        return new AbstractMap.SimpleEntry<>(rsc, announcements);
     }
 
     /**
@@ -508,27 +520,33 @@ public class Client{
      * and the list of announcements received 
      */
     public AbstractMap.SimpleEntry<StatusCode, List<Announcement>> read(int user, int number) {
-        // if (invalidUser(user)) {
-        //     System.out.println("Invalid user.");
-        //     return new AbstractMap.SimpleEntry<>(StatusCode.USER_NOT_REGISTERED, new ArrayList<>());
-        // }
-        // PublicKey userToReadPB = _usersPubKeys.get(user);
-        // String uuid = UUIDGenerator.generateUUID();
-        // ProtocolMessage pm = new ProtocolMessage("READ", _pubKey, uuid, number, userToReadPB);
-        // VerifiableProtocolMessage vpm = requestServer(pm);
-        // List<Announcement> announcements = null;
+        if (invalidUser(user)) {
+            System.out.println("Invalid user.");
+            return new AbstractMap.SimpleEntry<>(StatusCode.USER_NOT_REGISTERED, new ArrayList<>());
+        }
+        PublicKey userToReadPB = _usersPubKeys.get(user);
+        ProtocolMessage pm = new ProtocolMessage("READ", _pubKey, encryptToken(_token, _serverPubKey), number, userToReadPB);
+        VerifiableProtocolMessage vpm = requestServer(pm);
+        List<Announcement> announcements = null;
 
-        // StatusCode rsc = null;
-        // if (vpm == null) {
-        //     rsc = StatusCode.NO_RESPONSE;
-        // }
-        // else {
-        //     rsc = getStatusCodeFromVPM(vpm);
-        //     announcements = getAnnouncementsFromVPM(vpm);
-        // }
+        StatusCode rsc = null;
+        if (vpm == null) {
+            rsc = StatusCode.NO_RESPONSE;
+        }
+        else {
+            rsc = getStatusCodeFromVPM(vpm);
+            System.out.println("old token: " + getOldTokenFromVPM(vpm));
+            System.out.println("_token: " + _token);
+            if (!getOldTokenFromVPM(vpm).equals(_token)) {
+                rsc = StatusCode.INVALID_TOKEN;
+            }
+            else {
+                _token = getTokenFromVPM(vpm);
+                announcements = getAnnouncementsFromVPM(vpm);
+            }
+        }
 
-        // return new AbstractMap.SimpleEntry<>(rsc, announcements);
-        return null;
+        return new AbstractMap.SimpleEntry<>(rsc, announcements);
     }
 
     /**
@@ -538,22 +556,28 @@ public class Client{
      * and the list of announcements received 
      */
     public AbstractMap.SimpleEntry<StatusCode, List<Announcement>> readGeneral(int number) {
-        // String uuid = UUIDGenerator.generateUUID();
-        // ProtocolMessage pm = new ProtocolMessage("READGENERAL", _pubKey, uuid, number);
-        // VerifiableProtocolMessage vpm = requestServer(pm);
-        // List<Announcement> announcements = new ArrayList<Announcement>();
+        ProtocolMessage pm = new ProtocolMessage("READGENERAL", _pubKey, encryptToken(_token, _serverPubKey), number);
+        VerifiableProtocolMessage vpm = requestServer(pm);
+        List<Announcement> announcements = new ArrayList<Announcement>();
 
-        // StatusCode rsc = null;
-        // if (vpm == null) {
-        //     rsc = StatusCode.NO_RESPONSE;
-        // }
-        // else {
-        //     rsc = getStatusCodeFromVPM(vpm);
-        //     announcements = getAnnouncementsFromVPM(vpm);
-        // }
+        StatusCode rsc = null;
+        if (vpm == null) {
+            rsc = StatusCode.NO_RESPONSE;
+        }
+        else {
+            rsc = getStatusCodeFromVPM(vpm);
+            System.out.println("old token: " + getOldTokenFromVPM(vpm));
+            System.out.println("_token: " + _token);
+            if (!getOldTokenFromVPM(vpm).equals(_token)) {
+                rsc = StatusCode.INVALID_TOKEN;
+            }
+            else {
+                _token = getTokenFromVPM(vpm);
+                announcements = getAnnouncementsFromVPM(vpm);
+            }
+        }
 
-        // return new AbstractMap.SimpleEntry<>(rsc, announcements);
-        return null;
+        return new AbstractMap.SimpleEntry<>(rsc, announcements);
     }
 
     /**

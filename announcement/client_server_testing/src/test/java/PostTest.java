@@ -5,6 +5,7 @@ import pt.ulisboa.tecnico.sec.client.ClientTest;
 import pt.ulisboa.tecnico.sec.communication_lib.VerifiableProtocolMessage;
 import pt.ulisboa.tecnico.sec.communication_lib.StatusCode;
 import pt.ulisboa.tecnico.sec.server.Server;
+import org.junit.jupiter.api.BeforeEach;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,9 +38,8 @@ public class PostTest extends BaseTest {
     @Test
     void repeatMessage() {
         List<StatusCode> rsc = _clientTest.postTwice("message1", new ArrayList<>());
-        for (StatusCode sc: rsc) {
-            assertEquals(StatusCode.OK, sc);
-        }
+        assertEquals(StatusCode.OK, rsc.get(0));
+        assertEquals(StatusCode.INVALID_TOKEN, rsc.get(1));
     }
 
     @Test
@@ -64,6 +64,12 @@ public class PostTest extends BaseTest {
     void invalidRequest() {
         StatusCode sc = _clientTest.postInvalid("message1", new ArrayList<>());
         assertEquals(StatusCode.INVALID_COMMAND, sc);
+    }
+
+    @BeforeEach
+    void resetClient() {
+        _clientTest = new ClientTest(PUBLICKEY_PATH1, KEYSTORE_PATH1, CLIENT_KEYSTORE_PASSWD,
+                CLIENT_ENTRY_PASSWD, ALIAS, SERVER_PUBLIC_KEY_PATH);
     }
 
 }

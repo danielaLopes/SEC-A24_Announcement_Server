@@ -6,6 +6,8 @@ import pt.ulisboa.tecnico.sec.communication_lib.Announcement;
 import pt.ulisboa.tecnico.sec.communication_lib.VerifiableProtocolMessage;
 import pt.ulisboa.tecnico.sec.communication_lib.StatusCode;
 import pt.ulisboa.tecnico.sec.server.Server;
+import org.junit.jupiter.api.BeforeEach;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,9 +59,8 @@ public class ReadTest extends BaseTest {
         assertEquals(StatusCode.OK, sc1);
 
         List<StatusCode> rsc = _clientTest.readTwice(_clientTest.getPubKey(), 1).getKey();
-        for (StatusCode sc2: rsc) {
-            assertEquals(StatusCode.OK, sc2);
-        }
+        assertEquals(StatusCode.OK, rsc.get(0));
+        assertEquals(StatusCode.INVALID_TOKEN, rsc.get(1));
     }
 
     @Test
@@ -96,6 +97,12 @@ public class ReadTest extends BaseTest {
 
         StatusCode sc2 = _clientTest.readInvalid(_clientTest.getPubKey(), 1).getKey();
         assertEquals(StatusCode.INVALID_COMMAND, sc2);
+    }
+
+    @BeforeEach
+    void resetClient() {
+        _clientTest = new ClientTest(PUBLICKEY_PATH1, KEYSTORE_PATH1, CLIENT_KEYSTORE_PASSWD,
+                CLIENT_ENTRY_PASSWD, ALIAS, SERVER_PUBLIC_KEY_PATH);
     }
 
 }
