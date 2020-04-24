@@ -189,7 +189,22 @@ public class Database {
         }
     }
 
-    public int insertOperation(String clientUUID, String opUUID) {
+    public int updateOperationUserRow(String clientUUID, String opUUID) {
+        try {
+            String users = "UPDATE Operations SET OpUUID = ? WHERE ClientUUID = ?";
+            PreparedStatement statement = _con.prepareStatement(users);
+            statement.setString(1, opUUID);
+            statement.setString(2, clientUUID);
+            statement.executeUpdate();  
+            return 1;
+        }
+        catch(Exception e) {
+            System.out.println(e);
+            return 0;
+        }
+    }
+
+    public int createOperationUserRow(String clientUUID, String opUUID) {
         try {
             String users = "INSERT INTO Operations(ClientUUID, OpUUID) VALUES (?, ?)";
             PreparedStatement statement = _con.prepareStatement(users);

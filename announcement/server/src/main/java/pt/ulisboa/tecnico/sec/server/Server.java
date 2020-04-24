@@ -123,13 +123,11 @@ public class Server {
 
         // Retrieve _operations from database
 
-        // FIXME: RETRIEVE TOKENS
-        // List<OperationsBoardStructure> obs = dbs.getOperations();
-        // for (OperationsBoardStructure i: obs) {
-        // VerifiableProtocolMessage vpm = (VerifiableProtocolMessage)
-        // ProtocolMessageConverter.byteArrayToObj(i.getOperation());
-        // _operations.put(i.getOpUUID(), vpm);
-        // }
+        List<OperationsBoardStructure> obs = dbs.getOperations();
+        for (OperationsBoardStructure i: obs) {
+            User u = _users.get(getUserUUID(i.getClientUUID()));
+            u.setToken(i.getOpUUID());
+        }
 
     }
 
@@ -440,7 +438,7 @@ public class Server {
             response = createVerifiableMessage(new ProtocolMessage(
                 "REGISTER", StatusCode.OK, _pubKey, encryptedToken));
 
-            // _db.insertOperation(opUuid, operation);
+            _db.createOperationUserRow(uuid, user.getToken());
 
             return response;
         }
@@ -451,7 +449,7 @@ public class Server {
         response = createVerifiableMessage(new ProtocolMessage(
                 "REGISTER", sc, _pubKey, encryptedToken));
 
-        // _db.insertOperation(opUuid, operation);
+        _db.updateOperationUserRow(user.getdbTableName(), user.getToken());
         
         return response;
     }
@@ -482,6 +480,7 @@ public class Server {
         token = encryptToken(user.getToken(), clientPubKey);
         System.out.println("post old token: " + user.getToken());
         user.setRandomToken();
+        _db.updateOperationUserRow(user.getdbTableName(), user.getToken());
         System.out.println("post new token: " + user.getToken());
         byte[] newToken = encryptToken(user.getToken(), clientPubKey);
         if (sc.equals(StatusCode.INVALID_TOKEN)) {
@@ -547,6 +546,7 @@ public class Server {
         token = encryptToken(user.getToken(), clientPubKey);
         System.out.println("postGeneral old token: " + user.getToken());
         user.setRandomToken();
+        _db.updateOperationUserRow(user.getdbTableName(), user.getToken());
         System.out.println("postGeneral new token: " + user.getToken());
         byte[] newToken = encryptToken(user.getToken(), clientPubKey);
         if (sc.equals(StatusCode.INVALID_TOKEN)) {
@@ -623,6 +623,7 @@ public class Server {
         token = encryptToken(user.getToken(), clientPubKey);
         System.out.println("read old token: " + user.getToken());
         user.setRandomToken();
+        _db.updateOperationUserRow(user.getdbTableName(), user.getToken());
         System.out.println("read new token: " + user.getToken());
         byte[] newToken = encryptToken(user.getToken(), clientPubKey);
         if (sc.equals(StatusCode.INVALID_TOKEN)) {
@@ -694,6 +695,7 @@ public class Server {
         token = encryptToken(user.getToken(), clientPubKey);
         System.out.println("read old token: " + user.getToken());
         user.setRandomToken();
+        _db.updateOperationUserRow(user.getdbTableName(), user.getToken());
         System.out.println("read new token: " + user.getToken());
         byte[] newToken = encryptToken(user.getToken(), clientPubKey);
 
@@ -735,6 +737,7 @@ public class Server {
         token = encryptToken(user.getToken(), clientPubKey);
         System.out.println("read old token: " + user.getToken());
         user.setRandomToken();
+        _db.updateOperationUserRow(user.getdbTableName(), user.getToken());
         System.out.println("read new token: " + user.getToken());
         byte[] newToken = encryptToken(user.getToken(), clientPubKey);
 
