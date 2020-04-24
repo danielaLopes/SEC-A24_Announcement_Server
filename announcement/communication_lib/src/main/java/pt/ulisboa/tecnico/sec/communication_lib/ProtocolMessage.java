@@ -116,10 +116,11 @@ public class ProtocolMessage implements Serializable {
     }
 
     //Read Operations Server -> Client
-    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, byte[] token, List<Announcement> announcements) {
+    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, List<Announcement> announcements, byte[] token, byte[] oldToken) {
         _command = command;
         _statusCode = statusCode;
         _token = token;
+        _oldToken = oldToken;
         _publicKey = publicKey;
         _announcements = announcements;
     }

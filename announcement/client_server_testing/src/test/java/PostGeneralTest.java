@@ -1,4 +1,4 @@
-import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import pt.ulisboa.tecnico.sec.client.Client;
 import pt.ulisboa.tecnico.sec.client.ClientTest;
@@ -37,9 +37,8 @@ public class PostGeneralTest extends BaseTest {
     @Test
     void repeatMessage() {
         List<StatusCode> rsc = _clientTest.postGeneralTwice("message1", new ArrayList<>());
-        for (StatusCode sc: rsc) {
-            assertEquals(StatusCode.OK, sc);
-        }
+        assertEquals(StatusCode.OK, rsc.get(0));
+        assertEquals(StatusCode.INVALID_TOKEN, rsc.get(1));
     }
 
     @Test
@@ -64,6 +63,12 @@ public class PostGeneralTest extends BaseTest {
     void invalidRequest() {
         StatusCode sc = _clientTest.postGeneralInvalid("message1", new ArrayList<>());
         assertEquals(StatusCode.INVALID_COMMAND, sc);
+    }
+
+    @BeforeEach
+    void resetClient() {
+        _clientTest = new ClientTest(PUBLICKEY_PATH1, KEYSTORE_PATH1, CLIENT_KEYSTORE_PASSWD,
+                CLIENT_ENTRY_PASSWD, ALIAS, SERVER_PUBLIC_KEY_PATH);
     }
 
 }
