@@ -6,8 +6,21 @@ import java.security.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
+
+import sun.misc.Signal;
+import sun.misc.SignalHandler;
+
 public class Application {
     public static void main(String[] args) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+
+        //CTRL+C signal handler. Allows to clean databases.
+        Signal.handle(new Signal("INT"), new SignalHandler() {
+            public void handle(Signal sig) {
+                System.out.println("sigint");
+                System.exit(-1);
+            }
+        });
 
         if(args.length < 5) {
             System.out.println("\"Usage: <keyStorePassword> <entryPassword> <alias> <pubKeyPath> <keyStorePath>");
@@ -19,6 +32,7 @@ public class Application {
         Server server = new Server(false, args[0].toCharArray(), args[1].toCharArray(), args[2],
                 args[3], args[4]);
         server.start();
+
 
         // testing
         KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");

@@ -55,7 +55,8 @@ public class Server {
         // lots of reads)
         _generalBoard = new ArrayList<>();
         _communication = new Communication();
-        _db = new Database();
+        String db = "announcement" + UUIDGenerator.generateUUID();
+        _db = new Database(db);
 
         retrieveDataStructures();
     }
