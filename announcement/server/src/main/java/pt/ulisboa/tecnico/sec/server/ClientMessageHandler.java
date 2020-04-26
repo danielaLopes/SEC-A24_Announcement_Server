@@ -56,6 +56,11 @@ public class ClientMessageHandler extends Thread {
                         // Thread.sleep(10000);
                         readGeneral(vpm);
                         break;
+                    // Refresh Client Token
+                    case "TOKEN":
+                        // Thread.sleep(10000);
+                        refreshToken(vpm);
+                        break;
                     case "LOGOUT":
                         closeCommunication();
                         break;
@@ -134,6 +139,16 @@ public class ClientMessageHandler extends Thread {
     public void invalidCommand(VerifiableProtocolMessage vpm) {
         try {
             VerifiableProtocolMessage svpm = _server.invalidCommand(vpm);
+            _communication.sendMessage(svpm, _oos);
+        }
+        catch (IOException e) {
+            System.out.println(e);
+        }
+    }
+
+    public void refreshToken(VerifiableProtocolMessage vpm) {
+        try {
+            VerifiableProtocolMessage svpm = _server.refreshToken(vpm);
             _communication.sendMessage(svpm, _oos);
         }
         catch (IOException e) {

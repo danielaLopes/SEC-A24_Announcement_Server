@@ -39,6 +39,7 @@ public class Client{
 
     protected static final int TIMEOUT = 1000;
     protected static final int MAX_REQUESTS = 5;
+    protected static final int MAX_REFRESH = 3;
 
     public Client(String pubKeyPath, String keyStorePath,
                   String keyStorePasswd, String entryPasswd, String alias,
@@ -383,9 +384,6 @@ public class Client{
             rsc = getStatusCodeFromVPM(vpm);
             _token = getTokenFromVPM(vpm);
         }
-
-        System.out.println("register not decrypted: " +  vpm.getProtocolMessage().getToken().toString());
-        System.out.println("register decrypted: " +  _token);
         
         return rsc;
     }
@@ -410,23 +408,21 @@ public class Client{
             System.out.println("Maximum message length to post announcement is 255.");
             return StatusCode.INVALID_MESSAGE_LENGTH;
         }
-
-        Announcement a = new Announcement(message, references);
-        ProtocolMessage pm = new ProtocolMessage("POST", _pubKey, a, encryptToken(_token, _serverPubKey));
-        VerifiableProtocolMessage vpm = requestServer(pm);
+        
+        int refreshCounter = 0;
         StatusCode rsc = null;
-        if (vpm == null) {
-            rsc = StatusCode.NO_RESPONSE;
-        }
-        else {
-            rsc = getStatusCodeFromVPM(vpm);
-            System.out.println("old token: " + getOldTokenFromVPM(vpm));
-            System.out.println("_token: " + _token);
-            if (!getOldTokenFromVPM(vpm).equals(_token)) {
-                rsc = StatusCode.INVALID_TOKEN;
+
+        while (refreshCounter < MAX_REFRESH) {
+            Announcement a = new Announcement(message, references);
+            ProtocolMessage pm = new ProtocolMessage("POST", _pubKey, a, encryptToken(_token, _serverPubKey));
+            VerifiableProtocolMessage vpm = requestServer(pm);
+            rsc = verifyReceivedMessage(vpm);
+            if (rsc.equals(StatusCode.INVALID_TOKEN)) {
+                refreshToken();
+                refreshCounter++;
             }
             else {
-                _token = getTokenFromVPM(vpm);
+                refreshCounter = MAX_REFRESH;
             }
         }
         
@@ -455,21 +451,20 @@ public class Client{
         }
 
         Announcement a = new Announcement(message, references);
-        ProtocolMessage pm = new ProtocolMessage("POSTGENERAL", _pubKey, a, encryptToken(_token, _serverPubKey));
-        VerifiableProtocolMessage vpm = requestServer(pm);
+
+        int refreshCounter = 0;
         StatusCode rsc = null;
-        if (vpm == null) {
-            rsc = StatusCode.NO_RESPONSE;
-        }
-        else {
-            rsc = getStatusCodeFromVPM(vpm);
-            System.out.println("old token: " + getOldTokenFromVPM(vpm));
-            System.out.println("_token: " + _token);
-            if (!getOldTokenFromVPM(vpm).equals(_token)) {
-                rsc = StatusCode.INVALID_TOKEN;
+        
+        while (refreshCounter < MAX_REFRESH) {
+            ProtocolMessage pm = new ProtocolMessage("POSTGENERAL", _pubKey, a, encryptToken(_token, _serverPubKey));
+            VerifiableProtocolMessage vpm = requestServer(pm);
+            rsc = verifyReceivedMessage(vpm);
+            if (rsc.equals(StatusCode.INVALID_TOKEN)) {
+                refreshToken();
+                refreshCounter++;
             }
             else {
-                _token = getTokenFromVPM(vpm);
+                refreshCounter = MAX_REFRESH;
             }
         }
         
@@ -488,25 +483,27 @@ public class Client{
             System.out.println("Invalid user.");
             return new AbstractMap.SimpleEntry<>(StatusCode.NULL_FIELD, new ArrayList<>());
         }
-        ProtocolMessage pm = new ProtocolMessage("READ", _pubKey, encryptToken(_token, _serverPubKey), number, user);
-        VerifiableProtocolMessage vpm = requestServer(pm);
-        List<Announcement> announcements = null;
 
+        List<Announcement> announcements = null;
         StatusCode rsc = null;
-        if (vpm == null) {
-            rsc = StatusCode.NO_RESPONSE;
-        }
-        else {
-            rsc = getStatusCodeFromVPM(vpm);
-            System.out.println("old token: " + getOldTokenFromVPM(vpm));
-            System.out.println("_token: " + _token);
-            if (!getOldTokenFromVPM(vpm).equals(_token)) {
-                rsc = StatusCode.INVALID_TOKEN;
+        VerifiableProtocolMessage vpm = null;
+
+        int refreshCounter = 0;
+        while (refreshCounter < MAX_REFRESH) {
+            ProtocolMessage pm = new ProtocolMessage("READ", _pubKey, encryptToken(_token, _serverPubKey), number, user);
+            vpm = requestServer(pm);
+            rsc = verifyReceivedMessage(vpm);
+            if (rsc.equals(StatusCode.INVALID_TOKEN)) {
+                refreshToken();
+                refreshCounter++;
             }
             else {
-                _token = getTokenFromVPM(vpm);
-                announcements = getAnnouncementsFromVPM(vpm);
+                refreshCounter = MAX_REFRESH;
             }
+        }
+        
+        if (rsc.equals(StatusCode.OK)) {
+            announcements = getAnnouncementsFromVPM(vpm);
         }
 
         return new AbstractMap.SimpleEntry<>(rsc, announcements);
@@ -525,25 +522,27 @@ public class Client{
             return new AbstractMap.SimpleEntry<>(StatusCode.USER_NOT_REGISTERED, new ArrayList<>());
         }
         PublicKey userToReadPB = _usersPubKeys.get(user);
-        ProtocolMessage pm = new ProtocolMessage("READ", _pubKey, encryptToken(_token, _serverPubKey), number, userToReadPB);
-        VerifiableProtocolMessage vpm = requestServer(pm);
+        
         List<Announcement> announcements = null;
-
         StatusCode rsc = null;
-        if (vpm == null) {
-            rsc = StatusCode.NO_RESPONSE;
-        }
-        else {
-            rsc = getStatusCodeFromVPM(vpm);
-            System.out.println("old token: " + getOldTokenFromVPM(vpm));
-            System.out.println("_token: " + _token);
-            if (!getOldTokenFromVPM(vpm).equals(_token)) {
-                rsc = StatusCode.INVALID_TOKEN;
+        VerifiableProtocolMessage vpm = null;
+
+        int refreshCounter = 0;
+        while (refreshCounter < MAX_REFRESH) {
+            ProtocolMessage pm = new ProtocolMessage("READ", _pubKey, encryptToken(_token, _serverPubKey), number, userToReadPB);
+            vpm = requestServer(pm);
+            rsc = verifyReceivedMessage(vpm);
+            if (rsc.equals(StatusCode.INVALID_TOKEN)) {
+                refreshToken();
+                refreshCounter++;
             }
             else {
-                _token = getTokenFromVPM(vpm);
-                announcements = getAnnouncementsFromVPM(vpm);
+                refreshCounter = MAX_REFRESH;
             }
+        }
+        
+        if (rsc.equals(StatusCode.OK)) {
+            announcements = getAnnouncementsFromVPM(vpm);
         }
 
         return new AbstractMap.SimpleEntry<>(rsc, announcements);
@@ -556,28 +555,48 @@ public class Client{
      * and the list of announcements received 
      */
     public AbstractMap.SimpleEntry<StatusCode, List<Announcement>> readGeneral(int number) {
-        ProtocolMessage pm = new ProtocolMessage("READGENERAL", _pubKey, encryptToken(_token, _serverPubKey), number);
-        VerifiableProtocolMessage vpm = requestServer(pm);
-        List<Announcement> announcements = new ArrayList<Announcement>();
-
+        List<Announcement> announcements = null;
         StatusCode rsc = null;
-        if (vpm == null) {
-            rsc = StatusCode.NO_RESPONSE;
-        }
-        else {
-            rsc = getStatusCodeFromVPM(vpm);
-            System.out.println("old token: " + getOldTokenFromVPM(vpm));
-            System.out.println("_token: " + _token);
-            if (!getOldTokenFromVPM(vpm).equals(_token)) {
-                rsc = StatusCode.INVALID_TOKEN;
+        VerifiableProtocolMessage vpm = null;
+        
+        int refreshCounter = 0;
+        while (refreshCounter < MAX_REFRESH) {
+            ProtocolMessage pm = new ProtocolMessage("READGENERAL", _pubKey, encryptToken(_token, _serverPubKey), number);
+            vpm = requestServer(pm);
+            rsc = verifyReceivedMessage(vpm);
+            if (rsc.equals(StatusCode.INVALID_TOKEN)) {
+                refreshToken();
+                refreshCounter++;
             }
             else {
-                _token = getTokenFromVPM(vpm);
-                announcements = getAnnouncementsFromVPM(vpm);
+                refreshCounter = MAX_REFRESH;
             }
+        }
+        
+        if (rsc.equals(StatusCode.OK)) {
+            announcements = getAnnouncementsFromVPM(vpm);
         }
 
         return new AbstractMap.SimpleEntry<>(rsc, announcements);
+    }
+
+    public StatusCode refreshToken() {
+        ProtocolMessage pm = new ProtocolMessage("TOKEN", _pubKey);
+        VerifiableProtocolMessage vpm = requestServer(pm);
+        
+        StatusCode rsc = null;
+        if (vpm == null) {
+            rsc = StatusCode.NO_RESPONSE;
+            System.out.println("Could not refresh token: could not receive a response");
+            closeCommunication();
+            System.exit(-1);
+        }
+        else {
+            rsc = getStatusCodeFromVPM(vpm);
+            _token = getTokenFromVPM(vpm);
+        }
+        
+        return rsc;
     }
 
     /**
@@ -603,6 +622,27 @@ public class Client{
      */
     public boolean invalidUser(int user) {
         return user < 0 || user >= _usersPubKeys.size();
+    }
+
+    public boolean invalidToken(String token) {
+        return !token.equals(_token);
+    }
+
+    public StatusCode verifyReceivedMessage(VerifiableProtocolMessage vpm) {
+        StatusCode rsc = null;
+        if (vpm == null) {
+            rsc = StatusCode.NO_RESPONSE;
+        }
+        else {
+            rsc = getStatusCodeFromVPM(vpm);
+            if (invalidToken(getOldTokenFromVPM(vpm))) {
+                rsc = StatusCode.INVALID_TOKEN;
+            }
+            else {
+                _token = getTokenFromVPM(vpm);
+            }
+        }
+        return rsc;
     }
 
 }
