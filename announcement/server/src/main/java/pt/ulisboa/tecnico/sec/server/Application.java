@@ -27,9 +27,10 @@ public class Application {
             return;
         }
 
-        System.out.println("Hello world server");
+        int port = Integer.parseInt(args[0]);
+        System.out.println("Server running at port " + port);
 
-        Server server = new Server(false, Integer.parseInt(args[0]), args[1].toCharArray(), args[2].toCharArray(), args[3],
+        Server server = new Server(false, port, args[1].toCharArray(), args[2].toCharArray(), args[3],
                 args[4], args[5]);
         server.start();
 
