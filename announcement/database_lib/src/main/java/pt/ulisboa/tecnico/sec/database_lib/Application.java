@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 public class Application {
     public static void main(String args[]) {
-        Database db = new Database();
+        Database db = new Database("announcement");
 
         //db.createGeneralBoardTable();
        /* List<Integer> ref = new ArrayList<Integer>();

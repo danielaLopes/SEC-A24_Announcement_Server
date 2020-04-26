@@ -427,7 +427,6 @@ public class Server {
             String uuid = "T" + i;
             User user = new User(clientPubKey, uuid);
             user.setRandomToken();
-            System.out.println("register new token " + user.getToken());
             byte[] encryptedToken = encryptToken(user.getToken(), clientPubKey);
             _users.put(clientPubKey, user);
             _db.createUserTable(uuid);
@@ -479,10 +478,8 @@ public class Server {
         }
         User user = _users.get(clientPubKey);
         token = encryptToken(user.getToken(), clientPubKey);
-        System.out.println("post old token: " + user.getToken());
         user.setRandomToken();
         _db.updateOperationUserRow(user.getdbTableName(), user.getToken());
-        System.out.println("post new token: " + user.getToken());
         byte[] newToken = encryptToken(user.getToken(), clientPubKey);
         if (sc.equals(StatusCode.INVALID_TOKEN)) {
             return createVerifiableMessage(new ProtocolMessage(
@@ -545,10 +542,8 @@ public class Server {
         }
         User user = _users.get(clientPubKey);
         token = encryptToken(user.getToken(), clientPubKey);
-        System.out.println("postGeneral old token: " + user.getToken());
         user.setRandomToken();
         _db.updateOperationUserRow(user.getdbTableName(), user.getToken());
-        System.out.println("postGeneral new token: " + user.getToken());
         byte[] newToken = encryptToken(user.getToken(), clientPubKey);
         if (sc.equals(StatusCode.INVALID_TOKEN)) {
             return createVerifiableMessage(new ProtocolMessage(
@@ -622,10 +617,8 @@ public class Server {
         
         User user = _users.get(clientPubKey);
         token = encryptToken(user.getToken(), clientPubKey);
-        System.out.println("read old token: " + user.getToken());
         user.setRandomToken();
         _db.updateOperationUserRow(user.getdbTableName(), user.getToken());
-        System.out.println("read new token: " + user.getToken());
         byte[] newToken = encryptToken(user.getToken(), clientPubKey);
         if (sc.equals(StatusCode.INVALID_TOKEN)) {
             return createVerifiableMessage(new ProtocolMessage(
@@ -694,10 +687,8 @@ public class Server {
 
         User user = _users.get(clientPubKey);
         token = encryptToken(user.getToken(), clientPubKey);
-        System.out.println("read old token: " + user.getToken());
         user.setRandomToken();
         _db.updateOperationUserRow(user.getdbTableName(), user.getToken());
-        System.out.println("read new token: " + user.getToken());
         byte[] newToken = encryptToken(user.getToken(), clientPubKey);
 
         if (!sc.equals(StatusCode.OK)) {
@@ -736,13 +727,46 @@ public class Server {
 
         User user = _users.get(clientPubKey);
         token = encryptToken(user.getToken(), clientPubKey);
-        System.out.println("read old token: " + user.getToken());
         user.setRandomToken();
         _db.updateOperationUserRow(user.getdbTableName(), user.getToken());
-        System.out.println("read new token: " + user.getToken());
         byte[] newToken = encryptToken(user.getToken(), clientPubKey);
 
         return createVerifiableMessage(new ProtocolMessage(
                 "INVALID", StatusCode.INVALID_COMMAND, _pubKey, newToken, token));
+    }
+
+    public VerifiableProtocolMessage refreshToken(VerifiableProtocolMessage vpm) {
+        StatusCode sc;
+        VerifiableProtocolMessage response;
+        PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
+
+        if (vpm == null || clientPubKey == null || vpm.getProtocolMessage() == null ||
+                vpm.getSignedProtocolMessage() == null) {
+            
+            response = createVerifiableMessage(new ProtocolMessage(
+                    "TOKEN", StatusCode.NULL_FIELD, _pubKey));
+            return response;
+        }
+        sc = verifySignature(vpm);
+        if (!sc.equals(StatusCode.OK)) {
+            response = createVerifiableMessage(new ProtocolMessage(
+                    "TOKEN", sc, _pubKey));
+            return response;
+        }
+        sc = verifyUserRegistered(clientPubKey);
+        if (sc.equals(StatusCode.USER_NOT_REGISTERED)) {
+            response = createVerifiableMessage(new ProtocolMessage(
+                    "TOKEN", sc, _pubKey));
+            return response;
+        }
+        User user = _users.get(clientPubKey);
+        user.setRandomToken();
+        byte[] newToken = encryptToken(user.getToken(), clientPubKey);
+        response = createVerifiableMessage(new ProtocolMessage(
+                "TOKEN", StatusCode.OK, _pubKey, newToken));
+
+        _db.updateOperationUserRow(user.getdbTableName(), user.getToken());
+        
+        return response;
     }
 }
