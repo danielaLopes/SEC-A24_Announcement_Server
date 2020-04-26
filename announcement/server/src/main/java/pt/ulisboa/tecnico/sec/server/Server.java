@@ -24,6 +24,7 @@ public class Server {
 
     private ServerSocket _serverSocket;
     private Socket _socket;
+    private int _port;
 
     private PublicKey _pubKey;
     private PrivateKey _privateKey;
@@ -45,8 +46,10 @@ public class Server {
     private List<Announcement> _generalBoard;
     private Communication _communication;
 
-    public Server(boolean activateCC, char[] keyStorePasswd, char[] entryPasswd, String alias, String pubKeyPath,
+    public Server(boolean activateCC, int port, char[] keyStorePasswd, char[] entryPasswd, String alias, String pubKeyPath,
             String keyStorePath) {
+
+        _port = port;
         loadPublicKey(pubKeyPath);
         loadPrivateKey(keyStorePath, keyStorePasswd, entryPasswd, alias);
         _users = new ConcurrentHashMap<>();
@@ -167,7 +170,7 @@ public class Server {
 
     public void startClientCommunication() {
         try {
-            _serverSocket = _communication.createServerSocket(8888);
+            _serverSocket = _communication.createServerSocket(_port);
         } catch (IOException e) {
             System.out.println("Error starting server socket");
         }

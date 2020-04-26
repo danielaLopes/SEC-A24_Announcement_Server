@@ -17,7 +17,7 @@ public class RegisterUserTest extends BaseTest {
 
     public RegisterUserTest() {
 
-        _server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
+        _server = new Server(false, 8000, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
     }
 
@@ -26,7 +26,7 @@ public class RegisterUserTest extends BaseTest {
 
         _server.resetDatabase();
 
-        _server = new Server(false, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
+        _server = new Server(false, 8000, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS,
                 SERVER_PUBLIC_KEY_PATH, SERVER_KEYSTORE_PATH);
     }
 
