@@ -7,15 +7,15 @@ public class Application {
     public static void main(String[] args) {
         if (args.length < 6) {
             System.out.println("Usage: <pubKeyPath> <keyStorePath> <keyStorePassword>" + 
-            " <entryPassword> <alias> <serverPubKeyPath> <numberOfOtherClients> <otherClientsPubKeyPaths>*");
+            " <entryPassword> <alias> <numberOfOtherClients> <otherClientsPubKeyPaths>*");
         }
 
         List<String> otherUsersPubKeys = new ArrayList<String>();
-        for (int i = 1; i <= Integer.parseInt(args[6]); i++) {
-            otherUsersPubKeys.add(args[6+i]);
+        for (int i = 1; i <= Integer.parseInt(args[5]); i++) {
+            otherUsersPubKeys.add(args[5+i]);
         }
 
-        ClientUI clientUi = new ClientUI(args[0], args[1], args[2], args[3], args[4], args[5], otherUsersPubKeys);
+        ClientUI clientUi = new ClientUI(args[0], args[1], args[2], args[3], args[4], otherUsersPubKeys);
         clientUi.start();
 
         /*

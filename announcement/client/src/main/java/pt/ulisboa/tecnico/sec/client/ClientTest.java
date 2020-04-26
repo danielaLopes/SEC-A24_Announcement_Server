@@ -23,9 +23,8 @@ import java.util.List;
 public class ClientTest extends Client {
 
     public ClientTest(String pubKeyPath, String keyStorePath,
-                  String keyStorePasswd, String entryPasswd, String alias,
-                  String serverPubKeyPath) {
-        super(pubKeyPath, keyStorePath, keyStorePasswd, entryPasswd, alias, serverPubKeyPath);
+                  String keyStorePasswd, String entryPasswd, String alias) {
+        super(pubKeyPath, keyStorePath, keyStorePasswd, entryPasswd, alias);
     }
   
     // ---------------------------------------------------------------------
@@ -37,7 +36,7 @@ public class ClientTest extends Client {
      * @param pm is the ProtocolMessage to be sent
      * @return the server's response
      */
-    public VerifiableProtocolMessage requestServerTampered(ProtocolMessage pm) {
+    /*public VerifiableProtocolMessage requestServerTampered(ProtocolMessage pm) {
         if (pm == null) return null;
 
         VerifiableProtocolMessage vpm = createVerifiableMessage(pm);
@@ -77,7 +76,7 @@ public class ClientTest extends Client {
         }
 
         return rvpm;
-    }
+    }*/
 
     /**
      * Makes a request to the Server. The response has been dropped.
@@ -87,7 +86,7 @@ public class ClientTest extends Client {
      * @param pm is the ProtocolMessage to be sent
      * @return the server's response
      */
-    public VerifiableProtocolMessage requestServerDropped(ProtocolMessage pm) {
+    /*public VerifiableProtocolMessage requestServerDropped(ProtocolMessage pm) {
         if (pm == null) return null;
 
         VerifiableProtocolMessage vpm = createVerifiableMessage(pm);
@@ -112,14 +111,14 @@ public class ClientTest extends Client {
         }
 
         return rvpm;
-    }
+    }*/
 
     /**
      * Makes a request to the Server. The response is null.
      * @param pm is the ProtocolMessage to be sent
      * @return the server's response
      */
-    public VerifiableProtocolMessage requestServerNull(ProtocolMessage pm) {
+    /*public VerifiableProtocolMessage requestServerNull(ProtocolMessage pm) {
         if (pm == null) return null;
 
         VerifiableProtocolMessage vpm = createVerifiableMessage(pm);
@@ -146,7 +145,7 @@ public class ClientTest extends Client {
         }
 
         return rvpm;
-    }
+    }*/
 
     /**
      * Posts an announcement to the Client's Board twice.
@@ -154,7 +153,7 @@ public class ClientTest extends Client {
      * @param references to previous announcements
      * @return a list of the StatusCode of the two consecutive operations
      */
-    public List<StatusCode> postTwice(String message, List<String> references) {
+    /*public List<StatusCode> postTwice(String message, List<String> references) {
         List<StatusCode> rsc = new ArrayList<StatusCode>();        
         if (message == null) {
             System.out.println("Message cannot be null.");
@@ -195,7 +194,7 @@ public class ClientTest extends Client {
         }
         
         return rsc;
-    }
+    }*/
 
     /**
      * Posts an announcement to the Client's Board.
@@ -204,7 +203,7 @@ public class ClientTest extends Client {
      * @param references to previous announcements
      * @return the StatusCode of the operation
      */
-    public StatusCode postTampered(String message, List<String> references) {
+    /*public StatusCode postTampered(String message, List<String> references) {
         if (message == null) {
             System.out.println("Message cannot be null.");
             return StatusCode.NULL_FIELD;
@@ -238,7 +237,7 @@ public class ClientTest extends Client {
         }
         
         return rsc;
-    }
+    }*/
 
     /**
      * Posts an announcement to the Client's Board.
@@ -247,7 +246,7 @@ public class ClientTest extends Client {
      * @param references to previous announcements
      * @return the StatusCode of the operation
      */
-    public StatusCode postDropped(String message, List<String> references) {
+    /*public StatusCode postDropped(String message, List<String> references) {
         if (message == null) {
             System.out.println("Message cannot be null.");
             return StatusCode.NULL_FIELD;
@@ -281,7 +280,7 @@ public class ClientTest extends Client {
         }
         
         return rsc;
-    }
+    }*/
 
     /**
      * Posts an announcement to the Client's Board. 
@@ -290,7 +289,7 @@ public class ClientTest extends Client {
      * @param references to previous announcements
      * @return the StatusCode of the operation
      */
-    public StatusCode postNull(String message, List<String> references) {
+    /*public StatusCode postNull(String message, List<String> references) {
         if (message == null) {
             System.out.println("Message cannot be null.");
             return StatusCode.NULL_FIELD;
@@ -324,7 +323,7 @@ public class ClientTest extends Client {
         }
         
         return rsc;
-    }
+    }*/
 
     /**
      * Posts an announcement to the Client's Board.
@@ -333,7 +332,7 @@ public class ClientTest extends Client {
      * @param references to previous announcements
      * @return the StatusCode of the operation
      */
-    public StatusCode postInvalid(String message, List<String> references) {
+    /*public StatusCode postInvalid(String message, List<String> references) {
         if (message == null) {
             System.out.println("Message cannot be null.");
             return StatusCode.NULL_FIELD;
@@ -367,7 +366,7 @@ public class ClientTest extends Client {
         }
         
         return rsc;
-    }
+    }*/
 
     /**
      * Posts an announcement to the Client's Board twice.
@@ -375,7 +374,7 @@ public class ClientTest extends Client {
      * @param references to previous announcements
      * @return a list of the StatusCode of the two consecutive operations
      */
-    public List<StatusCode> postGeneralTwice(String message, List<String> references) {
+    /*public List<StatusCode> postGeneralTwice(String message, List<String> references) {
         List<StatusCode> rsc = new ArrayList<StatusCode>();
         
         if (message == null) {
@@ -418,7 +417,7 @@ public class ClientTest extends Client {
         for (StatusCode sc : rsc) System.out.println(sc.getDescription());
         
         return rsc;
-    }
+    }*/
 
     /**
      * Posts an announcement to the Client's Board.
@@ -427,7 +426,7 @@ public class ClientTest extends Client {
      * @param references to previous announcements
      * @return the StatusCode of the operation
      */
-    public StatusCode postGeneralTampered(String message, List<String> references) {
+    /*public StatusCode postGeneralTampered(String message, List<String> references) {
         if (message == null) {
             System.out.println("Message cannot be null.");
             return StatusCode.NULL_FIELD;
@@ -461,7 +460,7 @@ public class ClientTest extends Client {
         }
         
         return rsc;
-    }
+    }*/
 
     /**
      * Posts an announcement to the Client's Board.
@@ -470,7 +469,7 @@ public class ClientTest extends Client {
      * @param references to previous announcements
      * @return the StatusCode of the operation
      */
-    public StatusCode postGeneralDropped(String message, List<String> references) {
+    /*public StatusCode postGeneralDropped(String message, List<String> references) {
         if (message == null) {
             System.out.println("Message cannot be null.");
             return StatusCode.NULL_FIELD;
@@ -504,7 +503,7 @@ public class ClientTest extends Client {
         }
         
         return rsc;
-    }
+    }*/
 
     /**
      * Posts an announcement to the Client's Board.
@@ -513,7 +512,7 @@ public class ClientTest extends Client {
      * @param references to previous announcements
      * @return the StatusCode of the operation
      */
-    public StatusCode postGeneralNull(String message, List<String> references) {
+    /*public StatusCode postGeneralNull(String message, List<String> references) {
         if (message == null) {
             System.out.println("Message cannot be null.");
             return StatusCode.NULL_FIELD;
@@ -547,7 +546,7 @@ public class ClientTest extends Client {
         }
         
         return rsc;
-    }
+    }*/
 
     /**
      * Posts an announcement to the General Board.
@@ -556,7 +555,7 @@ public class ClientTest extends Client {
      * @param references to previous announcements
      * @return the StatusCode of the operation
      */
-    public StatusCode postGeneralInvalid(String message, List<String> references) {
+    /*public StatusCode postGeneralInvalid(String message, List<String> references) {
         if (message == null) {
             System.out.println("Message cannot be null.");
             return StatusCode.NULL_FIELD;
@@ -590,7 +589,7 @@ public class ClientTest extends Client {
         }
         
         return rsc;
-    }
+    }*/
 
     /**
      * Retrieves the number latest announcements from the user's Board twice.
@@ -599,7 +598,7 @@ public class ClientTest extends Client {
      * @return a pair containing a StatusCode of the operation
      * and the list of announcements received 
      */
-    public AbstractMap.SimpleEntry<List<StatusCode>, List<Announcement>> readTwice(PublicKey user, int number) {
+    /*public AbstractMap.SimpleEntry<List<StatusCode>, List<Announcement>> readTwice(PublicKey user, int number) {
         List<StatusCode> rsc = new ArrayList<StatusCode>();
         List<Announcement> announcements = new ArrayList<>();
 
@@ -630,7 +629,7 @@ public class ClientTest extends Client {
         }
 
         return new AbstractMap.SimpleEntry<>(rsc, announcements);
-    }
+    }*/
     
     /**
      * Retrieves the number latest announcements from the user's Board.
@@ -640,7 +639,7 @@ public class ClientTest extends Client {
      * @return a pair containing a StatusCode of the operation
      * and the list of announcements received 
      */
-    public AbstractMap.SimpleEntry<StatusCode, List<Announcement>> readTampered(PublicKey user, int number) {
+    /*public AbstractMap.SimpleEntry<StatusCode, List<Announcement>> readTampered(PublicKey user, int number) {
         if (user == null) {
             System.out.println("Invalid user.");
             return new AbstractMap.SimpleEntry<>(StatusCode.NULL_FIELD, new ArrayList<>());
@@ -667,7 +666,7 @@ public class ClientTest extends Client {
         }
 
         return new AbstractMap.SimpleEntry<>(rsc, announcements);
-    }
+    }*/
 
     /**
      * Retrieves the number latest announcements from the user's Board.
@@ -677,7 +676,7 @@ public class ClientTest extends Client {
      * @return a pair containing a StatusCode of the operation
      * and the list of announcements received 
      */
-    public AbstractMap.SimpleEntry<StatusCode, List<Announcement>> readDropped(PublicKey user, int number) {
+    /*public AbstractMap.SimpleEntry<StatusCode, List<Announcement>> readDropped(PublicKey user, int number) {
         if (user == null) {
             System.out.println("Invalid user.");
             return new AbstractMap.SimpleEntry<>(StatusCode.NULL_FIELD, new ArrayList<>());
@@ -704,7 +703,7 @@ public class ClientTest extends Client {
         }
 
         return new AbstractMap.SimpleEntry<>(rsc, announcements);
-    }
+    }*/
 
     /**
      * Retrieves the number latest announcements from the user's Board.
@@ -714,7 +713,7 @@ public class ClientTest extends Client {
      * @return a pair containing a StatusCode of the operation
      * and the list of announcements received 
      */
-    public AbstractMap.SimpleEntry<StatusCode, List<Announcement>> readNull(PublicKey user, int number) {
+    /*public AbstractMap.SimpleEntry<StatusCode, List<Announcement>> readNull(PublicKey user, int number) {
         if (user == null) {
             System.out.println("Invalid user.");
             return new AbstractMap.SimpleEntry<>(StatusCode.NULL_FIELD, new ArrayList<>());
@@ -741,7 +740,7 @@ public class ClientTest extends Client {
         }
 
         return new AbstractMap.SimpleEntry<>(rsc, announcements);
-    }
+    }*/
 
     /**
      * Retrieves the number latest announcements from the user's Board.
@@ -751,7 +750,7 @@ public class ClientTest extends Client {
      * @return a pair containing a StatusCode of the operation
      * and the list of announcements received 
      */
-    public AbstractMap.SimpleEntry<StatusCode, List<Announcement>> readInvalid(PublicKey user, int number) {
+    /*public AbstractMap.SimpleEntry<StatusCode, List<Announcement>> readInvalid(PublicKey user, int number) {
         if (user == null) {
             System.out.println("Invalid user.");
             return new AbstractMap.SimpleEntry<>(StatusCode.NULL_FIELD, new ArrayList<>());
@@ -778,7 +777,7 @@ public class ClientTest extends Client {
         }
 
         return new AbstractMap.SimpleEntry<>(rsc, announcements);
-    }
+    }*/
 
     /**
      * Retrieves the number latest announcements from the General Board twice.
@@ -786,7 +785,7 @@ public class ClientTest extends Client {
      * @return a pair containing a StatusCode of the operation
      * and the list of announcements received 
      */
-    public AbstractMap.SimpleEntry<List<StatusCode>, List<Announcement>> readGeneralTwice(int number) {
+    /*public AbstractMap.SimpleEntry<List<StatusCode>, List<Announcement>> readGeneralTwice(int number) {
         List<StatusCode> rsc = new ArrayList<StatusCode>();
         List<Announcement> announcements = new ArrayList<>();
 
@@ -811,7 +810,7 @@ public class ClientTest extends Client {
         }
 
         return new AbstractMap.SimpleEntry<>(rsc, announcements);
-    }
+    }*/
 
     /**
      * Retrieves the number latest announcements from the General Board.
@@ -820,7 +819,7 @@ public class ClientTest extends Client {
      * @return a pair containing a StatusCode of the operation
      * and the list of announcements received 
      */
-    public AbstractMap.SimpleEntry<StatusCode, List<Announcement>> readGeneralTampered(int number) {
+    /*public AbstractMap.SimpleEntry<StatusCode, List<Announcement>> readGeneralTampered(int number) {
         ProtocolMessage pm = new ProtocolMessage("READGENERAL", _pubKey, encryptToken(_token, _serverPubKey), number);
         VerifiableProtocolMessage vpm = requestServerTampered(pm);
         List<Announcement> announcements = new ArrayList<Announcement>();
@@ -843,7 +842,7 @@ public class ClientTest extends Client {
         }
 
         return new AbstractMap.SimpleEntry<>(rsc, announcements);
-    }
+    }*/
 
     /**
      * Retrieves the number latest announcements from the General Board.
@@ -852,7 +851,7 @@ public class ClientTest extends Client {
      * @return a pair containing a StatusCode of the operation
      * and the list of announcements received 
      */
-    public AbstractMap.SimpleEntry<StatusCode, List<Announcement>> readGeneralDropped(int number) {
+    /*public AbstractMap.SimpleEntry<StatusCode, List<Announcement>> readGeneralDropped(int number) {
         ProtocolMessage pm = new ProtocolMessage("READGENERAL", _pubKey, encryptToken(_token, _serverPubKey), number);
         VerifiableProtocolMessage vpm = requestServerDropped(pm);
         List<Announcement> announcements = new ArrayList<Announcement>();
@@ -875,7 +874,7 @@ public class ClientTest extends Client {
         }
 
         return new AbstractMap.SimpleEntry<>(rsc, announcements);
-    }
+    }*/
 
     /**
      * Retrieves the number latest announcements from the General Board.
@@ -884,7 +883,7 @@ public class ClientTest extends Client {
      * @return a pair containing a StatusCode of the operation
      * and the list of announcements received 
      */
-    public AbstractMap.SimpleEntry<StatusCode, List<Announcement>> readGeneralNull(int number) {
+    /*public AbstractMap.SimpleEntry<StatusCode, List<Announcement>> readGeneralNull(int number) {
         ProtocolMessage pm = new ProtocolMessage("READGENERAL", _pubKey, encryptToken(_token, _serverPubKey), number);
         VerifiableProtocolMessage vpm = requestServerNull(pm);
         List<Announcement> announcements = new ArrayList<Announcement>();
@@ -907,7 +906,7 @@ public class ClientTest extends Client {
         }
 
         return new AbstractMap.SimpleEntry<>(rsc, announcements);
-    }
+    }*/
 
     /**
      * Sends an invalid readGeneral request to the Server.
@@ -915,7 +914,7 @@ public class ClientTest extends Client {
      * @return a pair containing a StatusCode of the operation
      * and the list of announcements received 
      */
-    public AbstractMap.SimpleEntry<StatusCode, List<Announcement>> readGeneralInvalid(int number) {
+    /*public AbstractMap.SimpleEntry<StatusCode, List<Announcement>> readGeneralInvalid(int number) {
         ProtocolMessage pm = new ProtocolMessage("READSGENERAL", _pubKey, encryptToken(_token, _serverPubKey), number);
         VerifiableProtocolMessage vpm = requestServer(pm);
         List<Announcement> announcements = new ArrayList<Announcement>();
@@ -938,5 +937,5 @@ public class ClientTest extends Client {
         }
 
         return new AbstractMap.SimpleEntry<>(rsc, announcements);
-    }
+    }*/
 }

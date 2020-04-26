@@ -109,9 +109,9 @@ class ReadGeneralTest extends BaseTest {
 
     @AfterAll
     static void closeCommunications() {
-        _client1.closeCommunication();
-        _client2.closeCommunication();
-        _client3.closeCommunication();
+        _client1.closeCommunication(0);
+        _client2.closeCommunication(0);
+        _client3.closeCommunication(0);
     }
 
 }

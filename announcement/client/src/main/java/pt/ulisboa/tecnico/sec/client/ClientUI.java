@@ -16,8 +16,8 @@ public class ClientUI {
 
     public ClientUI(String pubKeyPath, String keyStorePath,
                     String keyStorePasswd, String entryPasswd, String alias,
-                    String serverPubKeyPath, List<String> otherUsersPubKeyPaths) {
-        _client = new Client(pubKeyPath, keyStorePath, keyStorePasswd, entryPasswd, alias, serverPubKeyPath, otherUsersPubKeyPaths);
+                    List<String> otherUsersPubKeyPaths) {
+        _client = new Client(pubKeyPath, keyStorePath, keyStorePasswd, entryPasswd, alias, otherUsersPubKeyPaths);
         _scanner = new Scanner(System.in);
     }
 
@@ -63,7 +63,8 @@ public class ClientUI {
      */
     public void closeCommunication() {
         try {
-            _client.closeCommunication();
+            //_client.closeCommunication();
+            _client.closeGroupCommunication();
         }
         catch(Exception e) {
             System.out.println("Error when closing Client's communications.");

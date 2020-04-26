@@ -17,7 +17,7 @@ class RegisterTest extends BaseTest {
 
         assertEquals(StatusCode.USER_ALREADY_REGISTERED, statusCode);
 
-        _client1.closeCommunication();
+        _client1.closeCommunication(0);
     }
 
     @Test
@@ -31,8 +31,8 @@ class RegisterTest extends BaseTest {
         assertEquals(StatusCode.USER_ALREADY_REGISTERED, statusCode1);
         assertEquals(StatusCode.USER_ALREADY_REGISTERED, statusCode2);
 
-        _client1.closeCommunication();
-        _client2.closeCommunication();
+        _client1.closeCommunication(0);
+        _client2.closeCommunication(0);
     }
 
     @Test
@@ -49,9 +49,9 @@ class RegisterTest extends BaseTest {
         assertEquals(StatusCode.USER_ALREADY_REGISTERED, statusCode2);
         assertEquals(StatusCode.USER_ALREADY_REGISTERED, statusCode3);
 
-        _client1.closeCommunication();
-        _client2.closeCommunication();
-        _client3.closeCommunication();
+        _client1.closeCommunication(0);
+        _client2.closeCommunication(0);
+        _client3.closeCommunication(0);
     }
 
 }
