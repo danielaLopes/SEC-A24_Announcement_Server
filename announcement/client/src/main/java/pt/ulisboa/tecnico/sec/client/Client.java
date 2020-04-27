@@ -20,6 +20,7 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Collections;
+import java.util.Arrays;
 
 import javax.crypto.*;
 
@@ -30,19 +31,12 @@ public class Client{
 
     private List<PublicKey> _usersPubKeys;
 
-    protected static final List<Integer> _serverPorts = Collections.unmodifiableList(
-            new ArrayList<Integer>() {{
-                add(8005);
-                add(8006);
-                add(8007);
-            }});
+    protected final Integer _startingServerPort = 8001;
 
-    protected static final List<String> _serverPubKeyPaths = Collections.unmodifiableList(
-            new ArrayList<String>() {{
-                add("../server/src/main/resources/crypto/public.key");
-                add("../server/src/main/resources/crypto/public2.key");
-                add("../server/src/main/resources/crypto/public3.key");
-            }});
+    protected final String _serverPubKeyPrefix = "../server/src/main/resources/crypto/public";
+    protected final String _serverPubKeySufix = ".key";
+
+    protected final int _nServers;
 
     private List<PublicKey> _serverPubKeys;
 
@@ -62,11 +56,12 @@ public class Client{
 
     public Client(String pubKeyPath, String keyStorePath,
                   String keyStorePasswd, String entryPasswd, String alias,
-                  List<String> otherUsersPubKeyPaths) {
+                  int nServers, List<String> otherUsersPubKeyPaths) {
         loadPublicKey(pubKeyPath);
         loadPrivateKey(keyStorePath, keyStorePasswd, entryPasswd, alias);
 
         //loadServerPublicKey(serverPubKeyPath);
+        _nServers = nServers;
         _serverPubKeys = new ArrayList<>();
         loadServersGroupPublicKeys();
 
@@ -86,11 +81,12 @@ public class Client{
     }
 
     public Client(String pubKeyPath, String keyStorePath,
-                  String keyStorePasswd, String entryPasswd, String alias) {
+                  String keyStorePasswd, String entryPasswd, String alias, int nServers) {
         loadPublicKey(pubKeyPath);
         loadPrivateKey(keyStorePath, keyStorePasswd, entryPasswd, alias);
         
         //loadServerPublicKey(serverPubKeyPath);
+        _nServers = nServers;
         _serverPubKeys = new ArrayList<>();
         loadServersGroupPublicKeys();
 
@@ -152,8 +148,8 @@ public class Client{
     }
 
     public void loadServersGroupPublicKeys() {
-        for (String path : _serverPubKeyPaths) {
-            loadServerPublicKey(path);
+        for (int i = 1; i <= _nServers; i++) {
+            loadServerPublicKey(_serverPubKeyPrefix + Integer.toString(i) + _serverPubKeySufix);
         }
     }
 
@@ -161,8 +157,6 @@ public class Client{
      * Loads server's public key to _serverPubKey.
      */
     public void loadServerPublicKey(String path) {
-        System.out.println("server pubkey path: " + path);
-        System.out.println("list: " + _serverPubKeys);
         if (path == null) {
             System.out.println("Error: Not possible to initialize client because it was not possible to load server's public key.\n");
             System.exit(-1);
@@ -237,11 +231,11 @@ public class Client{
     public void startServersGroupCommunication() {
         try {
             Socket socket;
-            for (int serverPort : _serverPorts) {
-                socket = new Socket("localhost", serverPort);
+            for (int i = 0; i < _nServers; i++) {
+                System.out.println("Connecting with server at port " + (_startingServerPort + i));
+                socket = new Socket("localhost", _startingServerPort + i);
                 socket.setSoTimeout(TIMEOUT);
                 _clientSockets.add(socket);
-
                 _oos.add(new ObjectOutputStream(socket.getOutputStream()));
                 _ois.add(new ObjectInputStream(socket.getInputStream()));
             }
@@ -258,7 +252,7 @@ public class Client{
      */
     public void startServerCommunication(int serverIndex) {
         try {
-            Socket clientSocket = new Socket("localhost", _serverPorts.get(serverIndex));
+            Socket clientSocket = new Socket("localhost", _startingServerPort + serverIndex);
             clientSocket.setSoTimeout(TIMEOUT);
             _clientSockets.add(clientSocket);
 
@@ -278,7 +272,7 @@ public class Client{
      */
     public void closeGroupCommunication() {
         try {
-            for (int i = 0; i < _serverPorts.size(); i++) {
+            for (int i = 0; i < _nServers; i++) {
                 ProtocolMessage pm = new ProtocolMessage("LOGOUT");
                 VerifiableProtocolMessage vpm = createVerifiableMessage(pm);
                 _communication.sendMessage(vpm, _oos.get(i));
@@ -422,7 +416,7 @@ public class Client{
     public List<VerifiableProtocolMessage> requestServersGroup(ProtocolMessage pm) {
 
         List<VerifiableProtocolMessage> responses = new ArrayList<>();
-        for (int serverIndex = 0; serverIndex < _serverPorts.size(); serverIndex++) {
+        for (int serverIndex = 0; serverIndex < _nServers; serverIndex++) {
             responses.add(requestServer(pm, serverIndex));
         }
 
@@ -451,7 +445,7 @@ public class Client{
                 }
                 rsc = getStatusCodeFromVPM(rvpm);
 
-                if (verifySignature(rvpm, 0)) {
+                if (verifySignature(rvpm, serverIndex)) {
                     System.out.println("Server signature verified successfully");
                     printStatusCode(rsc);
                 }
@@ -521,27 +515,27 @@ public class Client{
     public List<StatusCode> postServersGroup(String message, List<String> references) {
         if (message == null) {
             System.out.println("Message cannot be null.");
-            return new ArrayList<StatusCode>(StatusCode.NULL_FIELD);
+            return new ArrayList<StatusCode>(Arrays.asList(StatusCode.NULL_FIELD));
         }
         if (references == null) {
             System.out.println("References cannot be null.");
-            return new ArrayList<StatusCode>(StatusCode.NULL_FIELD);
+            return new ArrayList<StatusCode>(Arrays.asList(StatusCode.NULL_FIELD));
         }
         if (invalidMessageLength(message)) {
             System.out.println("Maximum message length to post announcement is 255.");
-            return new ArrayList<StatusCode>(StatusCode.INVALID_MESSAGE_LENGTH);
+            return new ArrayList<StatusCode>(Arrays.asList(StatusCode.INVALID_MESSAGE_LENGTH));
         }
 
         int refreshCounter = 0;
         StatusCode rsc = null;
+
+        List<StatusCode> rscs = new ArrayList<>();
 
         while (refreshCounter < MAX_REFRESH) {
             Announcement a = new Announcement(message, references);
             ProtocolMessage pm = new ProtocolMessage("POST", _pubKey, a, encryptToken(_token, _serverPubKeys.get(0)));
 
             List<VerifiableProtocolMessage> vpms = requestServersGroup(pm);
-
-            List<StatusCode> rscs = new ArrayList<>();
 
             for(VerifiableProtocolMessage vpm : vpms) {
 

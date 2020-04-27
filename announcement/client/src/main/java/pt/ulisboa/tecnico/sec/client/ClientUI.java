@@ -16,8 +16,9 @@ public class ClientUI {
 
     public ClientUI(String pubKeyPath, String keyStorePath,
                     String keyStorePasswd, String entryPasswd, String alias,
-                    List<String> otherUsersPubKeyPaths) {
-        _client = new Client(pubKeyPath, keyStorePath, keyStorePasswd, entryPasswd, alias, otherUsersPubKeyPaths);
+                    int nServers, List<String> otherUsersPubKeyPaths) {
+        _client = new Client(pubKeyPath, keyStorePath, keyStorePasswd, entryPasswd,
+                alias, nServers, otherUsersPubKeyPaths);
         _scanner = new Scanner(System.in);
     }
 
@@ -85,12 +86,15 @@ public class ClientUI {
 
         List<String> references = parseReferences(referencesIn);
 
-        StatusCode statusCode = _client.post(message, references);
-        if (statusCode == StatusCode.OK) {
-            System.out.println("Posted announcement.");
-        }
-        else {
-            System.out.println("Could not post announcement.");
+        //StatusCode statusCode = _client.post(message, references);
+        List<StatusCode> statusCodes = _client.postServersGroup(message, references);
+        for (int i = 0; i < _client._nServers; i++) {
+            if (statusCodes.get(i) == StatusCode.OK) {
+                System.out.println("Posted announcement in server " + (i + 1) + ".");
+            }
+            else {
+                System.out.println("Could not post announcement in server " + (i + 1) + ".");
+            }
         }
     }
 
