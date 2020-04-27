@@ -185,6 +185,7 @@ public class Server {
         while (true) {
             try {
                 _socket = _communication.accept(_serverSocket);
+                System.out.println("received new client connection in server");
                 new ClientMessageHandler(this, _socket).start();
             } catch (IOException e) {
                 System.out.println(e);

@@ -13,6 +13,7 @@ public class ClientMessageHandler extends Thread {
     private Communication _communication;
 
     public ClientMessageHandler(Server server, Socket socket) throws IOException {
+        System.out.println("received new client connection");
         _server = server;
         _socket = socket;
         _communication = new Communication();
