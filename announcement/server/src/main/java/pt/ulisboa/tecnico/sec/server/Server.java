@@ -24,7 +24,9 @@ public class Server {
 
     private ServerSocket _serverSocket;
     private Socket _socket;
+    private List<Socket> _serverSocketList;
     private int _port;
+    private int _nServers;
 
     private PublicKey _pubKey;
     private PrivateKey _privateKey;
@@ -46,10 +48,11 @@ public class Server {
     private List<Announcement> _generalBoard;
     private Communication _communication;
 
-    public Server(boolean activateCC, int port, char[] keyStorePasswd, char[] entryPasswd, String alias, String pubKeyPath,
+    public Server(boolean activateCC, int nServers, int port, char[] keyStorePasswd, char[] entryPasswd, String alias, String pubKeyPath,
             String keyStorePath) {
 
         _port = port;
+        _nServers = nServers;
         loadPublicKey(pubKeyPath);
         loadPrivateKey(keyStorePath, keyStorePasswd, entryPasswd, alias);
         _users = new ConcurrentHashMap<>();
@@ -58,7 +61,7 @@ public class Server {
         // lots of reads)
         _generalBoard = new ArrayList<>();
         _communication = new Communication();
-        String db = "announcement" + UUIDGenerator.generateUUID();
+        String db = "announcement" + Integer.toString(port);
         _db = new Database(db);
 
         retrieveDataStructures();
@@ -174,6 +177,28 @@ public class Server {
         } catch (IOException e) {
             System.out.println("Error starting server socket");
         }
+    }
+
+    // 1 9002 9003 
+    // 2 9001 9003
+    // 3 9001 9002
+
+    public List<Integer> getOtherServersPorts() {
+        int initialPort = 9001;
+        List<Integer> otherPorts = new ArrayList<Integer>();
+        for (int i = initialPort; i < initialPort + _nServers; i++) {
+            if (i != _port) {
+                otherPorts.add(i);
+            }
+        }
+        return otherPorts;
+    }
+
+    public void startServerCommunication() {
+        for (int port : getOtherServersPorts()) {
+            new ServerThread(this, port).start();
+        }
+
     }
 
     /**

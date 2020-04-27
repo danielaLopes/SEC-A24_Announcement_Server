@@ -23,15 +23,18 @@ public class Application {
         });
 
         if(args.length < 6) {
-            System.out.println("\"Usage: <port> <keyStorePassword> <entryPassword> <alias> <pubKeyPath> <keyStorePath>");
+            System.out.println("\"Usage: <nServers> <port> <keyStorePassword> <entryPassword> <alias> <pubKeyPath> <keyStorePath>");
             return;
         }
 
-        int port = Integer.parseInt(args[0]);
+        int nServers = Integer.parseInt(args[0]);
+        System.out.println(nServers + " servers running.");
+
+        int port = Integer.parseInt(args[1]);
         System.out.println("Server running at port " + port);
 
-        Server server = new Server(false, port, args[1].toCharArray(), args[2].toCharArray(), args[3],
-                args[4], args[5]);
+        Server server = new Server(false, nServers, port, args[2].toCharArray(), args[3].toCharArray(), args[4],
+                args[5], args[6]);
         server.start();
 
 
