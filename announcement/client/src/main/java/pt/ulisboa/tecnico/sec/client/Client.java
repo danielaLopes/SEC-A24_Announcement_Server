@@ -417,6 +417,7 @@ public class Client{
 
         List<VerifiableProtocolMessage> responses = new ArrayList<>();
         for (int serverIndex = 0; serverIndex < _nServers; serverIndex++) {
+            System.out.println("is going to check response from server " + serverIndex);
             responses.add(requestServer(pm, serverIndex));
         }
 
@@ -437,6 +438,7 @@ public class Client{
         int requestsCounter = 0;
 
         while (rvpm == null && requestsCounter < MAX_REQUESTS) {
+            System.out.println("new trial to send request");
             try {
                 _communication.sendMessage(vpm, _oos.get(serverIndex));
                 rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois.get(serverIndex));
@@ -447,7 +449,7 @@ public class Client{
 
                 if (verifySignature(rvpm, serverIndex)) {
                     System.out.println("Server signature verified successfully");
-                    printStatusCode(rsc);
+                    //printStatusCode(rsc);
                 }
                 else {
                     System.out.println("Could not register: could not verify server signature");
@@ -535,11 +537,13 @@ public class Client{
             Announcement a = new Announcement(message, references);
             ProtocolMessage pm = new ProtocolMessage("POST", _pubKey, a, encryptToken(_token, _serverPubKeys.get(0)));
 
+            System.out.println("refreshCounter while");
             List<VerifiableProtocolMessage> vpms = requestServersGroup(pm);
 
             for(VerifiableProtocolMessage vpm : vpms) {
 
-                rscs.add(verifyReceivedMessage(vpm));
+                rsc = verifyReceivedMessage(vpm);
+                rscs.add(rsc);
                 if (rsc.equals(StatusCode.INVALID_TOKEN)) {
                     refreshToken();
                     refreshCounter++;

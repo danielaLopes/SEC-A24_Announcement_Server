@@ -95,6 +95,7 @@ public class ClientUI {
             else {
                 System.out.println("Could not post announcement in server " + (i + 1) + ".");
             }
+            _client.printStatusCode(statusCodes.get(i));
         }
     }
 
