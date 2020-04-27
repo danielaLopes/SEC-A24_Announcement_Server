@@ -102,6 +102,7 @@ public class ClientMessageHandler extends Thread {
         try {
             VerifiableProtocolMessage svpm = _server.post(vpm);
             _communication.sendMessage(svpm, _oos);
+            System.out.println("sent message to client with status code " + svpm.getProtocolMessage().getStatusCode());
         }
         catch (IOException e) {
           System.out.println(e);

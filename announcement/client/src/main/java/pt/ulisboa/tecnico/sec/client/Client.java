@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Collections;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.HashMap;
 
 import javax.crypto.*;
 
@@ -38,7 +40,9 @@ public class Client{
 
     protected final int _nServers;
 
-    private List<PublicKey> _serverPubKeys;
+    // maps server public keys to the corresponding serverIndex to access for _oos,_ois or _clientSockets
+    private Map<PublicKey, Integer> _serverPubKeys;
+    private PublicKey _serverPubKey;
 
     protected final Communication _communication;
     protected List<ObjectOutputStream> _oos;
@@ -46,9 +50,10 @@ public class Client{
     private List<Socket> _clientSockets;
     private Socket _clientSocket;
 
-    protected List<String> _tokens;
+    // maps server's public key to corresponding token
+    protected Map<PublicKey, String> _tokens;
 
-    protected String _token;
+    //protected String _token;
 
     protected static final int TIMEOUT = 1000;
     protected static final int MAX_REQUESTS = 5;
@@ -62,7 +67,7 @@ public class Client{
 
         //loadServerPublicKey(serverPubKeyPath);
         _nServers = nServers;
-        _serverPubKeys = new ArrayList<>();
+        _serverPubKeys = new HashMap<>();
         loadServersGroupPublicKeys();
 
         _usersPubKeys = new ArrayList<PublicKey>();
@@ -74,7 +79,7 @@ public class Client{
         _ois = new ArrayList<>();
         _clientSockets = new ArrayList<>();
 
-        _tokens = new ArrayList<>();
+        _tokens = new HashMap<>();
 
         //startServerCommunication(0);
         startServersGroupCommunication();
@@ -87,7 +92,7 @@ public class Client{
         
         //loadServerPublicKey(serverPubKeyPath);
         _nServers = nServers;
-        _serverPubKeys = new ArrayList<>();
+        _serverPubKeys = new HashMap<>();
         loadServersGroupPublicKeys();
 
         _communication = new Communication();
@@ -96,7 +101,7 @@ public class Client{
         _ois = new ArrayList<>();
         _clientSockets = new ArrayList<>();
 
-        _tokens = new ArrayList<>();
+        _tokens = new HashMap<>();
 
         //startServerCommunication(0);
         startServersGroupCommunication();
@@ -149,14 +154,14 @@ public class Client{
 
     public void loadServersGroupPublicKeys() {
         for (int i = 1; i <= _nServers; i++) {
-            loadServerPublicKey(_serverPubKeyPrefix + Integer.toString(i) + _serverPubKeySufix);
+            loadServerPublicKey(_serverPubKeyPrefix + Integer.toString(i) + _serverPubKeySufix, i);
         }
     }
 
     /**
      * Loads server's public key to _serverPubKey.
      */
-    public void loadServerPublicKey(String path) {
+    public void loadServerPublicKey(String path, int serverIndex) {
         if (path == null) {
             System.out.println("Error: Not possible to initialize client because it was not possible to load server's public key.\n");
             System.exit(-1);
@@ -164,7 +169,11 @@ public class Client{
 
         try {
             //_serverPubKey = KeyPairUtil.loadPublicKey(path);
-            _serverPubKeys.add(KeyPairUtil.loadPublicKey(path));
+            PublicKey serverPubKey = KeyPairUtil.loadPublicKey(path);
+            if (serverIndex == 0) {
+                _serverPubKey = serverPubKey;
+            }
+            _serverPubKeys.put(serverPubKey, serverIndex);
         } catch (Exception e) {
             System.out.println("Error: Not possible to initialize client because it was not possible to load server's public key.\n" + e);
             System.exit(-1);
@@ -200,15 +209,16 @@ public class Client{
     }
 
     public List<PublicKey> getServersGroupPubKeys() {
-        return _serverPubKeys;
+        return new ArrayList<>(_serverPubKeys.keySet());
     }
 
     /**
      * @return the server's public key
      */
-    public PublicKey getServerPubKey(int serverIndex) {
+    /*public PublicKey getServerPubKey(int serverIndex) {
+        for ()
         return _serverPubKeys.get(serverIndex);
-    }
+    }*/
 
     /**
      * @return the client's public key
@@ -287,7 +297,8 @@ public class Client{
     /**
      * Closes the communication with the server.
      */
-    public void closeCommunication(int serverIndex) {
+    public void closeCommunication(PublicKey serverPubKey) {
+        int serverIndex = _serverPubKeys.get(serverPubKey);
         try {
             ProtocolMessage pm = new ProtocolMessage("LOGOUT");
             VerifiableProtocolMessage vpm = createVerifiableMessage(pm);
@@ -296,7 +307,7 @@ public class Client{
         }
         catch(IOException e) {
             System.out.println("Error closing socket.");
-        }   
+        }
     }
 
     /**
@@ -336,11 +347,11 @@ public class Client{
      * @param vpm is a VerifiableProtocolMessage
      * @return a boolean, expressing if the signature is valid or not
      */
-    public boolean verifySignature(VerifiableProtocolMessage vpm, int serverIndex) {
+    public boolean verifySignature(VerifiableProtocolMessage vpm, PublicKey serverPubKey) {
         if (vpm == null) return false;
         try {
             byte[] bpm = ProtocolMessageConverter.objToByteArray(vpm.getProtocolMessage());
-            return SignatureUtil.verifySignature(vpm.getSignedProtocolMessage(), _serverPubKeys.get(serverIndex), bpm);
+            return SignatureUtil.verifySignature(vpm.getSignedProtocolMessage(), serverPubKey, bpm);
         }
         catch (NoSuchAlgorithmException e) {
             System.out.println("Error: Algorithm used to verify signature is not valid.\n" + e);
@@ -362,6 +373,11 @@ public class Client{
     public StatusCode getStatusCodeFromVPM(VerifiableProtocolMessage vpm) {
         if (vpm == null) return null;
         return vpm.getProtocolMessage().getStatusCode();
+    }
+
+    public PublicKey getServerPublicKeyFromVPM(VerifiableProtocolMessage vpm) {
+        if (vpm == null) return null;
+        return vpm.getProtocolMessage().getPublicKey();
     }
 
     /**
@@ -400,25 +416,44 @@ public class Client{
 
     public String getTokenFromVPM(VerifiableProtocolMessage vpm) {
         if (vpm == null) return null;
-        return decryptToken(vpm.getProtocolMessage().getToken());
+        return vpm.getProtocolMessage().getToken();
     }
 
     public String getOldTokenFromVPM(VerifiableProtocolMessage vpm) {
         if (vpm == null) return null;
-        return decryptToken(vpm.getProtocolMessage().getOldToken());
+        return vpm.getProtocolMessage().getOldToken();
     }
 
     /**
-     * Makes a request to the group of active Servers, receiving a list of responses as VerifiableProtocolMessage's
-     * @param pm is the ProtocolMessage to be sent
+     * Makes a request to the group of active Servers to register and to obtain tokens,
+     * receiving a list of responses as VerifiableProtocolMessage's
+     * @param pm is a ProtocolMessage to be sent to all servers in register phase, when there's no token associated.
      * @return the servers' responses
      */
-    public List<VerifiableProtocolMessage> requestServersGroup(ProtocolMessage pm) {
+    public List<VerifiableProtocolMessage> requestServersGroupRegister(ProtocolMessage pm) {
 
         List<VerifiableProtocolMessage> responses = new ArrayList<>();
         for (int serverIndex = 0; serverIndex < _nServers; serverIndex++) {
             System.out.println("is going to check response from server " + serverIndex);
+            System.out.println("going to call requests server from requestServersgroup");
             responses.add(requestServer(pm, serverIndex));
+        }
+
+        return responses;
+    }
+
+    /**
+     * Makes a request to the group of active Servers, receiving a list of responses as VerifiableProtocolMessage's
+     * @param pms is a List the ProtocolMessages to be sent to each server (each server has a different token)
+     * @return the servers' responses
+     */
+    public List<VerifiableProtocolMessage> requestServersGroup(List<ProtocolMessage> pms) {
+
+        List<VerifiableProtocolMessage> responses = new ArrayList<>();
+        for (int serverIndex = 0; serverIndex < _nServers; serverIndex++) {
+            System.out.println("is going to check response from server " + serverIndex);
+            System.out.println("going to call requests server from requestServersgroup");
+            responses.add(requestServer(pms.get(serverIndex), serverIndex));
         }
 
         return responses;
@@ -438,7 +473,6 @@ public class Client{
         int requestsCounter = 0;
 
         while (rvpm == null && requestsCounter < MAX_REQUESTS) {
-            System.out.println("new trial to send request");
             try {
                 _communication.sendMessage(vpm, _oos.get(serverIndex));
                 rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois.get(serverIndex));
@@ -446,8 +480,9 @@ public class Client{
                     return null;
                 }
                 rsc = getStatusCodeFromVPM(rvpm);
+                PublicKey serverPubKey = getServerPublicKeyFromVPM(rvpm);
 
-                if (verifySignature(rvpm, serverIndex)) {
+                if (verifySignature(rvpm, serverPubKey)) {
                     System.out.println("Server signature verified successfully");
                     //printStatusCode(rsc);
                 }
@@ -469,21 +504,22 @@ public class Client{
 
     public List<StatusCode> registerServersGroup() {
         ProtocolMessage pm = new ProtocolMessage("REGISTER", _pubKey);
-        List<VerifiableProtocolMessage> vpms = requestServersGroup(pm);
+        System.out.println("going to call requests server from registerServersGroup");
+        List<VerifiableProtocolMessage> vpms = requestServersGroupRegister(pm);
 
         List<StatusCode> rscs = new ArrayList<>();
-        int serverIndex = 0;
         for(VerifiableProtocolMessage vpm : vpms) {
             StatusCode rsc = null;
+            PublicKey serverPubKey = getServerPublicKeyFromVPM(vpm);
             if (vpm == null) {
                 rsc = StatusCode.NO_RESPONSE;
                 System.out.println("Could not register: could not receive a response");
-                closeCommunication(serverIndex++);
+                closeCommunication(serverPubKey);
                 System.exit(-1);
             }
             else {
                 rscs.add(getStatusCodeFromVPM(vpm));
-                _tokens.add(getTokenFromVPM(vpm));
+                _tokens.put(serverPubKey, getTokenFromVPM(vpm));
             }
         }
 
@@ -497,18 +533,21 @@ public class Client{
      */
     public StatusCode register() {
         ProtocolMessage pm = new ProtocolMessage("REGISTER", _pubKey);
+        System.out.println("going to call requests server from register");
         VerifiableProtocolMessage vpm = requestServer(pm, 0);
 
         StatusCode rsc = null;
+        PublicKey serverPubKey = getServerPublicKeyFromVPM(vpm);
         if (vpm == null) {
             rsc = StatusCode.NO_RESPONSE;
             System.out.println("Could not register: could not receive a response");
-            closeCommunication(0);
+            closeCommunication(serverPubKey);
             System.exit(-1);
         }
         else {
             rsc = getStatusCodeFromVPM(vpm);
-            _token = getTokenFromVPM(vpm);
+            //_token = getTokenFromVPM(vpm);
+            _tokens.put(serverPubKey, getTokenFromVPM(vpm));
         }
         
         return rsc;
@@ -535,17 +574,25 @@ public class Client{
 
         while (refreshCounter < MAX_REFRESH) {
             Announcement a = new Announcement(message, references);
-            ProtocolMessage pm = new ProtocolMessage("POST", _pubKey, a, encryptToken(_token, _serverPubKeys.get(0)));
+
+            List<ProtocolMessage> pms = new ArrayList<>();
+            List<PublicKey> serverPubKeys = new ArrayList<>(_serverPubKeys.keySet());
+            for (PublicKey serverPubKey : serverPubKeys) {
+                pms.add(new ProtocolMessage("POST", _pubKey, a, _tokens.get(serverPubKey)));
+            }
 
             System.out.println("refreshCounter while");
-            List<VerifiableProtocolMessage> vpms = requestServersGroup(pm);
+            System.out.println("going to call requests server from postServersGroup");
+            List<VerifiableProtocolMessage> vpms = requestServersGroup(pms);
 
+            int serverIndex = 0;
             for(VerifiableProtocolMessage vpm : vpms) {
 
                 rsc = verifyReceivedMessage(vpm);
                 rscs.add(rsc);
                 if (rsc.equals(StatusCode.INVALID_TOKEN)) {
-                    refreshToken();
+                    System.out.println("invalid token:" + getTokenFromVPM(vpm));
+                    refreshToken(serverIndex++);
                     refreshCounter++;
                 } else {
                     refreshCounter = MAX_REFRESH;
@@ -582,11 +629,13 @@ public class Client{
 
         while (refreshCounter < MAX_REFRESH) {
             Announcement a = new Announcement(message, references);
-            ProtocolMessage pm = new ProtocolMessage("POST", _pubKey, a, encryptToken(_token, _serverPubKeys.get(0)));
+
+            ProtocolMessage pm = new ProtocolMessage("POST", _pubKey, a, _tokens.get(0));
+            System.out.println("going to call requests server from post");
             VerifiableProtocolMessage vpm = requestServer(pm, 0);
             rsc = verifyReceivedMessage(vpm);
             if (rsc.equals(StatusCode.INVALID_TOKEN)) {
-                refreshToken();
+                refreshToken(0);
                 refreshCounter++;
             }
             else {
@@ -624,11 +673,12 @@ public class Client{
         StatusCode rsc = null;
         
         while (refreshCounter < MAX_REFRESH) {
-            ProtocolMessage pm = new ProtocolMessage("POSTGENERAL", _pubKey, a, encryptToken(_token, _serverPubKeys.get(0)));
+            ProtocolMessage pm = new ProtocolMessage("POSTGENERAL", _pubKey, a, _tokens.get(0));
+            System.out.println("going to call requests server from postgeneral");
             VerifiableProtocolMessage vpm = requestServer(pm, 0);
             rsc = verifyReceivedMessage(vpm);
             if (rsc.equals(StatusCode.INVALID_TOKEN)) {
-                refreshToken();
+                refreshToken(0);
                 refreshCounter++;
             }
             else {
@@ -658,11 +708,12 @@ public class Client{
 
         int refreshCounter = 0;
         while (refreshCounter < MAX_REFRESH) {
-            ProtocolMessage pm = new ProtocolMessage("READ", _pubKey, encryptToken(_token, _serverPubKeys.get(0)), number, user);
+            ProtocolMessage pm = new ProtocolMessage("READ", _pubKey, _tokens.get(0), number, user);
+            System.out.println("going to call requests server from read");
             vpm = requestServer(pm, 0);
             rsc = verifyReceivedMessage(vpm);
             if (rsc.equals(StatusCode.INVALID_TOKEN)) {
-                refreshToken();
+                refreshToken(0);
                 refreshCounter++;
             }
             else {
@@ -697,11 +748,12 @@ public class Client{
 
         int refreshCounter = 0;
         while (refreshCounter < MAX_REFRESH) {
-            ProtocolMessage pm = new ProtocolMessage("READ", _pubKey, encryptToken(_token, _serverPubKeys.get(0)), number, userToReadPB);
+            ProtocolMessage pm = new ProtocolMessage("READ", _pubKey, _tokens.get(_serverPubKey), number, userToReadPB);
+            System.out.println("going to call requests server from read2");
             vpm = requestServer(pm, 0);
             rsc = verifyReceivedMessage(vpm);
             if (rsc.equals(StatusCode.INVALID_TOKEN)) {
-                refreshToken();
+                refreshToken(0);
                 refreshCounter++;
             }
             else {
@@ -729,11 +781,12 @@ public class Client{
         
         int refreshCounter = 0;
         while (refreshCounter < MAX_REFRESH) {
-            ProtocolMessage pm = new ProtocolMessage("READGENERAL", _pubKey, encryptToken(_token, _serverPubKeys.get(0)), number);
+            ProtocolMessage pm = new ProtocolMessage("READGENERAL", _pubKey, _tokens.get(_serverPubKey), number);
+            System.out.println("going to call requests server from readgeneral");
             vpm = requestServer(pm, 0);
             rsc = verifyReceivedMessage(vpm);
             if (rsc.equals(StatusCode.INVALID_TOKEN)) {
-                refreshToken();
+                refreshToken(0);
                 refreshCounter++;
             }
             else {
@@ -748,20 +801,23 @@ public class Client{
         return new AbstractMap.SimpleEntry<>(rsc, announcements);
     }
 
-    public StatusCode refreshToken() {
+    public StatusCode refreshToken(int serverIndex) {
         ProtocolMessage pm = new ProtocolMessage("TOKEN", _pubKey);
-        VerifiableProtocolMessage vpm = requestServer(pm, 0);
+        System.out.println("going to call requests server from refreshtoken");
+        VerifiableProtocolMessage vpm = requestServer(pm, serverIndex);
         
         StatusCode rsc = null;
+        PublicKey serverPubKey = getServerPublicKeyFromVPM(vpm);
         if (vpm == null) {
             rsc = StatusCode.NO_RESPONSE;
             System.out.println("Could not refresh token: could not receive a response");
-            closeCommunication(0);
+            closeCommunication(serverPubKey);
             System.exit(-1);
         }
         else {
             rsc = getStatusCodeFromVPM(vpm);
-            _token = getTokenFromVPM(vpm);
+            //_token = getTokenFromVPM(vpm);
+            _tokens.put(serverPubKey, getTokenFromVPM(vpm));
         }
         
         return rsc;
@@ -792,8 +848,8 @@ public class Client{
         return user < 0 || user >= _usersPubKeys.size();
     }
 
-    public boolean invalidToken(String token) {
-        return !token.equals(_token);
+    public boolean invalidToken(String token, PublicKey serverPubKey) {
+        return !token.equals(_tokens.get(serverPubKey));
     }
 
     public StatusCode verifyReceivedMessage(VerifiableProtocolMessage vpm) {
@@ -803,11 +859,13 @@ public class Client{
         }
         else {
             rsc = getStatusCodeFromVPM(vpm);
-            if (invalidToken(getOldTokenFromVPM(vpm))) {
+            PublicKey serverPubKey = getServerPublicKeyFromVPM(vpm);
+            if (invalidToken(getOldTokenFromVPM(vpm), serverPubKey)) {
                 rsc = StatusCode.INVALID_TOKEN;
             }
             else {
-                _token = getTokenFromVPM(vpm);
+                //_token = getTokenFromVPM(vpm);
+                _tokens.put(serverPubKey, getTokenFromVPM(vpm));
             }
         }
         return rsc;
