@@ -48,6 +48,8 @@ public class Server {
     private List<Announcement> _generalBoard;
     private Communication _communication;
 
+    private List<ServerThread> _serverThreads = new ArrayList<ServerThread>();
+
     public Server(boolean activateCC, int nServers, int port, char[] keyStorePasswd, char[] entryPasswd, String alias, String pubKeyPath,
             String keyStorePath) {
 
@@ -173,15 +175,28 @@ public class Server {
 
     public void startClientCommunication() {
         try {
-            _serverSocket = _communication.createServerSocket(_port);
+            _serverSocket = _communication.createServerSocket(_port - 1000);
         } catch (IOException e) {
-            System.out.println("Error starting server socket");
+            System.out.println("Error starting server socket in port:" + (_port - 1000));
         }
     }
 
-    // 1 9002 9003 
+    // 1 9002 9003 9001
     // 2 9001 9003
     // 3 9001 9002
+
+    public void bestEffortBroadcast(VerifiableProtocolMessage vpm) {
+        try {
+            for (ServerThread t: _serverThreads) {
+                System.out.println(t);
+                System.out.println(vpm);
+                t.bestEffortBroadcast(vpm);
+            }
+        }
+        catch (IOException e) {
+            System.out.println(e);
+        }
+    }
 
     public List<Integer> getOtherServersPorts() {
         int initialPort = 9001;
@@ -195,10 +210,18 @@ public class Server {
     }
 
     public void startServerCommunication() {
-        for (int port : getOtherServersPorts()) {
-            new ServerThread(this, port).start();
+        try{
+            ServerSocket serverSocket = _communication.createServerSocket(_port);
+            for (int port : getOtherServersPorts()) {
+                ServerThread t = new ServerThread(this, port, _port, serverSocket);
+                _serverThreads.add(t);
+                t.start();
+            }
         }
-
+        catch(IOException e) {
+            
+        }
+        
     }
 
     /**
@@ -207,6 +230,7 @@ public class Server {
      */
     public void start() {
         startClientCommunication();
+        startServerCommunication();
         while (true) {
             try {
                 _socket = _communication.accept(_serverSocket);
@@ -422,6 +446,8 @@ public class Server {
      */
 
     public VerifiableProtocolMessage registerUser(VerifiableProtocolMessage vpm) {
+
+        bestEffortBroadcast(vpm);
 
         StatusCode sc;
 

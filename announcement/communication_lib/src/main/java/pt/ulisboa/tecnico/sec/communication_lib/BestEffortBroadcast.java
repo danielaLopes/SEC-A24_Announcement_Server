@@ -1,13 +1,11 @@
 package pt.ulisboa.tecnico.sec.communication_lib;
 
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+
 public class BestEffortBroadcast {
-    
-    // public void pp2pSend(int nServers, int selfPort) {
-    //     int initialPort = 9001;
-    //     for (int i = 0; i < nServers; i++) {
-    //         if (9001 + i != selfPort) {
-                
-    //         }
-    //     }
-    // }
+    private Communication _communication = new Communication();
+    public void pp2pSend(ObjectOutputStream oos, VerifiableProtocolMessage vpm) throws IOException{
+        _communication.sendMessage(vpm, oos);
+    }
 }
