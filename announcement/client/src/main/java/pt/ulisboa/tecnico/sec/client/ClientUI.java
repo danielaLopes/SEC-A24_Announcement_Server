@@ -112,12 +112,14 @@ public class ClientUI {
         }
         List<String> references = parseReferences(referencesIn);
 
-        StatusCode statusCode = _client.postGeneral(message, references);
-        if (statusCode == StatusCode.OK) {
-            System.out.println("Posted announcement.");
-        }
-        else {
-            System.out.println("Could not post announcement.");
+        List<StatusCode> statusCodes = _client.postGeneralServersGroup(message, references);
+        for (int i = 0; i < _client._nServers; i++) {
+            if (statusCodes.get(i) == StatusCode.OK) {
+                System.out.println("Posted announcement " + (i + 1) + ".");
+            } else {
+                System.out.println("Could not post announcement " + (i + 1) + ".");
+            }
+            _client.printStatusCode(statusCodes.get(i));
         }
     }
 

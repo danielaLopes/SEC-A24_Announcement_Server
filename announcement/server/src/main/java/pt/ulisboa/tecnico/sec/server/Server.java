@@ -224,6 +224,7 @@ public class Server {
     public StatusCode verifyInvalidToken(PublicKey userPubKey, String token) {
 
         if (!_users.get(userPubKey).getToken().equals(token)) {
+            System.out.println("verifyInvalidToken");
             System.out.println("Invalid token: " + _users.get(userPubKey).getToken());
             System.out.println("token that should be: " + token);
             return StatusCode.INVALID_TOKEN;
