@@ -17,7 +17,7 @@ class BaseTest {
     public final static int MAX_MESSAGE_LENGTH = 255;
     public final static List<String> REFERENCES = new ArrayList<String>();
 
-    public final static String SERVER_PUBLICKEY_PATH = "../server/src/main/resources/crypto/public.key";
+    public final static String SERVER_PUBLICKEY_PATH = "../server/src/main/resources/crypto/public1.key";
     public final static String SERVER_KEYSTORE_PATH1 = "../server/src/main/resources/crypto/server_keystore.jks";
     public final static String SERVER_PASSWD = "password";
     public final static String SERVER_ALIAS = "alias";

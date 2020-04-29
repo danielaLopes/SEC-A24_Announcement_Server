@@ -13,6 +13,7 @@ public class ClientMessageHandler extends Thread {
     private Communication _communication;
 
     public ClientMessageHandler(Server server, Socket socket) throws IOException {
+        System.out.println("received new client connection");
         _server = server;
         _socket = socket;
         _communication = new Communication();
@@ -101,6 +102,7 @@ public class ClientMessageHandler extends Thread {
         try {
             VerifiableProtocolMessage svpm = _server.post(vpm);
             _communication.sendMessage(svpm, _oos);
+            System.out.println("sent message to client with status code " + svpm.getProtocolMessage().getStatusCode());
         }
         catch (IOException e) {
           System.out.println(e);
