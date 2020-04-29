@@ -61,7 +61,7 @@ class VerifySignatureTest extends BaseTest {
 
     @AfterAll
     static void closeCommunications() {
-        _client.closeCommunication();
+        _client.closeCommunication(0);
     }
 
 }

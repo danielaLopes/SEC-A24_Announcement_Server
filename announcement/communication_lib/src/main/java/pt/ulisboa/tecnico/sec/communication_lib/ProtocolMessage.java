@@ -12,8 +12,8 @@ public class ProtocolMessage implements Serializable {
     private List<Announcement> _announcements;
     private Announcement _postAnnouncement;
     // Post response
-    private byte[] _token;
-    private byte[] _oldToken;
+    private String _token;
+    private String _oldToken;
     //Read operation: Number of announcements to be read.
     private int _numberAnnouncements;
     //Read operation: Public key of user to read
@@ -40,13 +40,13 @@ public class ProtocolMessage implements Serializable {
         _publicKey = publicKey;
     }
 
-    public ProtocolMessage(String command, PublicKey publicKey, byte[] token) {
+    public ProtocolMessage(String command, PublicKey publicKey, String token) {
         _token = token;
         _command = command;
         _publicKey = publicKey;
     }
 
-    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, byte[] token, byte[] oldToken) {
+    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, String token, String oldToken) {
         _command = command;
         _statusCode = statusCode;
         _publicKey = publicKey;
@@ -54,14 +54,14 @@ public class ProtocolMessage implements Serializable {
         _oldToken = oldToken;
     }
 
-    public ProtocolMessage(String command, PublicKey publicKey, Announcement announcement, byte[] token) {
+    public ProtocolMessage(String command, PublicKey publicKey, Announcement announcement, String token) {
         _command = command;
         _publicKey = publicKey;
         _postAnnouncement = announcement;
         _token = token;
     }
 
-    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, Announcement announcement, byte[] token, byte[] oldToken) {
+    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, Announcement announcement, String token, String oldToken) {
         _command = command;
         _statusCode = statusCode;
         _publicKey = publicKey;
@@ -76,7 +76,7 @@ public class ProtocolMessage implements Serializable {
         _publicKey = publicKey;
     }
 
-    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, byte[] token, Announcement announcement) {
+    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, String token, Announcement announcement) {
         _token = token;
         _command = command;
         _statusCode = statusCode;
@@ -91,7 +91,7 @@ public class ProtocolMessage implements Serializable {
         _token = token;
     }*/
 
-    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, byte[] token) {
+    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, String token) {
         _command = command;
         _statusCode = statusCode;
         _token = token;
@@ -99,7 +99,7 @@ public class ProtocolMessage implements Serializable {
     }
 
     //Read Operation Client -> Server
-    public ProtocolMessage(String command, PublicKey publicKey, byte[] token, int numberAnnouncements, PublicKey toReadPublicKey) {
+    public ProtocolMessage(String command, PublicKey publicKey, String token, int numberAnnouncements, PublicKey toReadPublicKey) {
         _token = token;
         _command = command;
         _publicKey = publicKey;
@@ -108,7 +108,7 @@ public class ProtocolMessage implements Serializable {
     }
 
     //ReadGeneral Operation Client -> Server
-    public ProtocolMessage(String command, PublicKey publicKey, byte[] token, int numberAnnouncements) {
+    public ProtocolMessage(String command, PublicKey publicKey, String token, int numberAnnouncements) {
         _token = token;
         _command = command;
         _publicKey = publicKey;
@@ -116,7 +116,8 @@ public class ProtocolMessage implements Serializable {
     }
 
     //Read Operations Server -> Client
-    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey, List<Announcement> announcements, byte[] token, byte[] oldToken) {
+    public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey,
+                           List<Announcement> announcements, String token, String oldToken) {
         _command = command;
         _statusCode = statusCode;
         _token = token;
@@ -135,9 +136,9 @@ public class ProtocolMessage implements Serializable {
 
     public StatusCode getStatusCode() { return _statusCode; }
 
-    public byte[] getToken() { return _token; }
+    public String getToken() { return _token; }
 
-    public byte[] getOldToken() { return _oldToken; }
+    public String getOldToken() { return _oldToken; }
 
     public List<Announcement> getAnnouncements() { return _announcements; }
 

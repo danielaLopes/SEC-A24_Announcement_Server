@@ -16,8 +16,9 @@ public class ClientUI {
 
     public ClientUI(String pubKeyPath, String keyStorePath,
                     String keyStorePasswd, String entryPasswd, String alias,
-                    String serverPubKeyPath, List<String> otherUsersPubKeyPaths) {
-        _client = new Client(pubKeyPath, keyStorePath, keyStorePasswd, entryPasswd, alias, serverPubKeyPath, otherUsersPubKeyPaths);
+                    int nServers, List<String> otherUsersPubKeyPaths) {
+        _client = new Client(pubKeyPath, keyStorePath, keyStorePasswd, entryPasswd,
+                alias, nServers, otherUsersPubKeyPaths);
         _scanner = new Scanner(System.in);
     }
 
@@ -63,7 +64,8 @@ public class ClientUI {
      */
     public void closeCommunication() {
         try {
-            _client.closeCommunication();
+            //_client.closeCommunication();
+            _client.closeGroupCommunication();
         }
         catch(Exception e) {
             System.out.println("Error when closing Client's communications.");
@@ -84,12 +86,16 @@ public class ClientUI {
 
         List<String> references = parseReferences(referencesIn);
 
-        StatusCode statusCode = _client.post(message, references);
-        if (statusCode == StatusCode.OK) {
-            System.out.println("Posted announcement.");
-        }
-        else {
-            System.out.println("Could not post announcement.");
+        //StatusCode statusCode = _client.post(message, references);
+        List<StatusCode> statusCodes = _client.postServersGroup(message, references);
+        for (int i = 0; i < _client._nServers; i++) {
+            if (statusCodes.get(i) == StatusCode.OK) {
+                System.out.println("Posted announcement in server " + (i + 1) + ".");
+            }
+            else {
+                System.out.println("Could not post announcement in server " + (i + 1) + ".");
+            }
+            _client.printStatusCode(statusCodes.get(i));
         }
     }
 
@@ -106,12 +112,14 @@ public class ClientUI {
         }
         List<String> references = parseReferences(referencesIn);
 
-        StatusCode statusCode = _client.postGeneral(message, references);
-        if (statusCode == StatusCode.OK) {
-            System.out.println("Posted announcement.");
-        }
-        else {
-            System.out.println("Could not post announcement.");
+        List<StatusCode> statusCodes = _client.postGeneralServersGroup(message, references);
+        for (int i = 0; i < _client._nServers; i++) {
+            if (statusCodes.get(i) == StatusCode.OK) {
+                System.out.println("Posted announcement " + (i + 1) + ".");
+            } else {
+                System.out.println("Could not post announcement " + (i + 1) + ".");
+            }
+            _client.printStatusCode(statusCodes.get(i));
         }
     }
 
@@ -122,12 +130,14 @@ public class ClientUI {
     public void read() {
         int user = promptUser();
         int number = promptNumber();
-        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client.read(user, number);
-        if (response.getKey() == StatusCode.OK) {
-            printAnnouncements(response.getValue(), "USER");
-        }
-        else {
-            System.out.println("Could not read announcements.");
+        //AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client.read(user, number);
+        List<AbstractMap.SimpleEntry<StatusCode, List<Announcement>>> responses = _client.readServersGroup(user, number);
+        for (AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response : responses) {
+            if (response.getKey() == StatusCode.OK) {
+                printAnnouncements(response.getValue(), "USER");
+            } else {
+                System.out.println("Could not read announcements.");
+            }
         }
         
     }
@@ -139,13 +149,15 @@ public class ClientUI {
     public void readGeneral() {
         int number = promptNumber();
         _client.readGeneral(number);
-        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client.readGeneral(number);
-        if (response.getKey() == StatusCode.OK) {
-            printAnnouncements(response.getValue(), "GENERAL");
-        }
-        else {
-            System.out.println("Could not read announcements.");
-        }
+        //AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client.readGeneral(number);
+        List<AbstractMap.SimpleEntry<StatusCode, List<Announcement>>> responses = _client.readGeneralServersGroup(number);
+        for (AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response : responses) {
+            if (response.getKey() == StatusCode.OK) {
+                printAnnouncements(response.getValue(), "GENERAL");
+            } else {
+                System.out.println("Could not read announcements.");
+            }
+    }
     }
 
     /**

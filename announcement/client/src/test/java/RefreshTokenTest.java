@@ -16,6 +16,6 @@ public class RefreshTokenTest extends BaseTest {
 
         assertEquals(StatusCode.OK, statusCode);
 
-        _client.closeCommunication();
+        _client.closeCommunication(0);
     }
 }
