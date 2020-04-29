@@ -185,16 +185,11 @@ public class Server {
     // 2 9001 9003
     // 3 9001 9002
 
-    public void bestEffortBroadcast(VerifiableProtocolMessage vpm) {
-        try {
-            for (ServerThread t: _serverThreads) {
-                System.out.println(t);
-                System.out.println(vpm);
-                t.bestEffortBroadcast(vpm);
-            }
-        }
-        catch (IOException e) {
-            System.out.println(e);
+    public void bestEffortBroadcast(VerifiableServerMessage vsm) {
+        for (ServerThread t: _serverThreads) {
+            System.out.println(t);
+            System.out.println(vsm);
+            t.bestEffortBroadcast(vsm);
         }
     }
 
@@ -209,11 +204,39 @@ public class Server {
         return otherPorts;
     }
 
-    public void startServerCommunication() {
+    public void deliverPost(VerifiableProtocolMessage vpm, ClientMessageHandler cmh, String token, String newToken) {
+        System.out.println("DELIVER");
+        // Save Operation
+        String announcementUuid = UUIDGenerator.generateUUID();
+        ProtocolMessage pm = vpm.getProtocolMessage();
+        Announcement a = pm.getPostAnnouncement();
+        a.setAnnouncementID(announcementUuid);
+        a.setPublicKey(pm.getPublicKey());
+        byte[] ref = ProtocolMessageConverter.objToByteArray(a.getReferences());
+
+        byte[] b = ProtocolMessageConverter.objToByteArray(vpm);
+
+        _db.insertAnnouncement(a.getAnnouncement(), ref, announcementUuid, getUserUUID(pm.getPublicKey()),b);
+
+        int index = _users.get(pm.getPublicKey()).postAnnouncementBoard(a);
+        // client's public key is used to indicate it's stored in that client's PostOperation Board
+        _announcementMapper.put(announcementUuid, new AnnouncementLocation(pm.getPublicKey(), index));
+
+        cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
+                "POST", StatusCode.OK, _pubKey, a, newToken, token)));
+
+        // _db.insertOperation(opUuid, operation);
+
+        //printDataStructures();
+    }
+
+    public void startServerCommunication(VerifiableProtocolMessage vpm, ClientMessageHandler cmh, String token, String newToken) {
         try{
+            AtomicRegister1N atomicRegister1N = new AtomicRegister1N(this, _nServers, vpm, cmh, token, newToken);
             ServerSocket serverSocket = _communication.createServerSocket(_port);
+            System.out.println(getOtherServersPorts());
             for (int port : getOtherServersPorts()) {
-                ServerThread t = new ServerThread(this, port, _port, serverSocket);
+                ServerThread t = new ServerThread(this, port, _port, serverSocket, atomicRegister1N);
                 _serverThreads.add(t);
                 t.start();
             }
@@ -230,7 +253,6 @@ public class Server {
      */
     public void start() {
         startClientCommunication();
-        startServerCommunication();
         while (true) {
             try {
                 _socket = _communication.accept(_serverSocket);
@@ -427,7 +449,6 @@ public class Server {
 
     public VerifiableProtocolMessage registerUser(VerifiableProtocolMessage vpm) {
 
-        bestEffortBroadcast(vpm);
 
         StatusCode sc;
 
@@ -498,10 +519,8 @@ public class Server {
      * @param vpm
      * @return ProtocolMessage
      */
-    public VerifiableProtocolMessage post(VerifiableProtocolMessage vpm) {
+    public void post(VerifiableProtocolMessage vpm, ClientMessageHandler cmh) {
         StatusCode sc;
-
-        VerifiableProtocolMessage response;
 
         PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
         String message = vpm.getProtocolMessage().getPostAnnouncement().getAnnouncement();
@@ -512,8 +531,9 @@ public class Server {
         // verifications
         sc = verifyPost(token, vpm, message, references, clientPubKey);
         if (sc.equals(StatusCode.NULL_FIELD) || sc.equals(StatusCode.USER_NOT_REGISTERED)) {
-            return createVerifiableMessage(new ProtocolMessage(
-                "POST", sc, _pubKey));
+            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
+                "POST", sc, _pubKey)));
+                return;
         }
         User user = _users.get(clientPubKey);
         user.setRandomToken();
@@ -521,42 +541,20 @@ public class Server {
         System.out.println("newtoken: " + newToken);
         _db.updateOperationUserRow(user.getdbTableName(), newToken);
         if (sc.equals(StatusCode.INVALID_TOKEN)) {
-            return createVerifiableMessage(new ProtocolMessage(
-                "POST", sc, _pubKey, newToken, token));
+            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
+                "POST", sc, _pubKey, newToken, token)));
+            return;
         }
         if (!sc.equals(StatusCode.OK)) {
-            response = createVerifiableMessage(new ProtocolMessage(
-                    "POST", sc, _pubKey, newToken, token));
+            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
+                    "POST", sc, _pubKey, newToken, token)));
             if (!sc.equals(StatusCode.NULL_FIELD)) {
                 // _db.insertOperation(opUuid, operation);
             }
-            return response;
+            return;
         }
-
-        // Save Operation
-        String announcementUuid = UUIDGenerator.generateUUID();
-        ProtocolMessage pm = vpm.getProtocolMessage();
-        Announcement a = pm.getPostAnnouncement();
-        a.setAnnouncementID(announcementUuid);
-        a.setPublicKey(pm.getPublicKey());
-        byte[] ref = ProtocolMessageConverter.objToByteArray(a.getReferences());
-
-        byte[] b = ProtocolMessageConverter.objToByteArray(vpm);
-
-        _db.insertAnnouncement(a.getAnnouncement(), ref, announcementUuid, getUserUUID(pm.getPublicKey()),b);
-
-        int index = _users.get(clientPubKey).postAnnouncementBoard(a);
-        // client's public key is used to indicate it's stored in that client's PostOperation Board
-        _announcementMapper.put(announcementUuid, new AnnouncementLocation(clientPubKey, index));
-
-        response = createVerifiableMessage(new ProtocolMessage(
-                "POST", StatusCode.OK, _pubKey, a, newToken, token));
-
-        // _db.insertOperation(opUuid, operation);
-
-        //printDataStructures();
-
-        return response;
+        
+        startServerCommunication(vpm, cmh, token, newToken);
     }
 
     /**
@@ -803,4 +801,7 @@ public class Server {
         
         return response;
     }
+
+    public PublicKey getPublicKey() { return _pubKey; }
+    protected PrivateKey getPrivateKey() { return _privateKey; }
 }

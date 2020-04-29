@@ -41,7 +41,7 @@ public class ClientMessageHandler extends Thread {
                         break;
                     // Post to Client's Board
                     case "POST":
-                        post(vpm);
+                        _server.post(vpm, this);
                         break;
                     // Post to General Board
                     case "POSTGENERAL":
@@ -78,6 +78,15 @@ public class ClientMessageHandler extends Thread {
         }
     }
 
+    public void sendMessage(VerifiableProtocolMessage vpm) {
+        try {
+            _communication.sendMessage(vpm, _oos);
+        }
+        catch (IOException e) {
+          System.out.println(e);
+        }
+    }
+
     public void registerUser(VerifiableProtocolMessage vpm) {
         try {
             VerifiableProtocolMessage svpm = _server.registerUser(vpm);
@@ -92,17 +101,6 @@ public class ClientMessageHandler extends Thread {
         try {
             VerifiableProtocolMessage svpm = _server.postGeneral(vpm);
             _communication.sendMessage(svpm, _oos);
-        }
-        catch (IOException e) {
-          System.out.println(e);
-        }
-    }
-
-    public void post(VerifiableProtocolMessage vpm) {
-        try {
-            VerifiableProtocolMessage svpm = _server.post(vpm);
-            _communication.sendMessage(svpm, _oos);
-            System.out.println("sent message to client with status code " + svpm.getProtocolMessage().getStatusCode());
         }
         catch (IOException e) {
           System.out.println(e);
