@@ -470,7 +470,7 @@ public class Client {
         List<StatusCode> rscs = new ArrayList<>();
         for(Map.Entry<PublicKey, VerifiableProtocolMessage> vpm : vpms.entrySet()) {
             CommunicationServer serverCommunication = _serverCommunications.get(vpm.getKey());
-            
+
             if (vpm.getValue() == null) {
                 rscs.add(StatusCode.NO_RESPONSE);
                 // TODO: assume that if a client can't register with one of the servers, client shuts down
@@ -615,7 +615,7 @@ public class Client {
         }
         if (invalidMessageLength(message)) {
             System.out.println("Maximum message length to post announcement is 255.");
-            return new ArrayList<StatusCode>(Arrays.asList(StatusCode.INVALID_MESSAGE_LENGTH));
+            return new ArrayList<>(Arrays.asList(StatusCode.INVALID_MESSAGE_LENGTH));
         }
 
         Announcement a = new Announcement(message, references);
@@ -694,6 +694,46 @@ public class Client {
         return rsc;
     }
 
+    public List<AbstractMap.SimpleEntry<StatusCode, List<Announcement>>> readServersGroup(PublicKey user, int number) {
+        // TODO: see best way to verify if all servers responses have consensus
+        List<AbstractMap.SimpleEntry<StatusCode, List<Announcement>>> announcementsPerServer = new ArrayList<>();
+        if (user == null) {
+            System.out.println("Invalid user.");
+            announcementsPerServer.add(new AbstractMap.SimpleEntry<>(StatusCode.NULL_FIELD, new ArrayList<>()));
+        }
+
+        List<Announcement> announcements = null;
+        StatusCode rsc = null;
+
+        int refreshCounter = 0;
+        while (refreshCounter < MAX_REFRESH) {
+
+            Map<PublicKey, ProtocolMessage> pms = new HashMap<>();
+            for (Map.Entry<PublicKey, CommunicationServer> entry : _serverCommunications.entrySet()) {
+                pms.put(entry.getKey(), new ProtocolMessage("READ", _pubKey,
+                        entry.getValue().getToken(), number, user));
+            }
+
+            Map<PublicKey, VerifiableProtocolMessage> vpms = requestServersGroup(pms);
+
+            for(Map.Entry<PublicKey, VerifiableProtocolMessage> vpm : vpms.entrySet()) {
+                rsc = verifyReceivedMessage(vpm.getValue());
+                if (rsc.equals(StatusCode.INVALID_TOKEN)) {
+                    refreshToken(_serverCommunications.get(vpm.getKey()));
+                    refreshCounter++;
+                } else {
+                    refreshCounter = MAX_REFRESH;
+                }
+                if (rsc.equals(StatusCode.OK)) {
+                    announcements = getAnnouncementsFromVPM(vpm.getValue());
+                }
+                announcementsPerServer.add(new AbstractMap.SimpleEntry<>(rsc, announcements));
+            }
+        }
+
+        return announcementsPerServer;
+    }
+
     /**
      * Retrieves the number latest announcements from the user's Board.
      * @param user public key
@@ -733,6 +773,49 @@ public class Client {
         }
 
         return new AbstractMap.SimpleEntry<>(rsc, announcements);
+    }
+
+    public List<AbstractMap.SimpleEntry<StatusCode, List<Announcement>>> readServersGroup(int user, int number) {
+        // TODO: see best way to verify if all servers responses have consensus
+        List<AbstractMap.SimpleEntry<StatusCode, List<Announcement>>> announcementsPerServer = new ArrayList<>();
+
+        if (invalidUser(user)) {
+            System.out.println("Invalid user.");
+            announcementsPerServer.add(new AbstractMap.SimpleEntry<>(StatusCode.USER_NOT_REGISTERED, new ArrayList<>()));
+            return announcementsPerServer;
+        }
+        PublicKey userToReadPB = _usersPubKeys.get(user);
+
+        List<Announcement> announcements = null;
+        StatusCode rsc = null;
+
+        int refreshCounter = 0;
+        while (refreshCounter < MAX_REFRESH) {
+
+            Map<PublicKey, ProtocolMessage> pms = new HashMap<>();
+            for (Map.Entry<PublicKey, CommunicationServer> entry : _serverCommunications.entrySet()) {
+                pms.put(entry.getKey(), new ProtocolMessage("READ", _pubKey,
+                        entry.getValue().getToken(), number, userToReadPB));
+            }
+
+            Map<PublicKey, VerifiableProtocolMessage> vpms = requestServersGroup(pms);
+
+            for(Map.Entry<PublicKey, VerifiableProtocolMessage> vpm : vpms.entrySet()) {
+                rsc = verifyReceivedMessage(vpm.getValue());
+                if (rsc.equals(StatusCode.INVALID_TOKEN)) {
+                    refreshToken(_serverCommunications.get(vpm.getKey()));
+                    refreshCounter++;
+                } else {
+                    refreshCounter = MAX_REFRESH;
+                }
+                if (rsc.equals(StatusCode.OK)) {
+                    announcements = getAnnouncementsFromVPM(vpm.getValue());
+                }
+                announcementsPerServer.add(new AbstractMap.SimpleEntry<>(rsc, announcements));
+            }
+        }
+
+        return announcementsPerServer;
     }
 
     /**
@@ -777,6 +860,43 @@ public class Client {
         return new AbstractMap.SimpleEntry<>(rsc, announcements);
     }
 
+    public List<AbstractMap.SimpleEntry<StatusCode, List<Announcement>>> readGeneralServersGroup(int number) {
+        List<Announcement> announcements = null;
+        StatusCode rsc = null;
+
+        // TODO: see best way to verify if all servers responses have consensus
+        List<AbstractMap.SimpleEntry<StatusCode, List<Announcement>>> announcementsPerServer = new ArrayList<>();
+
+        int refreshCounter = 0;
+        while (refreshCounter < MAX_REFRESH) {
+
+            Map<PublicKey, ProtocolMessage> pms = new HashMap<>();
+            for (Map.Entry<PublicKey, CommunicationServer> entry : _serverCommunications.entrySet()) {
+                pms.put(entry.getKey(), new ProtocolMessage("READGENERAL", _pubKey,
+                        entry.getValue().getToken(), number));
+            }
+
+            Map<PublicKey, VerifiableProtocolMessage> vpms = requestServersGroup(pms);
+
+            for(Map.Entry<PublicKey, VerifiableProtocolMessage> vpm : vpms.entrySet()) {
+
+                rsc = verifyReceivedMessage(vpm.getValue());
+                if (rsc.equals(StatusCode.INVALID_TOKEN)) {
+                    refreshToken(_serverCommunications.get(vpm.getKey()));
+                    refreshCounter++;
+                } else {
+                    refreshCounter = MAX_REFRESH;
+                }
+                if (rsc.equals(StatusCode.OK)) {
+                    announcements = getAnnouncementsFromVPM(vpm.getValue());
+                }
+                announcementsPerServer.add(new AbstractMap.SimpleEntry<>(rsc, announcements));
+            }
+        }
+
+        return announcementsPerServer;
+    }
+
     /**
      * Retrieves the number latest announcements from the General Board.
      * @param number of announcements to be retrieved
@@ -804,7 +924,7 @@ public class Client {
                 refreshCounter = MAX_REFRESH;
             }
         }
-        
+
         if (rsc.equals(StatusCode.OK)) {
             announcements = getAnnouncementsFromVPM(vpm);
         }

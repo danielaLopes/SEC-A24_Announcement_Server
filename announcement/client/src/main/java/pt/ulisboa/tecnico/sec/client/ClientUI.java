@@ -130,12 +130,14 @@ public class ClientUI {
     public void read() {
         int user = promptUser();
         int number = promptNumber();
-        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client.read(user, number);
-        if (response.getKey() == StatusCode.OK) {
-            printAnnouncements(response.getValue(), "USER");
-        }
-        else {
-            System.out.println("Could not read announcements.");
+        //AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client.read(user, number);
+        List<AbstractMap.SimpleEntry<StatusCode, List<Announcement>>> responses = _client.readServersGroup(user, number);
+        for (AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response : responses) {
+            if (response.getKey() == StatusCode.OK) {
+                printAnnouncements(response.getValue(), "USER");
+            } else {
+                System.out.println("Could not read announcements.");
+            }
         }
         
     }
@@ -147,13 +149,15 @@ public class ClientUI {
     public void readGeneral() {
         int number = promptNumber();
         _client.readGeneral(number);
-        AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client.readGeneral(number);
-        if (response.getKey() == StatusCode.OK) {
-            printAnnouncements(response.getValue(), "GENERAL");
-        }
-        else {
-            System.out.println("Could not read announcements.");
-        }
+        //AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client.readGeneral(number);
+        List<AbstractMap.SimpleEntry<StatusCode, List<Announcement>>> responses = _client.readGeneralServersGroup(number);
+        for (AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response : responses) {
+            if (response.getKey() == StatusCode.OK) {
+                printAnnouncements(response.getValue(), "GENERAL");
+            } else {
+                System.out.println("Could not read announcements.");
+            }
+    }
     }
 
     /**
