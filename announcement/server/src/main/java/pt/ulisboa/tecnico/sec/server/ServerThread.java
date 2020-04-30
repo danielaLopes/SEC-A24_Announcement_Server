@@ -6,6 +6,9 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.bouncycastle.jcajce.provider.asymmetric.GOST.Mappings;
 
 import pt.ulisboa.tecnico.sec.communication_lib.*;
 import pt.ulisboa.tecnico.sec.crypto_lib.*;
@@ -21,18 +24,17 @@ public class ServerThread extends Thread {
     private ObjectInputStream _ois;
     private Communication _communication = new Communication();
     private BestEffortBroadcast _beb = new BestEffortBroadcast();
-    private AtomicRegister1N _atomicRegister1N;
+    private ConcurrentHashMap<PublicKey, AtomicRegister1N> _atomicRegisters1N = new ConcurrentHashMap<PublicKey, AtomicRegister1N>();
 
-    public ServerThread(Server server, int otherPort, int selfPort, ServerSocket serverSocket, AtomicRegister1N atomicRegister1N) {
+    public ServerThread(Server server, int otherPort, int selfPort, ServerSocket serverSocket) {
         _server = server;
         _otherPort = otherPort;
         _selfPort = selfPort;
         _serverSocket = serverSocket;
-        _atomicRegister1N = atomicRegister1N;
     }
 
     public void bestEffortBroadcast(VerifiableServerMessage vsm) {
-        System.out.println("Sending broadcast message");
+        System.out.println("Sending broadcast message: " + vsm.getServerMessage().getCommand());
         System.out.println(_socket);
         try{
             _beb.pp2pSend(_oos, vsm);
@@ -42,12 +44,20 @@ public class ServerThread extends Thread {
         }
     }
 
-    public void writeLocalValue(Announcement a) {
-        _atomicRegister1N.writeLocal(a);
+    public void writeLocalValue(PublicKey clientPubKey, Announcement a) {
+        _atomicRegisters1N.get(clientPubKey).writeLocal(a);
     }
 
-    public void writeValue(Announcement a) {
-        bestEffortBroadcast(createVerifiableServerMessage(_atomicRegister1N.write(a, _server.getPublicKey())));
+    public void writeValue(PublicKey clientPubKey, Announcement a) {
+        bestEffortBroadcast(createVerifiableServerMessage(_atomicRegisters1N.get(clientPubKey).write(a)));
+    }
+
+    public void readLocalValue(PublicKey clientPubKey) {
+        _atomicRegisters1N.get(clientPubKey).readLocal();
+    }
+
+    public void readValue(PublicKey clientPubKey) {
+        bestEffortBroadcast(createVerifiableServerMessage(_atomicRegisters1N.get(clientPubKey).read()));
     }
 
     public void receiveMessage() throws IOException {
@@ -58,15 +68,15 @@ public class ServerThread extends Thread {
                 VerifiableServerMessage vsm = (VerifiableServerMessage) _communication.receiveMessage(_ois);
                 if(verifySignature(vsm) == StatusCode.OK) {
                     ServerMessage sm = vsm.getServerMessage();
-                    System.out.println("Received broadcast message");
+                    System.out.println("Received broadcast message: " + sm.getCommand() + "from" + _socket.getPort());
                     Thread thread = new Thread(){
                         public void run(){
                         switch(sm.getCommand()){
                                 case "WRITE":
-                                    bestEffortBroadcast(createVerifiableServerMessage(_atomicRegister1N.acknowledge(sm)));
+                                    bestEffortBroadcast(createVerifiableServerMessage(_atomicRegisters1N.get(sm.getClientPublicKey()).acknowledge(sm)));
                                     break;
                                 case "ACK":
-                                    _atomicRegister1N.writeReturn(sm);
+                                    _atomicRegisters1N.get(sm.getClientPublicKey()).writeReturn(sm);
                                     break;
                                 default:
                                     break;
@@ -148,6 +158,8 @@ public class ServerThread extends Thread {
             return StatusCode.INVALID_SIGNATURE;
         }
     }
+
+    public void addAtomicRegisters1N(PublicKey p, AtomicRegister1N a) { _atomicRegisters1N.put(p, a); }
 
     public Server getServer() {return _server; }
 }

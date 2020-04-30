@@ -205,7 +205,7 @@ public class Server extends Thread {
     }
 
     public void deliverPost(VerifiableProtocolMessage vpm, ClientMessageHandler cmh, String token, String newToken) {
-        System.out.println("DELIVER");
+        System.out.println("DELIVERPOST");
         // Save Operation
         String announcementUuid = UUIDGenerator.generateUUID();
         ProtocolMessage pm = vpm.getProtocolMessage();
@@ -230,21 +230,40 @@ public class Server extends Thread {
         //printDataStructures();
     }
 
-    public void startServerCommunication(VerifiableProtocolMessage vpm, ClientMessageHandler cmh, String token, String newToken) {
+    public void deliverRead(VerifiableProtocolMessage vpm, ClientMessageHandler cmh, String token, String newToken, List<Announcement> announcements) {
+        System.out.println("DELIVERREAD");
+
+        ProtocolMessage pm = vpm.getProtocolMessage();
+        PublicKey toReadPublicKey = pm.getToReadPublicKey();
+        int number = pm.getReadNumberAnnouncements();
+        // System.out.println("checking database");
+        // List<Announcement> announcements = _db.getUserAnnouncements(number, encodedhash);
+        // TODO: Announcements need to have a signature
+        int nAnnouncements = _users.get(toReadPublicKey).getNumAnnouncements();
+        if ((0 < number) && (number <= nAnnouncements)) {
+            announcements = new ArrayList<>(_users.get(toReadPublicKey).getAnnouncements(number));
+        }
+        else {
+            announcements = _users.get(toReadPublicKey).getAllAnnouncements();
+        }
+        cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
+                "READ", StatusCode.OK, _pubKey, announcements, newToken, token)));
+
+        //printDataStructures();
+    }
+
+    public void startServerCommunication() {
         try{
-            AtomicRegister1N atomicRegister1N = new AtomicRegister1N(this, _nServers, vpm, cmh, token, newToken);
             ServerSocket serverSocket = _communication.createServerSocket(_port);
-            System.out.println(getOtherServersPorts());
             for (int port : getOtherServersPorts()) {
-                ServerThread t = new ServerThread(this, port, _port, serverSocket, atomicRegister1N);
+                ServerThread t = new ServerThread(this, port, _port, serverSocket);
                 _serverThreads.add(t);
                 t.start();
             }
         }
         catch(IOException e) {
-            
+
         }
-        
     }
 
     /**
@@ -253,6 +272,7 @@ public class Server extends Thread {
      */
     public void start() {
         startClientCommunication();
+        startServerCommunication();
         while (true) {
             try {
                 _socket = _communication.accept(_serverSocket);
@@ -553,19 +573,17 @@ public class Server extends Thread {
             }
             return;
         }
-        
-        startServerCommunication(vpm, cmh, token, newToken);
-        try {
-            Thread.sleep(3000);
-        }
-        catch(Exception e) {
-            
-        }
 
-        for (ServerThread t : _serverThreads) {
-            t.writeLocalValue(vpm.getProtocolMessage().getPostAnnouncement());
-            t.writeValue(vpm.getProtocolMessage().getPostAnnouncement());
+        AtomicRegister1N atomicRegister1N = new AtomicRegister1N(this, _nServers, vpm, cmh, token, newToken);
+        for(ServerThread t: _serverThreads) {
+            t.addAtomicRegisters1N(clientPubKey, atomicRegister1N);
         }
+        for(ServerThread t: _serverThreads) {
+            t.writeLocalValue(clientPubKey, vpm.getProtocolMessage().getPostAnnouncement());
+            t.writeValue(clientPubKey, vpm.getProtocolMessage().getPostAnnouncement());
+        }
+        
+        
     }
 
     /**
@@ -640,7 +658,7 @@ public class Server extends Thread {
      * @param vpm
      * @return a list of announcements
      */
-    public VerifiableProtocolMessage read(VerifiableProtocolMessage vpm) {
+    public void read(VerifiableProtocolMessage vpm, ClientMessageHandler cmh) {
         StatusCode sc;
 
         VerifiableProtocolMessage response;
@@ -651,58 +669,46 @@ public class Server extends Thread {
         String token = vpm.getProtocolMessage().getToken();
 
         // verifications
-        if (toReadPublicKey == null) return createVerifiableMessage(new ProtocolMessage(
-                "READ", StatusCode.NULL_FIELD, _pubKey));
+        if (toReadPublicKey == null) { cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
+                "READ", StatusCode.NULL_FIELD, _pubKey)));
+                return; }
         sc = verifyUserRegistered(toReadPublicKey);
-        if (sc.equals(StatusCode.USER_NOT_REGISTERED)) return createVerifiableMessage(new ProtocolMessage(
-                "READ", sc, _pubKey));
+        if (sc.equals(StatusCode.USER_NOT_REGISTERED)) {
+            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
+                "READ", sc, _pubKey)));
+            return;    
+        }
         sc = verifyRead(token, vpm, clientPubKey);
         if (sc.equals(StatusCode.NULL_FIELD)) {
-            return createVerifiableMessage(new ProtocolMessage("READ", sc, _pubKey));
+            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage("READ", sc, _pubKey)));
+            return; 
         }
         
         User user = _users.get(clientPubKey);
         String newToken = user.getToken();
         _db.updateOperationUserRow(user.getdbTableName(), newToken);
         if (sc.equals(StatusCode.INVALID_TOKEN)) {
-            return createVerifiableMessage(new ProtocolMessage(
-                "READ", sc, _pubKey, newToken, token));
+            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
+                "READ", sc, _pubKey, newToken, token)));
+            return;
         }
         if (!sc.equals(StatusCode.OK)) {
-            response = createVerifiableMessage(new ProtocolMessage(
-                    "READ", sc, _pubKey, newToken, token));
+            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
+                    "READ", sc, _pubKey, newToken, token)));
             if (!sc.equals(StatusCode.NULL_FIELD)) {
                 // _db.insertOperation(opUuid, operation);
             }
-            return response;
+            return;
         }
 
-        byte[] b = ProtocolMessageConverter.objToByteArray(toReadPublicKey);
-        byte[] encodedhash = null;
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            encodedhash = digest.digest(b);
-        } catch (NoSuchAlgorithmException e) {
-            System.out.println(e);
+        AtomicRegister1N atomicRegister1N = new AtomicRegister1N(this, _nServers, vpm, cmh, token, newToken);
+        for(ServerThread t: _serverThreads) {
+            t.addAtomicRegisters1N(clientPubKey, atomicRegister1N);
         }
-
-        ProtocolMessage pm = vpm.getProtocolMessage();
-        // System.out.println("checking database");
-        // List<Announcement> announcements = _db.getUserAnnouncements(number, encodedhash);
-        // TODO: Announcements need to have a signature
-        List<Announcement> announcements;
-        int nAnnouncements = _users.get(toReadPublicKey).getNumAnnouncements();
-        if ((0 < number) && (number <= nAnnouncements)) {
-            announcements = new ArrayList<>(_users.get(toReadPublicKey).getAnnouncements(number));
+        for(ServerThread t: _serverThreads) {
+            t.readLocalValue(clientPubKey);
+            t.readValue(clientPubKey);
         }
-        else {
-            announcements = _users.get(toReadPublicKey).getAllAnnouncements();
-        }
-        response = createVerifiableMessage(new ProtocolMessage(
-                "READ", StatusCode.OK, _pubKey, announcements, newToken, token));
-        
-        // _db.insertOperation(opUuid, operation);
-        return response;
     }
 
     /**
@@ -813,6 +819,7 @@ public class Server extends Thread {
         return response;
     }
 
+    public List<Announcement> getUserAnnouncements(PublicKey clientPublicKey) { return _users.get(clientPublicKey).getAllAnnouncements(); }
     public PublicKey getPublicKey() { return _pubKey; }
     protected PrivateKey getPrivateKey() { return _privateKey; }
 }

@@ -50,7 +50,7 @@ public class ClientMessageHandler extends Thread {
                         break;
                     // Read from specific user
                     case "READ":
-                        read(vpm);
+                        _server.read(vpm, this);
                         break;
                     // Read from General Board
                     case "READGENERAL":
@@ -110,16 +110,6 @@ public class ClientMessageHandler extends Thread {
     public void readGeneral(VerifiableProtocolMessage vpm) {
         try {
             VerifiableProtocolMessage svpm = _server.readGeneral(vpm);
-            _communication.sendMessage(svpm, _oos);
-        }
-        catch (IOException e) {
-          System.out.println(e);
-        }
-    }
-
-    public void read(VerifiableProtocolMessage vpm) {
-        try {
-            VerifiableProtocolMessage svpm = _server.read(vpm);
             _communication.sendMessage(svpm, _oos);
         }
         catch (IOException e) {
