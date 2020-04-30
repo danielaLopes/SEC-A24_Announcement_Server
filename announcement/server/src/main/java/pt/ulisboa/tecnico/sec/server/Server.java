@@ -20,7 +20,7 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.net.ssl.SSLEngineResult.Status;
 
-public class Server {
+public class Server extends Thread {
 
     private ServerSocket _serverSocket;
     private Socket _socket;
@@ -555,6 +555,17 @@ public class Server {
         }
         
         startServerCommunication(vpm, cmh, token, newToken);
+        try {
+            Thread.sleep(3000);
+        }
+        catch(Exception e) {
+            
+        }
+
+        for (ServerThread t : _serverThreads) {
+            t.writeLocalValue(vpm.getProtocolMessage().getPostAnnouncement());
+            t.writeValue(vpm.getProtocolMessage().getPostAnnouncement());
+        }
     }
 
     /**

@@ -66,9 +66,9 @@ Inside project root directory (announcement/):
     - Example 3 servers:
         ```
         cd server/
-        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="8001 password password alias src/main/resources/crypto/public1.key src/main/resources/crypto/server_keystore.jks"
-        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="8002 password password alias src/main/resources/crypto/public2.key src/main/resources/crypto/server2_keystore2.jks"
-        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="8003 password password alias src/main/resources/crypto/public3.key src/main/resources/crypto/server3_keystore3.jks"
+        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="2 9001 password password alias src/main/resources/crypto/public1.key src/main/resources/crypto/server_keystore.jks"
+        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="2 9002 password password alias src/main/resources/crypto/public2.key src/main/resources/crypto/server2_keystore2.jks"
+        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="3 9003 password password alias src/main/resources/crypto/public3.key src/main/resources/crypto/server3_keystore3.jks"
         ```
 4. Run client:
     - General:
@@ -78,7 +78,7 @@ Inside project root directory (announcement/):
         ```
     - 3 clients:
         ```
-        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="src/main/resources/crypto/public1.key src/main/resources/crypto/client1_keystore.jks password password alias 3 2 src/main/resources/crypto/public2.key src/main/resources/crypto/public3.key"
+        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="src/main/resources/crypto/public1.key src/main/resources/crypto/client1_keystore.jks password password alias 2 2 src/main/resources/crypto/public2.key src/main/resources/crypto/public3.key"
         mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="src/main/resources/crypto/public2.key src/main/resources/crypto/client2_keystore.jks password password alias 3 2 src/main/resources/crypto/public1.key src/main/resources/crypto/public3.key"
         mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="src/main/resources/crypto/public3.key src/main/resources/crypto/client3_keystore.jks password password alias 3 2 src/main/resources/crypto/public1.key src/main/resources/crypto/public2.key"
         ```

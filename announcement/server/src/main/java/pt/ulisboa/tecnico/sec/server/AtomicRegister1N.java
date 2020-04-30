@@ -39,6 +39,7 @@ public class AtomicRegister1N {
     }
 
     public void writeLocal(Announcement a) {
+        System.out.println("writeLocal");
         _wts += 1;
         _acks = 0;
         if (_wts > _values.getKey())
@@ -52,11 +53,13 @@ public class AtomicRegister1N {
     }
     
     public ServerMessage write(Announcement a, PublicKey serverPublicKey){
+        System.out.println("write");
         ServerMessage sm = new ServerMessage(serverPublicKey, "WRITE", new AbstractMap.SimpleEntry<Integer, Announcement>(_wts, a));
         return sm;
     }
 
     public ServerMessage acknowledge(ServerMessage sm) {
+        System.out.println("ack");
         if(sm.getTimestamp() > _values.getKey()) {
             _values = new AbstractMap.SimpleEntry<Integer, Announcement>(sm.getTimestamp(), sm.getValue()); 
         }
@@ -64,6 +67,7 @@ public class AtomicRegister1N {
     }
 
     public void writeReturn(ServerMessage sm) {
+        System.out.println("writeReturn");
         _acks += 1;
         if (_acks > _nServers/2) {
             _acks = 0;

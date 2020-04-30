@@ -38,7 +38,7 @@ public class ServerThread extends Thread {
             _beb.pp2pSend(_oos, vsm);
         }
         catch (IOException e) {
-            System.out.println("Could not broadcast message");
+            System.out.println("Could not broadcast message" + e);
         }
     }
 
@@ -73,7 +73,7 @@ public class ServerThread extends Thread {
                         }
                         }
                     };
-                    thread.start();
+                    thread.start();  
                 }
                 else {
                     System.out.println("Could not verify signature");
@@ -106,6 +106,8 @@ public class ServerThread extends Thread {
             _socket = new Socket("localhost", _otherPort);
 
             System.out.println("Starting client socket in port: " + _otherPort);
+
+
 
             receiveMessage();
         }

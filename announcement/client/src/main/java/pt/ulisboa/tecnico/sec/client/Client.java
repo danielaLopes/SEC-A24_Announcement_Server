@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Collections;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.HashMap;
 
 import javax.crypto.*;
@@ -55,7 +56,9 @@ public class Client {
 
     //protected String _token;
 
-    protected static final int TIMEOUT = 1000;
+    Integer _acks = 0;
+
+    protected static final int TIMEOUT = 500000;
     protected static final int MAX_REQUESTS = 5;
     protected static final int MAX_REFRESH = 3;
 
@@ -162,7 +165,7 @@ public class Client {
             //_serverPubKey = KeyPairUtil.loadPublicKey(path);
             serverPubKey = KeyPairUtil.loadPublicKey(path);
             // TODO: change this
-            _serverPubKey = serverPubKey;
+            // _serverPubKey = serverPubKey;
 
             //_serverPubKeys.put(serverPubKey, serverIndex);
         } catch (Exception e) {
@@ -409,12 +412,22 @@ public class Client {
      * @return the servers' responses
      */
     public Map<PublicKey, VerifiableProtocolMessage> requestServersGroup(Map<PublicKey, ProtocolMessage> pms) {
-
-        Map<PublicKey, VerifiableProtocolMessage> responses = new HashMap<>();
+        Map<PublicKey, VerifiableProtocolMessage> responses = new ConcurrentHashMap<>();
         for (Map.Entry<PublicKey, ProtocolMessage> pm : pms.entrySet()) {
-            responses.put(pm.getKey(), requestServer(pm.getValue(), _serverCommunications.get(pm.getKey())));
+            Thread thread = new Thread(){
+                public void run() {
+                    responses.put(pm.getKey(), requestServer(pm.getValue(), _serverCommunications.get(pm.getKey())));
+                    System.out.println("LALALALA");
+                    synchronized (_acks) {
+                        _acks += 1;
+                        System.out.println(_acks);
+                    }
+                }
+            };
+            thread.start();
         }
-
+        while (_acks < _nServers);
+        System.out.println("got out");
         return responses;
     }
 
@@ -532,13 +545,15 @@ public class Client {
 
         List<StatusCode> rscs = new ArrayList<>();
 
-        while (refreshCounter < MAX_REFRESH) {
+        // while (refreshCounter < MAX_REFRESH) {
             Announcement a = new Announcement(message, references);
 
             Map<PublicKey, ProtocolMessage> pms = new HashMap<>();
             for (Map.Entry<PublicKey, CommunicationServer> entry : _serverCommunications.entrySet()) {
                 pms.put(entry.getKey(), new ProtocolMessage("POST", _pubKey, a, entry.getValue().getToken()));
             }
+
+            System.out.println(pms);
 
             Map<PublicKey, VerifiableProtocolMessage> vpms = requestServersGroup(pms);
 
@@ -553,7 +568,7 @@ public class Client {
                     refreshCounter = MAX_REFRESH;
                 }
             }
-        }
+        // }
 
         return rscs;
     }

@@ -1,9 +1,10 @@
 package pt.ulisboa.tecnico.sec.communication_lib;
 
+import java.io.Serializable;
 import java.security.PublicKey;
 import java.util.AbstractMap;
 
-public class ServerMessage {
+public class ServerMessage implements Serializable {
     private PublicKey _publicKey;
     private String _command;
     private AbstractMap.SimpleEntry<Integer, Announcement> _values;
