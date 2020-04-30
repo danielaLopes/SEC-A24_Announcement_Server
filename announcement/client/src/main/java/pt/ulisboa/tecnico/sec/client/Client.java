@@ -417,16 +417,12 @@ public class Client {
             Thread thread = new Thread(){
                 public void run() {
                     responses.put(pm.getKey(), requestServer(pm.getValue(), _serverCommunications.get(pm.getKey())));
-                    System.out.println("LALALALA");
-                    synchronized (_acks) {
-                        _acks += 1;
-                        System.out.println(_acks);
-                    }
                 }
             };
             thread.start();
         }
-        while (_acks < _nServers);
+        
+        while (responses.size() < _nServers);
         System.out.println("got out");
         return responses;
     }
@@ -552,8 +548,6 @@ public class Client {
             for (Map.Entry<PublicKey, CommunicationServer> entry : _serverCommunications.entrySet()) {
                 pms.put(entry.getKey(), new ProtocolMessage("POST", _pubKey, a, entry.getValue().getToken()));
             }
-
-            System.out.println(pms);
 
             Map<PublicKey, VerifiableProtocolMessage> vpms = requestServersGroup(pms);
 
