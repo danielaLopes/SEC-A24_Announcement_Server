@@ -34,8 +34,8 @@ public class ServerThread extends Thread {
     }
 
     public void bestEffortBroadcast(VerifiableServerMessage vsm) {
-        System.out.println("Sending broadcast message: " + vsm.getServerMessage().getCommand());
-        System.out.println(_socket);
+        System.out.println("Sending broadcast message: " + vsm.getServerMessage().getCommand() + " " + vsm.getServerMessage().getPublicKey());
+        //System.out.println(_socket);
         try{
             _beb.pp2pSend(_oos, vsm);
         }
@@ -66,6 +66,8 @@ public class ServerThread extends Thread {
         while(true) {
             try{
                 VerifiableServerMessage vsm = (VerifiableServerMessage) _communication.receiveMessage(_ois);
+                //System.out.println("server sig: " + vsm.getServerMessage().getPublicKey());
+                System.out.println("status code: " + verifySignature(vsm).getDescription() + " command " + vsm.getServerMessage().getCommand());
                 if(verifySignature(vsm) == StatusCode.OK) {
                     ServerMessage sm = vsm.getServerMessage();
                     System.out.println("Received broadcast message: " + sm.getCommand() + "from" + _socket.getPort());
@@ -76,7 +78,14 @@ public class ServerThread extends Thread {
                                     bestEffortBroadcast(createVerifiableServerMessage(_atomicRegisters1N.get(sm.getClientPublicKey()).acknowledge(sm)));
                                     break;
                                 case "ACK":
-                                    _atomicRegisters1N.get(sm.getClientPublicKey()).writeReturn(sm);
+                                    _atomicRegisters1N.get(sm.getClientPublicKey()).deliver();
+                                    break;
+                                case "READ":
+                                    bestEffortBroadcast(createVerifiableServerMessage(_atomicRegisters1N.get(sm.getClientPublicKey()).value(sm)));
+                                    break;
+                                case "VALUE":
+                                    ServerMessage response = _atomicRegisters1N.get(sm.getClientPublicKey()).readReturn(sm);
+                                    if (response != null) bestEffortBroadcast(createVerifiableServerMessage(response));
                                     break;
                                 default:
                                     break;

@@ -10,14 +10,13 @@ public class ServerMessage implements Serializable {
     private PublicKey _publicKey;
     private PublicKey _clientPublicKey;
     private String _command;
-    private AbstractMap.SimpleEntry<Integer, Announcement> _values;
+    private byte[] _readAnnouncements;
     private AtomicInteger _rid;
-    private List<Announcement> _announcements;
 
-    public ServerMessage(PublicKey publicKey, PublicKey clientPublicKey, String command, AbstractMap.SimpleEntry<Integer, Announcement> values) {
+    public ServerMessage(PublicKey publicKey, PublicKey clientPublicKey, String command, byte[] readAnnouncements) {
         _publicKey = publicKey;
         _command = command;
-        _values = values;
+        _readAnnouncements = readAnnouncements;
         _clientPublicKey = clientPublicKey;
     }
 
@@ -28,19 +27,17 @@ public class ServerMessage implements Serializable {
         _clientPublicKey = clientPublicKey;
     }
 
-    public ServerMessage(PublicKey publicKey, PublicKey clientPublicKey, String command, AtomicInteger rid, List<Announcement> announcements) {
+    public ServerMessage(PublicKey publicKey, PublicKey clientPublicKey, String command, AtomicInteger rid, byte[] readAnnouncements) {
         _publicKey = publicKey;
         _command = command;
         _rid = rid;
-        _announcements = announcements;
+        _readAnnouncements = readAnnouncements;
         _clientPublicKey = clientPublicKey;
     }
 
     public PublicKey getPublicKey() {return _publicKey; }
     public PublicKey getClientPublicKey() {return _clientPublicKey; }
     public String getCommand() {return _command; }
-    public int getTimestamp() {return _values.getKey(); }
-    public Announcement getValue() {return _values.getValue(); }
     public AtomicInteger getRid() {return _rid; }
-    public List<Announcement> getAnnouncements() {return _announcements; }
+    public byte[] getReadAnnouncements() {return _readAnnouncements;}
 }
