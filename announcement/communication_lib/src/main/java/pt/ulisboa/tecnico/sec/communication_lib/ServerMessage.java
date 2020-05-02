@@ -8,35 +8,35 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ServerMessage implements Serializable {
     private PublicKey _publicKey;
-    private PublicKey _clientPublicKey;
+    private VerifiableProtocolMessage _clientMessage;
     private String _command;
     private byte[] _readAnnouncements;
     private AtomicInteger _rid;
 
-    public ServerMessage(PublicKey publicKey, PublicKey clientPublicKey, String command, byte[] readAnnouncements) {
+    public ServerMessage(PublicKey publicKey, VerifiableProtocolMessage vpm, String command, byte[] readAnnouncements) {
         _publicKey = publicKey;
         _command = command;
         _readAnnouncements = readAnnouncements;
-        _clientPublicKey = clientPublicKey;
+        _clientMessage = vpm;
     }
 
-    public ServerMessage(PublicKey publicKey, PublicKey clientPublicKey, String command, AtomicInteger rid) {
+    public ServerMessage(PublicKey publicKey, VerifiableProtocolMessage vpm, String command, AtomicInteger rid) {
         _publicKey = publicKey;
         _command = command;
         _rid = rid;
-        _clientPublicKey = clientPublicKey;
+        _clientMessage = vpm;
     }
 
-    public ServerMessage(PublicKey publicKey, PublicKey clientPublicKey, String command, AtomicInteger rid, byte[] readAnnouncements) {
+    public ServerMessage(PublicKey publicKey, VerifiableProtocolMessage vpm, String command, AtomicInteger rid, byte[] readAnnouncements) {
         _publicKey = publicKey;
         _command = command;
         _rid = rid;
         _readAnnouncements = readAnnouncements;
-        _clientPublicKey = clientPublicKey;
+        _clientMessage = vpm;
     }
 
     public PublicKey getPublicKey() {return _publicKey; }
-    public PublicKey getClientPublicKey() {return _clientPublicKey; }
+    public VerifiableProtocolMessage getClientMessage() { return _clientMessage; }
     public String getCommand() {return _command; }
     public AtomicInteger getRid() {return _rid; }
     public byte[] getReadAnnouncements() {return _readAnnouncements;}

@@ -16,6 +16,7 @@ import pt.ulisboa.tecnico.sec.crypto_lib.*;
 public class ServerThread extends Thread {
 
     private Server _server;
+    private int _nServers;
     private int _otherPort;
     private int _selfPort;
     private Socket _socket;
@@ -24,17 +25,18 @@ public class ServerThread extends Thread {
     private ObjectInputStream _ois;
     private Communication _communication = new Communication();
     private BestEffortBroadcast _beb = new BestEffortBroadcast();
-    private ConcurrentHashMap<PublicKey, AtomicRegister1N> _atomicRegisters1N = new ConcurrentHashMap<PublicKey, AtomicRegister1N>();
+    private ConcurrentHashMap<PublicKey, AtomicRegister1N> _atomicRegisters1N = new ConcurrentHashMap<>(); // shouldnt this be on the server to be shared by all the threads ???????
 
-    public ServerThread(Server server, int otherPort, int selfPort, ServerSocket serverSocket) {
+    public ServerThread(Server server, int nServers, int otherPort, int selfPort, ServerSocket serverSocket) {
         _server = server;
+        _nServers = nServers;
         _otherPort = otherPort;
         _selfPort = selfPort;
         _serverSocket = serverSocket;
     }
 
     public void bestEffortBroadcast(VerifiableServerMessage vsm) {
-        System.out.println("Sending broadcast message: " + vsm.getServerMessage().getCommand() + " " + vsm.getServerMessage().getPublicKey());
+        //System.out.println("Sending broadcast message: " + vsm.getServerMessage().getCommand() + " " + vsm.getServerMessage().getPublicKey());
         //System.out.println(_socket);
         try{
             _beb.pp2pSend(_oos, vsm);
@@ -70,21 +72,32 @@ public class ServerThread extends Thread {
                 System.out.println("status code: " + verifySignature(vsm).getDescription() + " command " + vsm.getServerMessage().getCommand());
                 if(verifySignature(vsm) == StatusCode.OK) {
                     ServerMessage sm = vsm.getServerMessage();
-                    System.out.println("Received broadcast message: " + sm.getCommand() + "from" + _socket.getPort());
+                    //System.out.println("Received broadcast message: " + sm.getCommand() + "from" + _socket.getPort());
+                    PublicKey clientPubKey = sm.getClientMessage().getProtocolMessage().getPublicKey();
                     Thread thread = new Thread(){
                         public void run(){
                         switch(sm.getCommand()){
                                 case "WRITE":
-                                    bestEffortBroadcast(createVerifiableServerMessage(_atomicRegisters1N.get(sm.getClientPublicKey()).acknowledge(sm)));
+                                    AtomicRegister1N ar1N = _atomicRegisters1N.get(clientPubKey);
+                                    if (ar1N == null) {
+                                        // if the server did not receive a message from the client,
+                                        // then it doesn't broadcast to other serversand should not perform
+                                        // write local either
+                                        _atomicRegisters1N.put(clientPubKey, new AtomicRegister1N(
+                                                _server, _nServers, sm.getClientMessage()));
+                                    }
+                                    else {
+                                        bestEffortBroadcast(createVerifiableServerMessage(ar1N.acknowledge(sm)));
+                                    }
                                     break;
                                 case "ACK":
-                                    _atomicRegisters1N.get(sm.getClientPublicKey()).deliver();
+                                    _atomicRegisters1N.get(clientPubKey).deliver();
                                     break;
                                 case "READ":
-                                    bestEffortBroadcast(createVerifiableServerMessage(_atomicRegisters1N.get(sm.getClientPublicKey()).value(sm)));
+                                    bestEffortBroadcast(createVerifiableServerMessage(_atomicRegisters1N.get(clientPubKey).value(sm)));
                                     break;
                                 case "VALUE":
-                                    ServerMessage response = _atomicRegisters1N.get(sm.getClientPublicKey()).readReturn(sm);
+                                    ServerMessage response = _atomicRegisters1N.get(clientPubKey).readReturn(sm);
                                     if (response != null) bestEffortBroadcast(createVerifiableServerMessage(response));
                                     break;
                                 default:

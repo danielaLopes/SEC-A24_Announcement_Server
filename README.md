@@ -52,8 +52,13 @@ Inside project root directory (announcement/):
         ```
 
 2. Build project:
+    * Without running tests
     ```
     mvn clean install -DskipTests
+    ```
+    * Without compilling tests
+    ```
+    mvn clean install -Dmaven.test.skip=true 
     ```
 
 

@@ -414,9 +414,13 @@ public class Client {
     public Map<PublicKey, VerifiableProtocolMessage> requestServersGroup(Map<PublicKey, ProtocolMessage> pms) {
         Map<PublicKey, VerifiableProtocolMessage> responses = new ConcurrentHashMap<>();
         for (Map.Entry<PublicKey, ProtocolMessage> pm : pms.entrySet()) {
+            // TODO: why new thread ?????
             Thread thread = new Thread(){
                 public void run() {
-                    responses.put(pm.getKey(), requestServer(pm.getValue(), _serverCommunications.get(pm.getKey())));
+                    VerifiableProtocolMessage response = requestServer(pm.getValue(), _serverCommunications.get(pm.getKey()));
+                    if (response != null) {
+                        responses.put(pm.getKey(), response);
+                    }
                 }
             };
             thread.start();

@@ -41,6 +41,7 @@ public class ClientMessageHandler extends Thread {
                         break;
                     // Post to Client's Board
                     case "POST":
+                        System.out.println("------------------------POST------------------------");
                         _server.post(vpm, this);
                         break;
                     // Post to General Board
@@ -50,6 +51,7 @@ public class ClientMessageHandler extends Thread {
                         break;
                     // Read from specific user
                     case "READ":
+                        System.out.println("------------------------READ------------------------");
                         _server.read(vpm, this);
                         break;
                     // Read from General Board

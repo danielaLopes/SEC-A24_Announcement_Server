@@ -48,6 +48,9 @@ public class Server extends Thread {
     private List<Announcement> _generalBoard;
     private Communication _communication;
 
+    /** maps client token to current clientHandler processing the request with that token */
+    //private ConcurrentHashMap<String, ClientMessageHandler> _processingRequests;
+
     private List<ServerThread> _serverThreads = new ArrayList<ServerThread>();
 
     public Server(boolean activateCC, int nServers, int port, char[] keyStorePasswd, char[] entryPasswd, String alias, String pubKeyPath,
@@ -63,7 +66,10 @@ public class Server extends Thread {
         // lots of reads)
         _generalBoard = new ArrayList<>();
         _communication = new Communication();
-        String db = "announcement" + Integer.toString(port);
+
+        //_processingRequests = new ConcurrentHashMap<>();
+
+        String db = "announcement" + port;
         _db = new Database(db);
 
         retrieveDataStructures();
@@ -222,8 +228,11 @@ public class Server extends Thread {
         // client's public key is used to indicate it's stored in that client's PostOperation Board
         _announcementMapper.put(announcementUuid, new AnnouncementLocation(pm.getPublicKey(), index));
 
-        cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
-                "POST", StatusCode.OK, _pubKey, a, newToken, token)));
+        // TODO: see if it's necessary to respond a client if it did not receive the request
+        if (cmh != null) {
+            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
+                    "POST", StatusCode.OK, _pubKey, a, newToken, token)));
+        }
 
         // _db.insertOperation(opUuid, operation);
 
@@ -246,8 +255,12 @@ public class Server extends Thread {
         else {
             announcements = _users.get(toReadPublicKey).getAllAnnouncements();
         }
-        cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
-                "READ", StatusCode.OK, _pubKey, announcements, newToken, token)));
+
+        // TODO: see if it's necessary to respond a client if it did not receive the request
+        if (cmh != null) {
+            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
+                    "READ", StatusCode.OK, _pubKey, announcements, newToken, token)));
+        }
 
         //printDataStructures();
     }
@@ -256,7 +269,7 @@ public class Server extends Thread {
         try{
             ServerSocket serverSocket = _communication.createServerSocket(_port);
             for (int port : getOtherServersPorts()) {
-                ServerThread t = new ServerThread(this, port, _port, serverSocket);
+                ServerThread t = new ServerThread(this, _nServers, port, _port, serverSocket);
                 _serverThreads.add(t);
                 t.start();
             }
