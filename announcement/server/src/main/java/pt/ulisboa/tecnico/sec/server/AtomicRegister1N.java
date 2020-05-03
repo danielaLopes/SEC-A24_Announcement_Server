@@ -29,9 +29,11 @@ public class AtomicRegister1N {
     //List that contains (ts, value) for each response from server with PublicKey
     private ConcurrentHashMap<PublicKey, AbstractMap.SimpleEntry<Integer, List<Announcement>>> _readList = new ConcurrentHashMap<>();
 
+    // saves highestVal on readReturn()
+    List<Announcement> _readVal;
+
     // atomic register only
     AtomicBoolean _reading = new AtomicBoolean(false);
-    List<Announcement> _readVal = new ArrayList<>();
 
     // when triggered by a server message on a serverThread
     public AtomicRegister1N(Server server, int nServers, VerifiableProtocolMessage vpm) {
@@ -40,7 +42,7 @@ public class AtomicRegister1N {
         _vpm = vpm;
     }
 
-    // whenn triggered by a client message on the server
+    // when triggered by a client message on the server
     public AtomicRegister1N(Server server, int nServers, VerifiableProtocolMessage vpm, ClientMessageHandler cmh, String token, String newToken) {
         _server = server;
         _nServers = nServers;
@@ -50,14 +52,19 @@ public class AtomicRegister1N {
         _newToken = newToken;
     }
 
-    public void setClientMessageHandler(ClientMessageHandler cmh) {_cmh = cmh;}
+    public void setClientInfo(ClientMessageHandler cmh, String token, String newToken) {
+        _cmh = cmh;
+        _token = token;
+        _newToken = newToken;
+    }
 
     public void readLocal() {
         System.out.println("readLocal");
         _rid.incrementAndGet();
         _readList.clear();
         _reading.set(true);
-        List<Announcement> a = _server.getUserAnnouncements(_vpm.getProtocolMessage().getPublicKey());
+        List<Announcement> a = _server.getUserAnnouncements(
+                _vpm.getProtocolMessage().getPublicKey(), _vpm.getProtocolMessage().getReadNumberAnnouncements());
         _readList.put(_server.getPublicKey(), new AbstractMap.SimpleEntry<>(_values.getKey(), a));
     }
 
@@ -68,7 +75,8 @@ public class AtomicRegister1N {
 
     public ServerMessage value(ServerMessage sm) {
         System.out.println("value");
-        List<Announcement> a = _server.getUserAnnouncements(_vpm.getProtocolMessage().getPublicKey());
+        List<Announcement> a = _server.getUserAnnouncements(
+                _vpm.getProtocolMessage().getPublicKey(), _vpm.getProtocolMessage().getReadNumberAnnouncements());
         AbstractMap.SimpleEntry<Integer, List<Announcement>> readAnnouncements = new AbstractMap.SimpleEntry<>(_values.getKey(), a);
         //return new ServerMessage(_server.getPublicKey(), _vpm.getProtocolMessage().getPublicKey(), "VALUE", sm.getRid(), readAnnouncements);
         return new ServerMessage(_server.getPublicKey(), _vpm, "VALUE", sm.getRid(), ProtocolMessageConverter.objToByteArray(readAnnouncements));
@@ -82,6 +90,7 @@ public class AtomicRegister1N {
                     ProtocolMessageConverter.byteArrayToObj(sm.getReadAnnouncements()));
             if(_readList.size() > _nServers / 2) {
                 AbstractMap.SimpleEntry<Integer, List<Announcement>> value = highestValue();
+                _readVal = value.getValue();
                 _readList.clear();
                 // server has to increment its own ack
                 _acks.set(1);
@@ -140,9 +149,8 @@ public class AtomicRegister1N {
         System.out.println("deliver reading: " + _reading.get());
         _acks.incrementAndGet();
         //System.out.println("_acks " + _acks.get());
-        if (_acks.get() > _nServers/2) {
+        if (_acks.getAndSet(0) > _nServers/2) {
             System.out.println("enough acks to deliver " + _acks.get());
-            _acks.set(0);
             if (_reading.get() == true) {
                 _reading.set(false);
                 //System.out.println("entrou");

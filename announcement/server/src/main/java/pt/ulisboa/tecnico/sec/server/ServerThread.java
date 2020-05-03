@@ -25,7 +25,6 @@ public class ServerThread extends Thread {
     private ObjectInputStream _ois;
     private Communication _communication = new Communication();
     private BestEffortBroadcast _beb = new BestEffortBroadcast();
-    private ConcurrentHashMap<PublicKey, AtomicRegister1N> _atomicRegisters1N = new ConcurrentHashMap<>(); // shouldnt this be on the server to be shared by all the threads ???????
 
     public ServerThread(Server server, int nServers, int otherPort, int selfPort, ServerSocket serverSocket) {
         _server = server;
@@ -46,20 +45,12 @@ public class ServerThread extends Thread {
         }
     }
 
-    public void writeLocalValue(PublicKey clientPubKey, Announcement a) {
-        _atomicRegisters1N.get(clientPubKey).writeLocal(a);
-    }
-
     public void writeValue(PublicKey clientPubKey, Announcement a) {
-        bestEffortBroadcast(createVerifiableServerMessage(_atomicRegisters1N.get(clientPubKey).write(a)));
-    }
-
-    public void readLocalValue(PublicKey clientPubKey) {
-        _atomicRegisters1N.get(clientPubKey).readLocal();
+        bestEffortBroadcast(createVerifiableServerMessage(_server.getAtomicRegister1N(clientPubKey).write(a)));
     }
 
     public void readValue(PublicKey clientPubKey) {
-        bestEffortBroadcast(createVerifiableServerMessage(_atomicRegisters1N.get(clientPubKey).read()));
+        bestEffortBroadcast(createVerifiableServerMessage(_server.getAtomicRegister1N(clientPubKey).read()));
     }
 
     public void receiveMessage() throws IOException {
@@ -76,29 +67,40 @@ public class ServerThread extends Thread {
                     PublicKey clientPubKey = sm.getClientMessage().getProtocolMessage().getPublicKey();
                     Thread thread = new Thread(){
                         public void run(){
-                        switch(sm.getCommand()){
+                            AtomicRegister1N ar1N = _server.getAtomicRegister1N(clientPubKey);
+                            switch(sm.getCommand()){
                                 case "WRITE":
-                                    AtomicRegister1N ar1N = _atomicRegisters1N.get(clientPubKey);
                                     if (ar1N == null) {
                                         // if the server did not receive a message from the client,
-                                        // then it doesn't broadcast to other serversand should not perform
+                                        // then it doesn't broadcast to other servers and should not perform
                                         // write local either
-                                        _atomicRegisters1N.put(clientPubKey, new AtomicRegister1N(
-                                                _server, _nServers, sm.getClientMessage()));
+                                        ar1N = new AtomicRegister1N(_server, _nServers, sm.getClientMessage());
+                                        _server.putAtomicRegister1N(clientPubKey, ar1N);
                                     }
-                                    else {
-                                        bestEffortBroadcast(createVerifiableServerMessage(ar1N.acknowledge(sm)));
-                                    }
+                                    bestEffortBroadcast(createVerifiableServerMessage(ar1N.acknowledge(sm)));
                                     break;
                                 case "ACK":
-                                    _atomicRegisters1N.get(clientPubKey).deliver();
+                                    // in case an ack is received after delivered
+                                    if (ar1N != null) {
+                                        _server.getAtomicRegister1N(clientPubKey).deliver();
+                                    }
                                     break;
                                 case "READ":
-                                    bestEffortBroadcast(createVerifiableServerMessage(_atomicRegisters1N.get(clientPubKey).value(sm)));
+                                    if (ar1N == null) {
+                                        // if the server did not receive a message from the client,
+                                        // then it doesn't broadcast to other servers and should not perform
+                                        // write local either
+                                        ar1N = new AtomicRegister1N(_server, _nServers, sm.getClientMessage());
+                                        _server.putAtomicRegister1N(clientPubKey, ar1N);
+                                    }
+                                    bestEffortBroadcast(createVerifiableServerMessage(_server.getAtomicRegister1N(clientPubKey).value(sm)));
                                     break;
                                 case "VALUE":
-                                    ServerMessage response = _atomicRegisters1N.get(clientPubKey).readReturn(sm);
-                                    if (response != null) bestEffortBroadcast(createVerifiableServerMessage(response));
+                                    if (ar1N != null) {
+                                        ServerMessage response = _server.getAtomicRegister1N(clientPubKey).readReturn(sm);
+                                        if (response != null)
+                                            bestEffortBroadcast(createVerifiableServerMessage(response));
+                                    }
                                     break;
                                 default:
                                     break;
@@ -180,8 +182,6 @@ public class ServerThread extends Thread {
             return StatusCode.INVALID_SIGNATURE;
         }
     }
-
-    public void addAtomicRegisters1N(PublicKey p, AtomicRegister1N a) { _atomicRegisters1N.put(p, a); }
 
     public Server getServer() {return _server; }
 }

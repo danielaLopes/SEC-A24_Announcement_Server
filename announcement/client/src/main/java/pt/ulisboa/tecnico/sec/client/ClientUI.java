@@ -88,7 +88,7 @@ public class ClientUI {
 
         //StatusCode statusCode = _client.post(message, references);
         List<StatusCode> statusCodes = _client.postServersGroup(message, references);
-        for (int i = 0; i < _client._nServers; i++) {
+        for (int i = 0; i < statusCodes.size(); i++) {
             if (statusCodes.get(i) == StatusCode.OK) {
                 System.out.println("Posted announcement in server " + (i + 1) + ".");
             }
@@ -113,7 +113,7 @@ public class ClientUI {
         List<String> references = parseReferences(referencesIn);
 
         List<StatusCode> statusCodes = _client.postGeneralServersGroup(message, references);
-        for (int i = 0; i < _client._nServers; i++) {
+        for (int i = 0; i < statusCodes.size(); i++) {
             if (statusCodes.get(i) == StatusCode.OK) {
                 System.out.println("Posted announcement " + (i + 1) + ".");
             } else {

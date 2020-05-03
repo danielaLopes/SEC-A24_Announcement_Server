@@ -8,6 +8,7 @@ import pt.ulisboa.tecnico.sec.crypto_lib.SignatureUtil;
 import pt.ulisboa.tecnico.sec.crypto_lib.UUIDGenerator;
 
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.security.InvalidKeyException;
 import java.security.KeyStore;
@@ -230,6 +231,16 @@ public class Client {
         return _usersPubKeys.get(userIndex);
     }
 
+    public CommunicationServer createServerCommunication(int port) throws IOException {
+
+        Socket socket = new Socket("localhost", port);
+        socket.setSoTimeout(TIMEOUT);
+
+        return new CommunicationServer(
+                port, new ObjectOutputStream(socket.getOutputStream()),
+                new ObjectInputStream(socket.getInputStream()), socket);
+    }
+
     /**
      * Starts the communication with the group of active servers for future operations.
      */
@@ -237,17 +248,11 @@ public class Client {
         try {
             int serverIndex = 0;
             for (PublicKey serverPubKey : serverPublicKeys) {
-                System.out.println("Connecting with server at port " + (_startingServerPort + serverIndex));
+                int port = _startingServerPort + serverIndex++;
+                System.out.println("Connecting with server at port " + port);
 
-                Socket socket = new Socket("localhost", _startingServerPort + serverIndex++);
-                socket.setSoTimeout(TIMEOUT);
-
-                _serverCommunications.put(serverPubKey, new CommunicationServer(
-                                new ObjectOutputStream(socket.getOutputStream()),
-                                new ObjectInputStream(socket.getInputStream()),
-                                socket));
+                _serverCommunications.put(serverPubKey, createServerCommunication(port));
             }
-
             registerServersGroup();
         }
         catch(IOException e) {
@@ -414,7 +419,8 @@ public class Client {
     public Map<PublicKey, VerifiableProtocolMessage> requestServersGroup(Map<PublicKey, ProtocolMessage> pms) {
         Map<PublicKey, VerifiableProtocolMessage> responses = new ConcurrentHashMap<>();
         for (Map.Entry<PublicKey, ProtocolMessage> pm : pms.entrySet()) {
-            // TODO: why new thread ?????
+            /*String opUuid = UUIDGenerator.generateUUID();
+            pm.getValue().setOpUuid(opUuid);*/
             Thread thread = new Thread(){
                 public void run() {
                     VerifiableProtocolMessage response = requestServer(pm.getValue(), _serverCommunications.get(pm.getKey()));
@@ -425,8 +431,8 @@ public class Client {
             };
             thread.start();
         }
-        
-        while (responses.size() < _nServers);
+        // TODO: change number of responses
+        //while (responses.size() < _nServers);
         System.out.println("got out");
         return responses;
     }
@@ -438,6 +444,20 @@ public class Client {
      */
     public VerifiableProtocolMessage requestServer(ProtocolMessage pm, CommunicationServer serverCommunication) {
         if (pm == null) return null;
+
+        try {
+            // tries to reconnect with dead servers
+            if (serverCommunication.getAlive() == false) {
+                CommunicationServer newServerCommunication = createServerCommunication(serverCommunication.getPort());
+                serverCommunication = newServerCommunication;
+            }
+        }
+        catch (IOException e) {
+            System.out.println("Error reconnecting with server at port " + serverCommunication.getPort() +
+                    ". Server is still dead!");
+            // does not try to send message if server is still dead
+            return null;
+        }
 
         VerifiableProtocolMessage vpm = createVerifiableMessage(pm);
         VerifiableProtocolMessage rvpm = null;
@@ -466,6 +486,11 @@ public class Client {
             catch(SocketTimeoutException e) {
                 System.out.println("Could not receive a response on request " + (++requestsCounter) + 
                 ". Trying again...");
+            }
+            catch (SocketException e) {
+                System.out.println("A server is dead!");
+                serverCommunication.setAlive(false);
+                return null;
             }
             catch (IOException | ClassNotFoundException e) {
                 System.out.println(e);
@@ -545,7 +570,8 @@ public class Client {
 
         List<StatusCode> rscs = new ArrayList<>();
 
-        // while (refreshCounter < MAX_REFRESH) {
+        // TODO: fix this -> loop!
+        //while (refreshCounter < MAX_REFRESH) {
             Announcement a = new Announcement(message, references);
 
             Map<PublicKey, ProtocolMessage> pms = new HashMap<>();
@@ -566,7 +592,7 @@ public class Client {
                     refreshCounter = MAX_REFRESH;
                 }
             }
-        // }
+        //}
 
         return rscs;
     }

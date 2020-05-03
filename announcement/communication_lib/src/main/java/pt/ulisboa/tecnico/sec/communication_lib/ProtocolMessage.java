@@ -9,6 +9,8 @@ public class ProtocolMessage implements Serializable {
     private PublicKey _publicKey;
     private StatusCode _statusCode;
 
+    //private String _opUuid;
+
     private List<Announcement> _announcements;
     private Announcement _postAnnouncement;
     // Post response
@@ -135,6 +137,10 @@ public class ProtocolMessage implements Serializable {
     public PublicKey getToReadPublicKey() { return _toReadPublicKey; }
 
     public StatusCode getStatusCode() { return _statusCode; }
+
+    /*public String getOpUuid() { return _opUuid; }
+
+    public void setOpUuid(String opUuid) { _opUuid = opUuid; }*/
 
     public String getToken() { return _token; }
 
