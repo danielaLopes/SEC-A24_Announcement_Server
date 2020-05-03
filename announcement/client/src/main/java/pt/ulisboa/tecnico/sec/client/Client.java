@@ -432,7 +432,7 @@ public class Client {
             thread.start();
         }
         // TODO: change number of responses
-        //while (responses.size() < _nServers);
+        while (responses.size() < _nServers);
         System.out.println("got out");
         return responses;
     }
@@ -1018,6 +1018,7 @@ public class Client {
         else {
             rsc = getStatusCodeFromVPM(vpm);
             PublicKey serverPubKey = getServerPublicKeyFromVPM(vpm);
+
             if (invalidToken(getOldTokenFromVPM(vpm), serverPubKey)) {
                 rsc = StatusCode.INVALID_TOKEN;
             }

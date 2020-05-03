@@ -220,6 +220,7 @@ public class Server extends Thread {
         return otherPorts;
     }
 
+    // TODO: verify if every time this is called  vpm is defined
     public void deliverPost(VerifiableProtocolMessage vpm, ClientMessageHandler cmh, String token, String newToken) {
         System.out.println("DELIVERPOST");
         // Save Operation
@@ -243,8 +244,8 @@ public class Server extends Thread {
         System.out.flush();
 
         if (cmh != null) {
-            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
-                    "POST", StatusCode.OK, _pubKey, a, newToken, token)));
+            cmh.sendMessage(createVerifiableMessage(
+                    new ProtocolMessage("POST", StatusCode.OK, _pubKey, a, newToken, token)));
         }
     }
 
@@ -258,8 +259,8 @@ public class Server extends Thread {
         System.out.flush();
 
         if (cmh != null) {
-            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
-                    "READ", StatusCode.OK, _pubKey, announcements, newToken, token)));
+            cmh.sendMessage(createVerifiableMessage(
+                    new ProtocolMessage("READ", StatusCode.OK, _pubKey, announcements, newToken, token)));
         }
     }
 
@@ -403,7 +404,7 @@ public class Server extends Thread {
         }
 
         sc = verifyUserRegistered(clientPubKey);
-        if (!sc.equals(StatusCode.OK)) {
+        if (sc.equals(StatusCode.USER_NOT_REGISTERED)) {
             return sc;
         }
 
@@ -440,7 +441,7 @@ public class Server extends Thread {
         }
 
         sc = verifyUserRegistered(clientPubKey);
-        if (!sc.equals(StatusCode.OK)) {
+        if (sc.equals(StatusCode.USER_NOT_REGISTERED)) {
             return sc;
         }
 
@@ -553,7 +554,7 @@ public class Server extends Thread {
             _atomicRegisters1N.put(clientPubKey, register);
         }
         else {
-            register.setClientInfo(cmh, token, newToken);
+            register.setClientInfo(cmh, vpm, token, newToken);
         }
         return register;
     }
@@ -593,6 +594,7 @@ public class Server extends Thread {
         if (!sc.equals(StatusCode.OK)) {
             cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
                     "POST", sc, _pubKey, newToken, token)));
+            // TODO: should this be anything ????
             if (!sc.equals(StatusCode.NULL_FIELD)) {
                 // _db.insertOperation(opUuid, operation);
             }

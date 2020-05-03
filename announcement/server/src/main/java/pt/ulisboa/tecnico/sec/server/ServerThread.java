@@ -64,7 +64,8 @@ public class ServerThread extends Thread {
                 if(verifySignature(vsm) == StatusCode.OK) {
                     ServerMessage sm = vsm.getServerMessage();
                     //System.out.println("Received broadcast message: " + sm.getCommand() + "from" + _socket.getPort());
-                    PublicKey clientPubKey = sm.getClientMessage().getProtocolMessage().getPublicKey();
+                    //PublicKey clientPubKey = sm.getClientMessage().getProtocolMessage().getPublicKey();
+                    PublicKey clientPubKey = sm.getClientPubKey();
                     Thread thread = new Thread(){
                         public void run(){
                             AtomicRegister1N ar1N = _server.getAtomicRegister1N(clientPubKey);
@@ -74,7 +75,8 @@ public class ServerThread extends Thread {
                                         // if the server did not receive a message from the client,
                                         // then it doesn't broadcast to other servers and should not perform
                                         // write local either
-                                        ar1N = new AtomicRegister1N(_server, _nServers, sm.getClientMessage());
+                                        //ar1N = new AtomicRegister1N(_server, _nServers, sm.getClientMessage());
+                                        ar1N = new AtomicRegister1N(_server, _nServers, clientPubKey);
                                         _server.putAtomicRegister1N(clientPubKey, ar1N);
                                     }
                                     bestEffortBroadcast(createVerifiableServerMessage(ar1N.acknowledge(sm)));
@@ -90,7 +92,8 @@ public class ServerThread extends Thread {
                                         // if the server did not receive a message from the client,
                                         // then it doesn't broadcast to other servers and should not perform
                                         // write local either
-                                        ar1N = new AtomicRegister1N(_server, _nServers, sm.getClientMessage());
+                                        //ar1N = new AtomicRegister1N(_server, _nServers, sm.getClientMessage());
+                                        ar1N = new AtomicRegister1N(_server, _nServers, clientPubKey);
                                         _server.putAtomicRegister1N(clientPubKey, ar1N);
                                     }
                                     bestEffortBroadcast(createVerifiableServerMessage(_server.getAtomicRegister1N(clientPubKey).value(sm)));
