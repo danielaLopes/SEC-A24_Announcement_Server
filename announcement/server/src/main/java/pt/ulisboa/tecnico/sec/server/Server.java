@@ -49,6 +49,7 @@ public class Server extends Thread {
     private Communication _communication;
 
     private ConcurrentHashMap<PublicKey, AtomicRegister1N> _atomicRegisters1N = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<PublicKey, RegularRegisterNN> _regularRegistersNN = new ConcurrentHashMap<>();
 
     /** maps client token to current clientHandler processing the request with that token */
     //private ConcurrentHashMap<String, ClientMessageHandler> _processingRequests;
@@ -261,6 +262,49 @@ public class Server extends Thread {
         if (cmh != null) {
             cmh.sendMessage(createVerifiableMessage(
                     new ProtocolMessage("READ", StatusCode.OK, _pubKey, announcements, newToken, token)));
+        }
+    }
+
+    public void deliverPostGeneral(VerifiableProtocolMessage vpm, ClientMessageHandler cmh, String token, String newToken) {
+        System.out.println("DELIVERPOSTGENERAL");
+        // Save Operation
+        String announcementUuid = UUIDGenerator.generateUUID();
+        ProtocolMessage pm = vpm.getProtocolMessage();
+        Announcement a = pm.getPostAnnouncement();
+        a.setAnnouncementID(announcementUuid);
+        a.setPublicKey(pm.getPublicKey());
+        byte[] ref = ProtocolMessageConverter.objToByteArray(a.getReferences());
+
+        byte[] b = ProtocolMessageConverter.objToByteArray(vpm);
+
+        _db.insertAnnouncement(a.getAnnouncement(), ref, announcementUuid, getUserUUID(pm.getPublicKey()),b);
+
+        int index = _users.get(pm.getPublicKey()).postAnnouncementBoard(a);
+        // client's public key is used to indicate it's stored in that client's PostOperation Board
+        _announcementMapper.put(announcementUuid, new AnnouncementLocation(pm.getPublicKey(), index));
+
+        _regularRegistersNN.remove(pm.getPublicKey());
+
+        System.out.flush();
+
+        if (cmh != null) {
+            cmh.sendMessage(createVerifiableMessage(
+                    new ProtocolMessage("POSTGENERAL", StatusCode.OK, _pubKey, a, newToken, token)));
+        }
+    }
+
+    public void deliverReadGeneral(VerifiableProtocolMessage vpm, ClientMessageHandler cmh, String token, String newToken, List<Announcement> announcements) {
+        System.out.println("DELIVERREADGENERAL");
+
+        ProtocolMessage pm = vpm.getProtocolMessage();
+
+        _regularRegistersNN.remove(pm.getPublicKey());
+
+        System.out.flush();
+
+        if (cmh != null) {
+            cmh.sendMessage(createVerifiableMessage(
+                    new ProtocolMessage("READGENERAL", StatusCode.OK, _pubKey, announcements, newToken, token)));
         }
     }
 
