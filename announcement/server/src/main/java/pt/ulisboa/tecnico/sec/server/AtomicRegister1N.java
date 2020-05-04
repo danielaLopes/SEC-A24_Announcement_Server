@@ -158,11 +158,11 @@ public class AtomicRegister1N {
     }
 
     public void deliver() {
-        System.out.println("deliver reading: " + _reading.get());
         _acks.incrementAndGet();
+        System.out.println("deliver acks: " + _acks.get());
         //System.out.println("_acks " + _acks.get());
         if (_acks.getAndSet(0) > _nServers/2) {
-            System.out.println("enough acks to deliver " + _acks.get());
+            System.out.println("enough acks to deliver ");
             if (_reading.get() == true) {
                 _reading.set(false);
                 _server.deliverRead(_vpm, _cmh, _token, _newToken, _readVal);

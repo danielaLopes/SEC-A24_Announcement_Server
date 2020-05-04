@@ -56,20 +56,23 @@ public class ServerThread extends Thread {
     public void receiveMessage() throws IOException {
         _oos = new ObjectOutputStream(_socket.getOutputStream());
         _ois = new ObjectInputStream(_socket.getInputStream());
+        // TODO: put timeout
         while(true) {
-            try{
+            try {
                 VerifiableServerMessage vsm = (VerifiableServerMessage) _communication.receiveMessage(_ois);
-                //System.out.println("server sig: " + vsm.getServerMessage().getPublicKey());
-                System.out.println("status code: " + verifySignature(vsm).getDescription() + " command " + vsm.getServerMessage().getCommand());
-                if(verifySignature(vsm) == StatusCode.OK) {
-                    ServerMessage sm = vsm.getServerMessage();
-                    //System.out.println("Received broadcast message: " + sm.getCommand() + "from" + _socket.getPort());
-                    //PublicKey clientPubKey = sm.getClientMessage().getProtocolMessage().getPublicKey();
-                    PublicKey clientPubKey = sm.getClientPubKey();
-                    Thread thread = new Thread(){
-                        public void run(){
+
+                Thread thread = new Thread() {
+                    public void run() {
+                        //System.out.println("server sig: " + vsm.getServerMessage().getPublicKey());
+                        System.out.println("status code: " + verifySignature(vsm).getDescription() + " command " + vsm.getServerMessage().getCommand());
+                        if (verifySignature(vsm) == StatusCode.OK) {
+                            ServerMessage sm = vsm.getServerMessage();
+                            //System.out.println("Received broadcast message: " + sm.getCommand() + "from" + _socket.getPort());
+                            //PublicKey clientPubKey = sm.getClientMessage().getProtocolMessage().getPublicKey();
+                            PublicKey clientPubKey = sm.getClientPubKey();
+
                             AtomicRegister1N ar1N = _server.getAtomicRegister1N(clientPubKey);
-                            switch(sm.getCommand()){
+                            switch (sm.getCommand()) {
                                 case "WRITE":
                                     if (ar1N == null) {
                                         // if the server did not receive a message from the client,
@@ -107,16 +110,14 @@ public class ServerThread extends Thread {
                                     break;
                                 default:
                                     break;
+                            }
+                        } else {
+                            System.out.println("Could not verify signature");
                         }
-                        }
-                    };
-                    thread.start();  
-                }
-                else {
-                    System.out.println("Could not verify signature");
-                }
-            }
-            catch (IOException | ClassNotFoundException e) {
+                    }
+                };
+                thread.start();
+            } catch (IOException | ClassNotFoundException e) {
                 //System.out.println(e);
             }
         }
