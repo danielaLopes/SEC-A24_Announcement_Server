@@ -108,6 +108,12 @@ public class ServerThread extends Thread {
                                             bestEffortBroadcast(createVerifiableServerMessage(response));
                                     }
                                     break;
+                                case "READGENERAL":
+                                    bestEffortBroadcast(createVerifiableServerMessage(_server.getRegularRegisterNN().value(sm)));
+                                    break;
+                                case "VALUEGENERAL":
+                                    bestEffortBroadcast(createVerifiableServerMessage(_server.getRegularRegisterNN().readReturn(sm)));
+                                    break;
                                 default:
                                     break;
                             }

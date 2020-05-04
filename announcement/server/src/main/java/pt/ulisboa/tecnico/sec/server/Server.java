@@ -49,7 +49,7 @@ public class Server extends Thread {
     private Communication _communication;
 
     private ConcurrentHashMap<PublicKey, AtomicRegister1N> _atomicRegisters1N = new ConcurrentHashMap<>();
-    private ConcurrentHashMap<PublicKey, RegularRegisterNN> _regularRegistersNN = new ConcurrentHashMap<>();
+    private RegularRegisterNN _regularRegisterNN = new RegularRegisterNN(this, _nServers);
 
     /** maps client token to current clientHandler processing the request with that token */
     //private ConcurrentHashMap<String, ClientMessageHandler> _processingRequests;
@@ -82,6 +82,10 @@ public class Server extends Thread {
         return _atomicRegisters1N.get(clientPubKey);
     }
 
+    public RegularRegisterNN getRegularRegisterNN() {
+        return _regularRegisterNN;
+    }
+
     public void putAtomicRegister1N(PublicKey clientPubKey, AtomicRegister1N register) {
         _atomicRegisters1N.put(clientPubKey, register);
     }
@@ -107,13 +111,13 @@ public class Server extends Thread {
 
     public void retrieveDataStructures() {
         DBStructure dbs = _db.retrieveStructure();
-        // Retrieve _users from database
-        List<UserStructure> us = dbs.getUsers();
-        for (UserStructure i : us) {
-            PublicKey pk = (PublicKey) ProtocolMessageConverter.byteArrayToObj(i.getPublicKey());
-            User u = new User(pk, i.getClientUUID());
-            _users.put(pk, u);
-        }
+        // // Retrieve _users from database
+        // List<UserStructure> us = dbs.getUsers();
+        // for (UserStructure i : us) {
+        //     PublicKey pk = (PublicKey) ProtocolMessageConverter.byteArrayToObj(i.getPublicKey());
+        //     User u = new User(pk, i.getClientUUID());
+        //     _users.put(pk, u);
+        // }
 
         // Retrieve _generalBoard from database
         List<GeneralBoardStructure> gbs = dbs.getGeneralBoard();
@@ -283,8 +287,6 @@ public class Server extends Thread {
         // client's public key is used to indicate it's stored in that client's PostOperation Board
         _announcementMapper.put(announcementUuid, new AnnouncementLocation(pm.getPublicKey(), index));
 
-        _regularRegistersNN.remove(pm.getPublicKey());
-
         System.out.flush();
 
         if (cmh != null) {
@@ -293,14 +295,12 @@ public class Server extends Thread {
         }
     }
 
-    public void deliverReadGeneral(VerifiableProtocolMessage vpm, ClientMessageHandler cmh, String token, String newToken, List<Announcement> announcements) {
+    public void deliverReadGeneral(List<Announcement> announcements, PublicKey clientPublicKey) {
         System.out.println("DELIVERREADGENERAL");
 
-        ProtocolMessage pm = vpm.getProtocolMessage();
-
-        _regularRegistersNN.remove(pm.getPublicKey());
-
         System.out.flush();
+
+        ClientMessageHandler cmh = _users.get(clientPublicKey).getCmh();
 
         if (cmh != null) {
             cmh.sendMessage(createVerifiableMessage(
@@ -524,7 +524,7 @@ public class Server extends Thread {
      * @return ProtocolMessage
      */
 
-    public VerifiableProtocolMessage registerUser(VerifiableProtocolMessage vpm) {
+    public VerifiableProtocolMessage registerUser(VerifiableProtocolMessage vpm, ClientMessageHandler cmh) {
 
 
         StatusCode sc;
@@ -557,7 +557,7 @@ public class Server extends Thread {
         if (sc.equals(StatusCode.USER_NOT_REGISTERED)) {
             String i = UUIDGenerator.generateUUID();
             String uuid = "T" + i;
-            User user = new User(clientPubKey, uuid);
+            User user = new User(clientPubKey, uuid, cmh);
             user.setRandomToken();
             String token = user.getToken();
             _users.put(clientPubKey, user);

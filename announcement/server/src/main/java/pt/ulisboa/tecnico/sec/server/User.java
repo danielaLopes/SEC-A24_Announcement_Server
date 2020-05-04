@@ -15,11 +15,13 @@ public class User {
     // has to be a list because latest announcements can be requested
     private List<Announcement> _announcementBoard;
     private String _token;
+    private ClientMessageHandler _cmh;
 
-    public User(PublicKey pubKey, String dbTableName) {
+    public User(PublicKey pubKey, String dbTableName, ClientMessageHandler cmh) {
         _pubKey = pubKey;
         _announcementBoard = new ArrayList<>();
         _dbTableName = dbTableName;
+        _cmh = cmh;
     }
 
     public String getdbTableName() {
@@ -46,6 +48,10 @@ public class User {
 
     public int getNumAnnouncements() {
         return _announcementBoard.size();
+    }
+
+    public ClientMessageHandler getCmh() {
+        return _cmh;
     }
 
     public String getToken() {

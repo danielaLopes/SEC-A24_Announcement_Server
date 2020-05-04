@@ -13,6 +13,7 @@ public class ServerMessage implements Serializable {
     private String _command;
     private byte[] _readAnnouncements;
     private AtomicInteger _rid;
+    private byte[] _regularValue;
 
     //public ServerMessage(PublicKey publicKey, VerifiableProtocolMessage vpm, String command, byte[] readAnnouncements) {
     public ServerMessage(PublicKey publicKey, PublicKey clientPubKey, String command, byte[] readAnnouncements) {
@@ -41,6 +42,9 @@ public class ServerMessage implements Serializable {
         //_clientMessage = vpm;
         _clientPubKey = clientPubKey;
     }
+
+    public void setRegularValue(byte[] regularValue) { _regularValue = regularValue; }
+    public byte[] getRegularValue() {return _regularValue;}
 
     public PublicKey getPublicKey() {return _publicKey; }
     //public VerifiableProtocolMessage getClientMessage() { return _clientMessage; }

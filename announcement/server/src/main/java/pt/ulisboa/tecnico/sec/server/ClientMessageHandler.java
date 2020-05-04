@@ -91,7 +91,7 @@ public class ClientMessageHandler extends Thread {
 
     public void registerUser(VerifiableProtocolMessage vpm) {
         try {
-            VerifiableProtocolMessage svpm = _server.registerUser(vpm);
+            VerifiableProtocolMessage svpm = _server.registerUser(vpm, this);
             _communication.sendMessage(svpm, _oos);
         }
         catch (IOException e) {
