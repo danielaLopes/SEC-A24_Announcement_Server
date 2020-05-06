@@ -2,6 +2,7 @@ package pt.ulisboa.tecnico.sec.client;
 
 import pt.ulisboa.tecnico.sec.communication_lib.*;
 
+import java.security.PublicKey;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +19,7 @@ public class ClientUI {
                     String keyStorePasswd, String entryPasswd, String alias,
                     int nServers, List<String> otherUsersPubKeyPaths) {
         _client = new Client(pubKeyPath, keyStorePath, keyStorePasswd, entryPasswd,
-                alias, nServers, otherUsersPubKeyPaths);
+                alias, nServers, otherUsersPubKeyPaths, this);
         _scanner = new Scanner(System.in);
     }
 
@@ -87,16 +88,12 @@ public class ClientUI {
         List<String> references = parseReferences(referencesIn);
 
         //StatusCode statusCode = _client.post(message, references);
-        List<StatusCode> statusCodes = _client.postServersGroup(message, references);
-        for (int i = 0; i < statusCodes.size(); i++) {
-            if (statusCodes.get(i) == StatusCode.OK) {
-                System.out.println("Posted announcement in server " + (i + 1) + ".");
-            }
-            else {
-                System.out.println("Could not post announcement in server " + (i + 1) + ".");
-            }
-            _client.printStatusCode(statusCodes.get(i));
-        }
+        _client.post(message, references);
+    }
+
+    public void deliverPost(StatusCode sc) {
+        System.out.print("POST: ");
+        _client.printStatusCode(sc);
     }
 
     /**
@@ -123,6 +120,13 @@ public class ClientUI {
         }
     }
 
+    public void deliverRead(StatusCode sc, List<Announcement> announcements) {
+        System.out.print("READ: ");
+        _client.printStatusCode(sc);
+        if(sc == StatusCode.OK)
+            printAnnouncements(announcements, "USER");
+    }
+
     /**
      * Prompts the user for an existing user's ID and for a number n
      * in order to retrieve the n latest announcements.
@@ -130,15 +134,15 @@ public class ClientUI {
     public void read() {
         int user = promptUser();
         int number = promptNumber();
-        //AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client.read(user, number);
-        List<AbstractMap.SimpleEntry<StatusCode, List<Announcement>>> responses = _client.readServersGroup(user, number);
-        for (AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response : responses) {
-            if (response.getKey() == StatusCode.OK) {
-                printAnnouncements(response.getValue(), "USER");
-            } else {
-                System.out.println("Could not read announcements.");
-            }
+
+        if (invalidUser(user)) {
+            System.out.println("Invalid user.");
+            return;
         }
+        PublicKey userToReadPB = _client._usersPubKeys.get(user);
+
+        //AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client.read(user, number);
+        _client.read(userToReadPB, number);
         
     }
 
@@ -157,7 +161,15 @@ public class ClientUI {
             } else {
                 System.out.println("Could not read announcements.");
             }
+        }
     }
+
+    /**
+     * Verifies if a user exists within _usersPubKeys.
+     * @param user
+     */
+    public boolean invalidUser(int user) {
+        return user < 0 || user >= _client._usersPubKeys.size();
     }
 
     /**

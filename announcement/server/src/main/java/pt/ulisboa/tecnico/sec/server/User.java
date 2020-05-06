@@ -15,12 +15,14 @@ public class User {
     // has to be a list because latest announcements can be requested
     private List<Announcement> _announcementBoard;
     private String _token;
+    private AtomicRegister1N _atomicRegister1N;
     private ClientMessageHandler _cmh;
 
-    public User(PublicKey pubKey, String dbTableName, ClientMessageHandler cmh) {
+    public User(PublicKey pubKey, String dbTableName, AtomicRegister1N atomicRegister1N, ClientMessageHandler cmh) {
         _pubKey = pubKey;
         _announcementBoard = new ArrayList<>();
         _dbTableName = dbTableName;
+        _atomicRegister1N = atomicRegister1N;
         _cmh = cmh;
     }
 
@@ -46,12 +48,12 @@ public class User {
         return _announcementBoard;
     }
 
-    public int getNumAnnouncements() {
-        return _announcementBoard.size();
+    public AtomicRegister1N getAtomicRegister1N() {
+        return _atomicRegister1N;
     }
 
-    public ClientMessageHandler getCmh() {
-        return _cmh;
+    public int getNumAnnouncements() {
+        return _announcementBoard.size();
     }
 
     public String getToken() {

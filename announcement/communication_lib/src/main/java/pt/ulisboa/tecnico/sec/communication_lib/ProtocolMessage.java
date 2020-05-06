@@ -11,6 +11,9 @@ public class ProtocolMessage implements Serializable {
 
     //private String _opUuid;
 
+    private AtomicRegisterMessages _atomicRegisterMessages;
+
+    //TODO Eliminar
     private List<Announcement> _announcements;
     private Announcement _postAnnouncement;
     // Post response
@@ -128,7 +131,10 @@ public class ProtocolMessage implements Serializable {
         _announcements = announcements;
     }
 
+
+    public void setAtomicRegisterMessages(AtomicRegisterMessages a) { _atomicRegisterMessages = a; }
     // Read Response
+    public AtomicRegisterMessages getAtomicRegisterMessages() { return _atomicRegisterMessages; }
 
     public String getCommand() { return _command; }
 

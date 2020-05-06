@@ -44,6 +44,11 @@ public class ClientMessageHandler extends Thread {
                         System.out.println("------------------------POST------------------------");
                         _server.post(vpm, this);
                         break;
+                    //Writeback phase
+                    case "WRITEBACK":
+                        System.out.println("------------------------WRITEBACK------------------------");
+                        _server.writeBack(vpm, this);
+                        break;
                     // Post to General Board
                     case "POSTGENERAL":
                         // Thread.sleep(10000);

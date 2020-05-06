@@ -45,14 +45,6 @@ public class ServerThread extends Thread {
         }
     }
 
-    public void writeValue(PublicKey clientPubKey, Announcement a) {
-        bestEffortBroadcast(createVerifiableServerMessage(_server.getAtomicRegister1N(clientPubKey).write(a)));
-    }
-
-    public void readValue(PublicKey clientPubKey) {
-        bestEffortBroadcast(createVerifiableServerMessage(_server.getAtomicRegister1N(clientPubKey).read()));
-    }
-
     public void receiveMessage() throws IOException {
         _oos = new ObjectOutputStream(_socket.getOutputStream());
         _ois = new ObjectInputStream(_socket.getInputStream());
@@ -62,7 +54,7 @@ public class ServerThread extends Thread {
                 VerifiableServerMessage vsm = (VerifiableServerMessage) _communication.receiveMessage(_ois);
 
                 Thread thread = new Thread() {
-                    public void run() {
+                    public void run() {/*
                         //System.out.println("server sig: " + vsm.getServerMessage().getPublicKey());
                         System.out.println("status code: " + verifySignature(vsm).getDescription() + " command " + vsm.getServerMessage().getCommand());
                         if (verifySignature(vsm) == StatusCode.OK) {
@@ -120,7 +112,7 @@ public class ServerThread extends Thread {
                         } else {
                             System.out.println("Could not verify signature");
                         }
-                    }
+                    */}
                 };
                 thread.start();
             } catch (IOException | ClassNotFoundException e) {
