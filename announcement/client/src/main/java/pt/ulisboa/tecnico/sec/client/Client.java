@@ -481,6 +481,7 @@ public class Client {
             Thread thread = new Thread(){
                 public void run() {
                     VerifiableProtocolMessage response = requestServer(pm.getValue(), _serverCommunications.get(pm.getKey()));
+                    System.out.println("Received [" + response.getProtocolMessage().getCommand() + "]");
                     if (response != null && verifyReceivedMessage(response) == StatusCode.OK) {
                         //TODO CHECK HOW MANY SERVERS NEED TO CALL WRITE RETURN
                         if (general)
@@ -488,7 +489,7 @@ public class Client {
                         else
                             _atomicRegister1N.writeReturn(response.getProtocolMessage().getAtomicRegisterMessages().getRid());
                         responses.put(pm.getKey(), response);
-                        printStatusCode(response.getProtocolMessage().getStatusCode());
+                        //printStatusCode(response.getProtocolMessage().getStatusCode());
                     }
                 }
             };
@@ -514,6 +515,7 @@ public class Client {
             Thread thread = new Thread(){
                 public void run() {
                     VerifiableProtocolMessage response = requestServer(pm.getValue(), _serverCommunications.get(pm.getKey()));
+                    System.out.println("Received [" + response.getProtocolMessage().getCommand() + "]");
                     if (response != null && (response.getProtocolMessage().getCommand().equals("VALUE") || 
                     response.getProtocolMessage().getCommand().equals("VALUEGENERAL")) && verifyReceivedMessage(response) == StatusCode.OK) {
                         //TODO CHECK HOW MANY SERVERS NEED TO CALL WRITE RETURN
@@ -522,7 +524,7 @@ public class Client {
                         else
                             _atomicRegister1N.writeBack(response.getProtocolMessage());
                         responses.put(pm.getKey(), response);
-                        printStatusCode(response.getProtocolMessage().getStatusCode());
+                        //printStatusCode(response.getProtocolMessage().getStatusCode());
                     }
                 }
             };
@@ -569,7 +571,7 @@ public class Client {
                 PublicKey serverPubKey = getServerPublicKeyFromVPM(rvpm);
 
                 if (verifySignature(rvpm, serverPubKey)) {
-                    System.out.println("Server signature verified successfully");
+                    //System.out.println("Server signature verified successfully");
                     //printStatusCode(rsc);
                 }
                 else {
