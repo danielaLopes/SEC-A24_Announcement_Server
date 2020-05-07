@@ -21,6 +21,11 @@ public class AtomicRegisterMessages implements Serializable {
         _values = new ArrayList<Announcement>();
     }
 
+    public AtomicRegisterMessages(int wts, List<Announcement> values) {
+        _wts = wts;
+        _values = values;
+    }
+
     public int getRid() { return _rid; }
     public int getWts() { return _wts; }
     public List<Announcement> getValues() { return _values; }

@@ -23,7 +23,7 @@ public class AtomicRegister1N {
     public List<Announcement> getValues() { return _values; }
 
     public AtomicRegisterMessages acknowledge(AtomicRegisterMessages arm) {
-        System.out.println("acknowledge");
+        //System.out.println("acknowledge");
         if (arm.getWts() > _ts) {
             _ts = arm.getWts();
             _values.addAll(arm.getValues());
@@ -32,7 +32,7 @@ public class AtomicRegister1N {
     }
 
     public AtomicRegisterMessages value(AtomicRegisterMessages arm, int n) {
-        System.out.println("value");
+        //System.out.println("value");
         return new AtomicRegisterMessages(arm.getRid(), _ts, getUserAnnouncements(n));
     }
 

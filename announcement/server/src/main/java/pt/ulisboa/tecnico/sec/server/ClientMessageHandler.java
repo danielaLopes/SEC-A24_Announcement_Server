@@ -52,7 +52,7 @@ public class ClientMessageHandler extends Thread {
                     // Post to General Board
                     case "POSTGENERAL":
                         // Thread.sleep(10000);
-                        postGeneral(vpm);
+                        _server.postGeneral(vpm, this);
                         break;
                     // Read from specific user
                     case "READ":
@@ -62,7 +62,7 @@ public class ClientMessageHandler extends Thread {
                     // Read from General Board
                     case "READGENERAL":
                         // Thread.sleep(10000);
-                        readGeneral(vpm);
+                        _server.readGeneral(vpm, this);
                         break;
                     // Refresh Client Token
                     case "TOKEN":
@@ -97,26 +97,6 @@ public class ClientMessageHandler extends Thread {
     public void registerUser(VerifiableProtocolMessage vpm) {
         try {
             VerifiableProtocolMessage svpm = _server.registerUser(vpm, this);
-            _communication.sendMessage(svpm, _oos);
-        }
-        catch (IOException e) {
-          System.out.println(e);
-        }
-    }
-
-    public void postGeneral(VerifiableProtocolMessage vpm) {
-        try {
-            VerifiableProtocolMessage svpm = _server.postGeneral(vpm);
-            _communication.sendMessage(svpm, _oos);
-        }
-        catch (IOException e) {
-          System.out.println(e);
-        }
-    }
-
-    public void readGeneral(VerifiableProtocolMessage vpm) {
-        try {
-            VerifiableProtocolMessage svpm = _server.readGeneral(vpm);
             _communication.sendMessage(svpm, _oos);
         }
         catch (IOException e) {

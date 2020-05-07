@@ -472,6 +472,8 @@ public class Server extends Thread {
             return sc;
         }
 
+        if(!vpm.getProtocolMessage().getPublicKey().equals(vpm.getProtocolMessage().getAtomicRegisterMessages().getValues().get(0).getClientPublicKey()))
+            return StatusCode.INVALID_ANNOUNCEMENT_PUBLIC_KEY;
         return sc;
     }
 
@@ -678,10 +680,8 @@ public class Server extends Thread {
         System.out.println("token: " + token);
 
         // verifications
-        System.out.println("1");
         sc = verifyWriteBack(token, vpm, clientPubKey);
         if (sc.equals(StatusCode.NULL_FIELD) || sc.equals(StatusCode.USER_NOT_REGISTERED)) {
-            System.out.println("2");
             cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
                 "POST", sc, _pubKey)));
                 return;
@@ -692,13 +692,11 @@ public class Server extends Thread {
         System.out.println("newtoken: " + newToken);
         _db.updateOperationUserRow(user.getdbTableName(), newToken);
         if (sc.equals(StatusCode.INVALID_TOKEN)) {
-            System.out.println("3");
             cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
                 "POST", sc, _pubKey, newToken, token)));
             return;
         }
         if (!sc.equals(StatusCode.OK)) {
-            System.out.println("4");
             cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
                     "POST", sc, _pubKey, newToken, token)));
             // TODO: should this be anything ????
@@ -707,8 +705,6 @@ public class Server extends Thread {
             }
             return;
         }
-
-        System.out.println("5");
         
         AtomicRegisterMessages arm = _users.get(clientPubKey).getAtomicRegister1N().acknowledge(vpm.getProtocolMessage().getAtomicRegisterMessages());
         ProtocolMessage p = new ProtocolMessage("ACK", sc, _pubKey, newToken, token);
@@ -730,7 +726,7 @@ public class Server extends Thread {
      * @param vpm
      * @return ProtocolMessage
      */
-    public VerifiableProtocolMessage postGeneral(VerifiableProtocolMessage vpm) {
+    public void postGeneral(VerifiableProtocolMessage vpm, ClientMessageHandler cmh) {
         StatusCode sc;
 
         VerifiableProtocolMessage response;
@@ -742,47 +738,31 @@ public class Server extends Thread {
         // verifications
         sc = verifyPost(token, vpm, message, references, clientPubKey);
         if (sc.equals(StatusCode.NULL_FIELD) || sc.equals(StatusCode.USER_NOT_REGISTERED)) {
-            return createVerifiableMessage(new ProtocolMessage("POST", sc, _pubKey));
+            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage("POSTGENERAL", sc, _pubKey)));
+            return;
         }
         User user = _users.get(clientPubKey);
         user.setRandomToken();
         String newToken = user.getToken();
         _db.updateOperationUserRow(user.getdbTableName(), user.getToken());
         if (sc.equals(StatusCode.INVALID_TOKEN)) {
-            return createVerifiableMessage(new ProtocolMessage(
-                "POSTGENERAL", sc, _pubKey, newToken, token));
+            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
+                "POSTGENERAL", sc, _pubKey, newToken, token)));
+            return;
         }
         if (!sc.equals(StatusCode.OK)) {
-            response = createVerifiableMessage(new ProtocolMessage(
-                    "POSTGENERAL", sc, _pubKey, newToken, token));
+            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
+                    "POSTGENERAL", sc, _pubKey, newToken, token)));
             if (!sc.equals(StatusCode.NULL_FIELD)) {
                 // _db.insertOperation(opUuid, operation);
             }
-            return response;
+            return;
         }
 
-        String announcementUuid = UUIDGenerator.generateUUID();
-
-        ProtocolMessage pm = vpm.getProtocolMessage();
-        Announcement a = pm.getPostAnnouncement();
-        a.setAnnouncementID(announcementUuid);
-        a.setPublicKey(pm.getPublicKey());
-        byte[] ref = ProtocolMessageConverter.objToByteArray(a.getReferences());
-
-        _db.insertAnnouncementGB(a.getAnnouncement(), ref, announcementUuid, getUserUUID(pm.getPublicKey()));
-
-        int index;
-        synchronized (_generalBoard) {
-            index = _generalBoard.size();
-            _generalBoard.add(a);
-        }
-        // server's public key is used to indicate it's stored in the General Board
-        _announcementMapper.put(announcementUuid, new AnnouncementLocation(_pubKey, index));
-
-        response = createVerifiableMessage(new ProtocolMessage(
-                "POSTGENERAL", StatusCode.OK, _pubKey, a, newToken, token));
-        // _db.insertOperation(opUuid, operation);
-        return response;
+        AtomicRegisterMessages arm = _regularRegisterNN.acknowledge(vpm.getProtocolMessage());
+        ProtocolMessage p = new ProtocolMessage("ACK", sc, _pubKey, newToken, token);
+        p.setAtomicRegisterMessages(arm);
+        cmh.sendMessage(createVerifiableMessage(p));
     }
 
     public String getUserUUID(PublicKey publicKey) {
@@ -857,22 +837,24 @@ public class Server extends Thread {
      * @param vpm
      * @return a list of announcements
      */
-    public VerifiableProtocolMessage readGeneral(VerifiableProtocolMessage vpm) {
+    public void readGeneral(VerifiableProtocolMessage vpm, ClientMessageHandler cmh) {
         StatusCode sc;
 
         VerifiableProtocolMessage response;
 
         PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
-        int number = vpm.getProtocolMessage().getReadNumberAnnouncements();
         String token = vpm.getProtocolMessage().getToken();
 
 
         // verifications
         sc = verifyRead(token, vpm, clientPubKey);
-        if (sc.equals(StatusCode.USER_NOT_REGISTERED)) return createVerifiableMessage(new ProtocolMessage(
-                "READGENERAL", sc, _pubKey));        
+        if (sc.equals(StatusCode.USER_NOT_REGISTERED)) {
+            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage("READGENERAL", sc, _pubKey))); 
+            return;       
+        }
         if (sc.equals(StatusCode.NULL_FIELD)) {
-            return createVerifiableMessage(new ProtocolMessage("READ", sc, _pubKey));
+            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage("READGENERAL", sc, _pubKey)));
+            return;
         }
 
         User user = _users.get(clientPubKey);
@@ -881,30 +863,17 @@ public class Server extends Thread {
         _db.updateOperationUserRow(user.getdbTableName(), user.getToken());
 
         if (!sc.equals(StatusCode.OK)) {
-            response = createVerifiableMessage(new ProtocolMessage(
-                    "READGENERAL", sc, _pubKey, newToken, token));
-            if (!sc.equals(StatusCode.NULL_FIELD)) {
+            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage("READGENERAL", sc, _pubKey, newToken, token)));   
+            if (!sc.equals(StatusCode.NULL_FIELD)) { ;
                 // _db.insertOperation(opUuid, operation);
             }
-            return response;
+            return;
         }
 
-        ProtocolMessage pm = vpm.getProtocolMessage();
-        // List<Announcement> announcements = _db.getGBAnnouncements(number);
-        List<Announcement> announcements;
-        int nAnnouncements = _generalBoard.size();
-        if ((0 < number) && (number <= nAnnouncements)) {
-            announcements = new ArrayList<>(_generalBoard.subList(nAnnouncements - number, nAnnouncements));
-        }
-        else {
-            announcements = _generalBoard;
-        }
-        // TODO: Announcements need to have a signature
-
-        response = createVerifiableMessage(new ProtocolMessage(
-                "READGENERAL", StatusCode.OK, _pubKey, announcements, newToken, token));
-        // _db.insertOperation(opUuid, operation);
-        return response;
+        AtomicRegisterMessages arm = _regularRegisterNN.value(vpm.getProtocolMessage());
+        ProtocolMessage p = new ProtocolMessage("VALUEGENERAL", sc, _pubKey, newToken, token);
+        p.setAtomicRegisterMessages(arm);
+        cmh.sendMessage(createVerifiableMessage(p));
     }
 
     // // does not make changes to the system, so it does not need to taken into account in _operations

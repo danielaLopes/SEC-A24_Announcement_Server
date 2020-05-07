@@ -1,14 +1,14 @@
 package pt.ulisboa.tecnico.sec.client;
 
-import pt.ulisboa.tecnico.sec.communication_lib.*;
-
 import java.security.PublicKey;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-
 import java.util.regex.Pattern;
+
+import pt.ulisboa.tecnico.sec.communication_lib.Announcement;
+import pt.ulisboa.tecnico.sec.communication_lib.StatusCode;
 
 public class ClientUI {
 
@@ -90,11 +90,7 @@ public class ClientUI {
         //StatusCode statusCode = _client.post(message, references);
         _client.post(message, references);
     }
-
-    public void deliverPost(StatusCode sc) {
-        System.out.print("POST: ");
-        _client.printStatusCode(sc);
-    }
+    
 
     /**
      * Prompts the user for the message and reference(s) needed to post
@@ -109,19 +105,28 @@ public class ClientUI {
         }
         List<String> references = parseReferences(referencesIn);
 
-        List<StatusCode> statusCodes = _client.postGeneralServersGroup(message, references);
-        for (int i = 0; i < statusCodes.size(); i++) {
-            if (statusCodes.get(i) == StatusCode.OK) {
-                System.out.println("Posted announcement " + (i + 1) + ".");
-            } else {
-                System.out.println("Could not post announcement " + (i + 1) + ".");
-            }
-            _client.printStatusCode(statusCodes.get(i));
-        }
+        _client.postGeneral(message, references);
+    }
+
+    public void deliverPost(StatusCode sc) {
+        System.out.print("POST: ");
+        _client.printStatusCode(sc);
+    }
+
+    public void deliverPostGeneral(StatusCode sc) {
+        System.out.print("POSTGENERAL: ");
+        _client.printStatusCode(sc);
     }
 
     public void deliverRead(StatusCode sc, List<Announcement> announcements) {
         System.out.print("READ: ");
+        _client.printStatusCode(sc);
+        if(sc == StatusCode.OK)
+            printAnnouncements(announcements, "USER");
+    }
+
+    public void deliverReadGeneral(StatusCode sc, List<Announcement> announcements) {
+        System.out.print("READGENERAL: ");
         _client.printStatusCode(sc);
         if(sc == StatusCode.OK)
             printAnnouncements(announcements, "USER");
@@ -153,15 +158,6 @@ public class ClientUI {
     public void readGeneral() {
         int number = promptNumber();
         _client.readGeneral(number);
-        //AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client.readGeneral(number);
-        List<AbstractMap.SimpleEntry<StatusCode, List<Announcement>>> responses = _client.readGeneralServersGroup(number);
-        for (AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response : responses) {
-            if (response.getKey() == StatusCode.OK) {
-                printAnnouncements(response.getValue(), "GENERAL");
-            } else {
-                System.out.println("Could not read announcements.");
-            }
-        }
     }
 
     /**
@@ -184,7 +180,7 @@ public class ClientUI {
             System.out.println("\n-------------- ANNOUNCEMENTS FROM " + board + " --------------");
             for (Announcement a: announcements){
                 System.out.println("\n---------------- BEGIN ANNOUNCEMENT ----------------");
-                System.out.println("*** From: " + a.getClientPublicKey());
+                System.out.println("*** From: " + a.getClientPublicKey().toString().substring(0, 120) + "...");
                 System.out.println("*** Message: " + a.getAnnouncement());
                 System.out.println("*** ID: " + a.getAnnouncementID());
                 System.out.println("\n------------------END ANNOUNCEMENT------------------");
