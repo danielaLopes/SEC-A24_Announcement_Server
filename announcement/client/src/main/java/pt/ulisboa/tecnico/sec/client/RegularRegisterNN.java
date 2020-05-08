@@ -67,12 +67,16 @@ public class RegularRegisterNN {
     }
 
     public void writeReturn(AtomicRegisterMessages arm) {
-        //System.out.println("writeReturn");
+        System.out.println("writeReturn");
+        System.out.println("argm.getWts(): " + arm.getWts());
+        System.out.println("_wts: " + _wts);
         if (arm.getWts() == _wts) {
             _acks.incrementAndGet();
+            System.out.println("nAcks: " + _acks.get());
             synchronized(_acks) {
                 if (_acks.get() > _client._nServers / 2) {
                     _acks.set(0);
+                    System.out.println("ready to deliverpostgeneral()");
                     _client.deliverPostGeneral();
                 }
             }

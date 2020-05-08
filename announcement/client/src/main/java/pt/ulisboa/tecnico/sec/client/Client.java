@@ -91,6 +91,7 @@ public class Client {
         _regularRegisterNN  = new RegularRegisterNN(this);
         
         _clientUI = clientUI;
+        //_clientUI.start();
 
     }
 
@@ -268,7 +269,9 @@ public class Client {
 
                 _serverCommunications.put(serverPubKey, createServerCommunication(port));
             }
+            //System.out.println("before registerServersGroup");
             registerServersGroup();
+            //System.out.println("after registerServersGroup");
         }
         catch(IOException e) {
             System.out.println("Error starting client socket. Make sure the server is running.");
@@ -459,6 +462,7 @@ public class Client {
     }
 
     public void deliverPostGeneral() {
+        System.out.println("deliverPostGeneral");
         if (_clientUI != null)
             _clientUI.deliverPostGeneral(StatusCode.OK);  
     }
@@ -515,7 +519,11 @@ public class Client {
             Thread thread = new Thread(){
                 public void run() {
                     VerifiableProtocolMessage response = requestServer(pm.getValue(), _serverCommunications.get(pm.getKey()));
+                    System.out.println("Response pm " + response.getProtocolMessage() + " announcements");
+                    System.out.println("Received " + response.getProtocolMessage().getAnnouncements().size() + " announcements");
                     System.out.println("Received [" + response.getProtocolMessage().getCommand() + "]");
+                    System.out.flush();
+
                     if (response != null && (response.getProtocolMessage().getCommand().equals("VALUE") || 
                     response.getProtocolMessage().getCommand().equals("VALUEGENERAL")) && verifyReceivedMessage(response) == StatusCode.OK) {
                         //TODO CHECK HOW MANY SERVERS NEED TO CALL WRITE RETURN
@@ -550,6 +558,8 @@ public class Client {
         catch (IOException e) {
             System.out.println("Error reconnecting with server at port " + serverCommunication.getPort() +
                     ". Server is still dead!");
+            System.out.flush();
+
             // does not try to send message if server is still dead
             return null;
         }
@@ -592,6 +602,9 @@ public class Client {
                 System.out.println(e);
                 System.exit(-1);
             }
+            finally {
+                System.out.flush();
+            }
         }
 
         return rvpm;
@@ -610,6 +623,7 @@ public class Client {
                 rscs.add(StatusCode.NO_RESPONSE);
                 // TODO: assume that if a client can't register with one of the servers, client shuts down
                 System.out.println("Could not register: could not receive a response");
+                System.out.flush();
                 closeGroupCommunication();
                 System.exit(-1);
             }
@@ -644,6 +658,8 @@ public class Client {
             rsc = getStatusCodeFromVPM(vpm);
             serverCommunication.setToken(getTokenFromVPM(vpm));
         }
+
+        System.out.flush();
         
         return rsc;
     }

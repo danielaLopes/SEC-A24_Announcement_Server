@@ -89,6 +89,7 @@ public class AtomicRegister1N {
                     _acks.set(0);
                     if(_reading) {
                         _reading = false;
+                        System.out.println("_readVal size before calling deliverRead() " + _readval.size());
                         _client.deliverRead(_readval);
                     }
                     else

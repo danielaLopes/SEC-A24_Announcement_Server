@@ -27,10 +27,10 @@ public class ClientUI {
      * Starts Client UI for better interaction.
      */
     public void start() {
-        String option = "1";
 
-        while (!option.equals("0")) {
-            option = promptGeneralMenu();
+        boolean repeat = false;
+        do {
+            String option = promptGeneralMenu();
             if (!option.equals("\n")) {
                 switch (option) {
                     case "1":
@@ -51,12 +51,14 @@ public class ClientUI {
                     // Exit and close communication
                     case "0":
                         closeCommunication();
+                        System.exit(0);
                         break;
                     default:
+                        repeat = true;
                         break;
                 }
             }
-        }
+        } while(repeat == true);
     }
 
     /**
@@ -111,11 +113,13 @@ public class ClientUI {
     public void deliverPost(StatusCode sc) {
         System.out.print("POST: ");
         _client.printStatusCode(sc);
+        start();
     }
 
     public void deliverPostGeneral(StatusCode sc) {
         System.out.print("POSTGENERAL: ");
         _client.printStatusCode(sc);
+        start();
     }
 
     public void deliverRead(StatusCode sc, List<Announcement> announcements) {
@@ -123,6 +127,7 @@ public class ClientUI {
         _client.printStatusCode(sc);
         if(sc == StatusCode.OK)
             printAnnouncements(announcements, "USER");
+        start();
     }
 
     public void deliverReadGeneral(StatusCode sc, List<Announcement> announcements) {
@@ -130,6 +135,7 @@ public class ClientUI {
         _client.printStatusCode(sc);
         if(sc == StatusCode.OK)
             printAnnouncements(announcements, "USER");
+        start();
     }
 
     /**
@@ -174,6 +180,7 @@ public class ClientUI {
      * @param board where the announcements were posted
      */
     public void printAnnouncements(List<Announcement> announcements, String board) {
+        System.out.println("size of announcements to print " + announcements.size());
         if (announcements.size() == 0)
             System.out.println("\nTHERE ARE NO ANNOUNCEMENTS TO DISPLAY");
         else {
@@ -200,7 +207,8 @@ public class ClientUI {
         System.out.println("4 - " + Message.READ_GENERAL);
         System.out.println("0 - " + Message.EXIT);
 
-        return _scanner.nextLine();
+        String cmd = _scanner.nextLine();
+        return cmd;
     }
 
     /**

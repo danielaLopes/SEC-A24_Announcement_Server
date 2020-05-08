@@ -39,9 +39,11 @@ public class AtomicRegister1N {
     public List<Announcement> getUserAnnouncements(int number) {
         int nAnnouncements = _values.size();
         if ((0 < number) && (number <= nAnnouncements)) {
+            System.out.println("returning " + number + " announcements");
             return new ArrayList<>(_values.subList(nAnnouncements - number, nAnnouncements));
         }
         else {
+            System.out.println("returning all " + _values.size() + " announcements");
             return _values;
         }
     }
