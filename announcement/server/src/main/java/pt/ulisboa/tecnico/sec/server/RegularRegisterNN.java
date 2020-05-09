@@ -11,6 +11,7 @@ import java.util.ArrayList;
 
 public class RegularRegisterNN {
 
+    private Object _lock = new Object();
     private Server _server;
     private int _nServers;
     private List<RegisterValue> _registerValues;
@@ -25,9 +26,11 @@ public class RegularRegisterNN {
         //System.out.println("acknowledge");
         RegisterMessage arm = (RegisterMessage) ProtocolMessageConverter.byteArrayToObj(pm.getAtomicRegisterMessages());
         PublicKey clientPubKey = pm.getPublicKey();
-        if (arm.getWts() > getLastUserTimeStamp(clientPubKey)) {
-            RegisterValue rv = new RegisterValue(arm.getWts(), arm.getValues().get(0), clientPubKey);
-            _registerValues.add(rv);
+        synchronized (_lock) {
+            if (arm.getWts() > getLastUserTimeStamp(clientPubKey)) {
+                RegisterValue rv = new RegisterValue(arm.getWts(), arm.getValues().get(0), clientPubKey);
+                _registerValues.add(rv);
+            }
         }
 
         RegisterMessage newArm = new RegisterMessage();
@@ -36,7 +39,7 @@ public class RegularRegisterNN {
         return newArm;
     }
 
-    public RegisterMessage value(ProtocolMessage pm) {
+    public synchronized RegisterMessage value(ProtocolMessage pm) {
         //System.out.println("value");
         RegisterMessage arm = new RegisterMessage(pm.getAtomicRegisterMessages());
         int n = pm.getReadNumberAnnouncements();
