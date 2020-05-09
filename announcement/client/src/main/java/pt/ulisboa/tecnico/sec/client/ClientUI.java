@@ -191,6 +191,7 @@ public class ClientUI {
                 System.out.println("*** Message: " + a.getAnnouncement());
                 System.out.println("*** ID: " + a.getAnnouncementID());
                 System.out.println("\n------------------END ANNOUNCEMENT------------------");
+                System.out.flush();
             }
         }
     }

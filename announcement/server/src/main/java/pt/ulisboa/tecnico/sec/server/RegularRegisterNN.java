@@ -1,16 +1,12 @@
 package pt.ulisboa.tecnico.sec.server;
 
 import pt.ulisboa.tecnico.sec.communication_lib.Announcement;
-import pt.ulisboa.tecnico.sec.communication_lib.AtomicRegisterMessages;
-import pt.ulisboa.tecnico.sec.communication_lib.Communication;
+import pt.ulisboa.tecnico.sec.communication_lib.RegisterMessage;
 import pt.ulisboa.tecnico.sec.communication_lib.ProtocolMessage;
-import pt.ulisboa.tecnico.sec.communication_lib.ServerMessage;
-import pt.ulisboa.tecnico.sec.crypto_lib.ProtocolMessageConverter;
 
 import java.security.PublicKey;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class RegularRegisterNN {
 
@@ -24,22 +20,26 @@ public class RegularRegisterNN {
         _registerValues = new ArrayList<RegisterValue>();
     }
 
-    public AtomicRegisterMessages acknowledge(ProtocolMessage pm) {
+    public RegisterMessage acknowledge(ProtocolMessage pm) {
         //System.out.println("acknowledge");
-        AtomicRegisterMessages arm = pm.getAtomicRegisterMessages();
+        RegisterMessage arm = pm.getAtomicRegisterMessages();
         PublicKey clientPubKey = pm.getPublicKey();
         if (arm.getWts() > getLastUserTimeStamp(clientPubKey)) {
             RegisterValue rv = new RegisterValue(arm.getWts(), arm.getValues().get(0), clientPubKey);
             _registerValues.add(rv);
         }
-        return new AtomicRegisterMessages(arm.getWts());
+
+        RegisterMessage newArm = new RegisterMessage();
+        newArm.setWts(arm.getWts());
+
+        return newArm;
     }
 
-    public AtomicRegisterMessages value(ProtocolMessage pm) {
+    public RegisterMessage value(ProtocolMessage pm) {
         //System.out.println("value");
-        AtomicRegisterMessages arm = pm.getAtomicRegisterMessages();
+        RegisterMessage arm = pm.getAtomicRegisterMessages();
         int n = pm.getReadNumberAnnouncements();
-        return new AtomicRegisterMessages(arm.getRid(), getLastTimeStamp(), getAnnouncements(n));
+        return new RegisterMessage(arm.getRid(), getLastTimeStamp(), getAnnouncements(n));
     }
 
     public int getLastTimeStamp() {

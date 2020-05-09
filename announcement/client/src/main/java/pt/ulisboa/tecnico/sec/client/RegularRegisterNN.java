@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import pt.ulisboa.tecnico.sec.communication_lib.Announcement;
-import pt.ulisboa.tecnico.sec.communication_lib.AtomicRegisterMessages;
+import pt.ulisboa.tecnico.sec.communication_lib.RegisterMessage;
 import pt.ulisboa.tecnico.sec.communication_lib.ProtocolMessage;
 
 public class RegularRegisterNN {
@@ -28,22 +28,40 @@ public class RegularRegisterNN {
         _readList.clear();
     }
 
-    public AtomicRegisterMessages read() {
+    public RegisterMessage read() {
         //System.out.println("read");
         _rid += 1;
         _readList.clear();
-        return new AtomicRegisterMessages(_rid);
+        return new RegisterMessage(_rid);
     }
 
     public void readReturn(ProtocolMessage pm) {
         //System.out.println("readreturn");
         if(_rid == pm.getAtomicRegisterMessages().getRid()) {
             AtomicValue av = new AtomicValue(pm.getAtomicRegisterMessages().getWts(), pm.getAtomicRegisterMessages().getValues());
-            _readList.put(pm.getPublicKey(), av);
-            if (_readList.size() > _client._nServers / 2) {
-                AtomicValue highest = highest();
-                _readList.clear();
-                _client.deliverReadGeneral(highest.getValues());
+
+            synchronized(_readList) {
+                // print _readList before
+                System.out.println("Print _readList before");
+                for (AtomicValue val : _readList.values()) {
+                    System.out.println("val before " + val);
+                }
+                System.out.flush();
+
+                _readList.put(pm.getPublicKey(), av);
+
+                // print _readList after
+                System.out.println("Print _readList after");
+                for (AtomicValue val : _readList.values()) {
+                    System.out.println("val after " + val);
+                }
+                System.out.flush();
+
+                if (_readList.size() > _client._nServers / 2) {
+                    AtomicValue highest = highest();
+                    _readList.clear();
+                    _client.deliverReadGeneral(highest.getValues());
+                }
             }
         }
     }
@@ -66,17 +84,13 @@ public class RegularRegisterNN {
         _acks.set(0);
     }
 
-    public void writeReturn(AtomicRegisterMessages arm) {
+    public void writeReturn(RegisterMessage arm) {
         System.out.println("writeReturn");
-        System.out.println("argm.getWts(): " + arm.getWts());
-        System.out.println("_wts: " + _wts);
         if (arm.getWts() == _wts) {
             _acks.incrementAndGet();
-            System.out.println("nAcks: " + _acks.get());
             synchronized(_acks) {
                 if (_acks.get() > _client._nServers / 2) {
                     _acks.set(0);
-                    System.out.println("ready to deliverpostgeneral()");
                     _client.deliverPostGeneral();
                 }
             }

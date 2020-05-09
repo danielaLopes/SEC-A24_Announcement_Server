@@ -9,16 +9,9 @@ import java.net.*;
 import java.security.*;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.net.ssl.SSLEngineResult.Status;
 
 public class Server extends Thread {
 
@@ -659,7 +652,7 @@ public class Server extends Thread {
             return;
         }
         
-        AtomicRegisterMessages arm = _users.get(clientPubKey).getAtomicRegister1N().acknowledge(vpm.getProtocolMessage().getAtomicRegisterMessages());
+        RegisterMessage arm = _users.get(clientPubKey).getAtomicRegister1N().acknowledge(vpm.getProtocolMessage().getAtomicRegisterMessages());
         ProtocolMessage p = new ProtocolMessage("ACK", sc, _pubKey, newToken, token);
         p.setAtomicRegisterMessages(arm);
         cmh.sendMessage(createVerifiableMessage(p));
@@ -706,7 +699,7 @@ public class Server extends Thread {
             return;
         }
         
-        AtomicRegisterMessages arm = _users.get(clientPubKey).getAtomicRegister1N().acknowledge(vpm.getProtocolMessage().getAtomicRegisterMessages());
+        RegisterMessage arm = _users.get(clientPubKey).getAtomicRegister1N().acknowledge(vpm.getProtocolMessage().getAtomicRegisterMessages());
         ProtocolMessage p = new ProtocolMessage("ACK", sc, _pubKey, newToken, token);
         p.setAtomicRegisterMessages(arm);
         cmh.sendMessage(createVerifiableMessage(p));
@@ -759,7 +752,7 @@ public class Server extends Thread {
             return;
         }
 
-        AtomicRegisterMessages arm = _regularRegisterNN.acknowledge(vpm.getProtocolMessage());
+        RegisterMessage arm = _regularRegisterNN.acknowledge(vpm.getProtocolMessage());
         ProtocolMessage p = new ProtocolMessage("ACK", sc, _pubKey, newToken, token);
         p.setAtomicRegisterMessages(arm);
         cmh.sendMessage(createVerifiableMessage(p));
@@ -819,7 +812,7 @@ public class Server extends Thread {
             return;
         }
 
-        AtomicRegisterMessages arm = _users.get(clientPubKey).getAtomicRegister1N().value(vpm.getProtocolMessage().getAtomicRegisterMessages(), number);
+        RegisterMessage arm = _users.get(clientPubKey).getAtomicRegister1N().value(vpm.getProtocolMessage().getAtomicRegisterMessages(), number);
         ProtocolMessage p = new ProtocolMessage("VALUE", sc, _pubKey, newToken, token);
         p.setAtomicRegisterMessages(arm);
         cmh.sendMessage(createVerifiableMessage(p));
@@ -870,7 +863,7 @@ public class Server extends Thread {
             return;
         }
 
-        AtomicRegisterMessages arm = _regularRegisterNN.value(vpm.getProtocolMessage());
+        RegisterMessage arm = _regularRegisterNN.value(vpm.getProtocolMessage());
         ProtocolMessage p = new ProtocolMessage("VALUEGENERAL", sc, _pubKey, newToken, token);
         p.setAtomicRegisterMessages(arm);
         cmh.sendMessage(createVerifiableMessage(p));

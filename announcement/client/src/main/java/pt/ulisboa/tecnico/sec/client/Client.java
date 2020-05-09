@@ -5,7 +5,6 @@ import pt.ulisboa.tecnico.sec.crypto_lib.KeyPairUtil;
 import pt.ulisboa.tecnico.sec.crypto_lib.KeyStorage;
 import pt.ulisboa.tecnico.sec.crypto_lib.ProtocolMessageConverter;
 import pt.ulisboa.tecnico.sec.crypto_lib.SignatureUtil;
-import pt.ulisboa.tecnico.sec.crypto_lib.UUIDGenerator;
 
 import java.net.Socket;
 import java.net.SocketException;
@@ -20,13 +19,10 @@ import java.io.*;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Collections;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.HashMap;
-
-import javax.crypto.*;
 
 public class Client {
 
@@ -486,6 +482,7 @@ public class Client {
                 public void run() {
                     VerifiableProtocolMessage response = requestServer(pm.getValue(), _serverCommunications.get(pm.getKey()));
                     System.out.println("Received [" + response.getProtocolMessage().getCommand() + "]");
+                    System.out.flush();
                     if (response != null && verifyReceivedMessage(response) == StatusCode.OK) {
                         //TODO CHECK HOW MANY SERVERS NEED TO CALL WRITE RETURN
                         if (general)
@@ -501,7 +498,7 @@ public class Client {
         }
     }
 
-    public void writeBack(AtomicRegisterMessages arm) {
+    public void writeBack(RegisterMessage arm) {
         Map<PublicKey, ProtocolMessage> pms = new HashMap<>();
             for (Map.Entry<PublicKey, CommunicationServer> entry : _serverCommunications.entrySet()) {
                 ProtocolMessage p = new ProtocolMessage("WRITEBACK", _pubKey, entry.getValue().getToken());
@@ -520,7 +517,9 @@ public class Client {
                 public void run() {
                     VerifiableProtocolMessage response = requestServer(pm.getValue(), _serverCommunications.get(pm.getKey()));
                     System.out.println("Response pm " + response.getProtocolMessage() + " announcements");
-                    System.out.println("Received " + response.getProtocolMessage().getAnnouncements().size() + " announcements");
+                    System.out.println("Received register messages" + response.getProtocolMessage().getAtomicRegisterMessages());
+                    // TODO: null pointer here, are announcements null?
+                    //System.out.println("Received " + response.getProtocolMessage().getAnnouncements().size() + " announcements");
                     System.out.println("Received [" + response.getProtocolMessage().getCommand() + "]");
                     System.out.flush();
 
@@ -693,7 +692,7 @@ public class Client {
             int wts = _atomicRegister1N.getWts();
             List<Announcement> values = new ArrayList<Announcement>(Arrays.asList(a));
 
-            AtomicRegisterMessages arm = new AtomicRegisterMessages(rid, wts, values);
+            RegisterMessage arm = new RegisterMessage(rid, wts, values);
  
             Map<PublicKey, ProtocolMessage> pms = new HashMap<>();
             for (Map.Entry<PublicKey, CommunicationServer> entry : _serverCommunications.entrySet()) {
@@ -745,7 +744,7 @@ public class Client {
         int wts = _regularRegisterNN.getWts();
         List<Announcement> values = new ArrayList<Announcement>(Arrays.asList(a));
 
-        AtomicRegisterMessages arm = new AtomicRegisterMessages(wts, values);
+        RegisterMessage arm = new RegisterMessage(wts, values);
 
         Map<PublicKey, ProtocolMessage> pms = new HashMap<>();
         for (Map.Entry<PublicKey, CommunicationServer> entry : _serverCommunications.entrySet()) {
@@ -770,7 +769,7 @@ public class Client {
         List<Announcement> announcements = null;
         StatusCode rsc = null;
 
-        AtomicRegisterMessages arm = _atomicRegister1N.read();
+        RegisterMessage arm = _atomicRegister1N.read();
 
         Map<PublicKey, ProtocolMessage> pms = new HashMap<>();
         for (Map.Entry<PublicKey, CommunicationServer> entry : _serverCommunications.entrySet()) {
@@ -791,7 +790,7 @@ public class Client {
         List<Announcement> announcements = null;
         StatusCode rsc = null;
 
-        AtomicRegisterMessages arm = _regularRegisterNN.read();
+        RegisterMessage arm = _regularRegisterNN.read();
 
         Map<PublicKey, ProtocolMessage> pms = new HashMap<>();
         for (Map.Entry<PublicKey, CommunicationServer> entry : _serverCommunications.entrySet()) {

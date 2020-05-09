@@ -1,17 +1,8 @@
 package pt.ulisboa.tecnico.sec.server;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import com.mysql.cj.protocol.Protocol;
-
-import java.io.IOException;
-import java.security.*;
 
 import pt.ulisboa.tecnico.sec.communication_lib.*;
-import pt.ulisboa.tecnico.sec.crypto_lib.ProtocolMessageConverter;
 
 public class AtomicRegister1N {
     private Server _server;
@@ -22,18 +13,18 @@ public class AtomicRegister1N {
     public int getTimeStamp() { return _ts; }
     public List<Announcement> getValues() { return _values; }
 
-    public AtomicRegisterMessages acknowledge(AtomicRegisterMessages arm) {
+    public RegisterMessage acknowledge(RegisterMessage arm) {
         //System.out.println("acknowledge");
         if (arm.getWts() > _ts) {
             _ts = arm.getWts();
             _values.addAll(arm.getValues());
         }
-        return new AtomicRegisterMessages(arm.getRid());
+        return new RegisterMessage(arm.getRid());
     }
 
-    public AtomicRegisterMessages value(AtomicRegisterMessages arm, int n) {
+    public RegisterMessage value(RegisterMessage arm, int n) {
         //System.out.println("value");
-        return new AtomicRegisterMessages(arm.getRid(), _ts, getUserAnnouncements(n));
+        return new RegisterMessage(arm.getRid(), _ts, getUserAnnouncements(n));
     }
 
     public List<Announcement> getUserAnnouncements(int number) {

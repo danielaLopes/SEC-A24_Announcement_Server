@@ -1,60 +1,87 @@
 package pt.ulisboa.tecnico.sec.client;
 
 import pt.ulisboa.tecnico.sec.communication_lib.Announcement;
-import pt.ulisboa.tecnico.sec.communication_lib.AtomicRegisterMessages;
+import pt.ulisboa.tecnico.sec.communication_lib.RegisterMessage;
 import pt.ulisboa.tecnico.sec.communication_lib.ProtocolMessage;
 
 import java.security.PublicKey;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class AtomicRegister1N {
     private AtomicValue _atomicValue;
-    private int _rid;
+    private AtomicInteger _rid;
     private AtomicInteger _acks;
     private HashMap<PublicKey, AtomicValue> _readList = new HashMap<>();
-    private boolean _reading;
-    private int _wts;
+    private AtomicBoolean _reading;
+    private AtomicInteger _wts;
     private List<Announcement> _readval;
     private Client _client;
 
+    // in order to lock both _readList and _readval
+    private Object lock = new Object();
+
     public AtomicRegister1N(Client client) {
         _atomicValue = new AtomicValue(0, new ArrayList<Announcement>());
-        _wts = 0;
+        _wts = new AtomicInteger(0);
         _acks = new AtomicInteger(0);
-        _rid = 0;
-        _reading = false;
+        _rid = new AtomicInteger(0);
+        _reading = new AtomicBoolean(false);
         _client = client;
         resetReadList();
         _readval = new ArrayList<Announcement>();
     }
 
     public void resetReadList() {
-        _readList.clear();
+        synchronized (_readList) {
+            _readList.clear();
+        }
     }
 
-    public AtomicRegisterMessages read() {
+    public RegisterMessage read() {
         //System.out.println("read");
-        _rid += 1;
+        int rid = _rid.incrementAndGet();
         _acks.set(0);
         resetReadList();
-        _reading = true;
-        return new AtomicRegisterMessages(_rid);
+        _reading.set(true);
+        return new RegisterMessage(rid);
     }
 
-    public AtomicRegisterMessages writeBack(ProtocolMessage pm) {
-        if(_rid == pm.getAtomicRegisterMessages().getRid()) {
+    public RegisterMessage writeBack(ProtocolMessage pm) {
+        int rid = _rid.get();
+        if (rid == pm.getAtomicRegisterMessages().getRid()) {
             AtomicValue av = new AtomicValue(pm.getAtomicRegisterMessages().getWts(), pm.getAtomicRegisterMessages().getValues());
-            _readList.put(pm.getPublicKey(), av);
-            if (_readList.size() > _client._nServers / 2) {
-                AtomicValue highest = highest();
-                resetReadList();
-                _client.writeBack(new AtomicRegisterMessages(_rid, highest.getTimeStamp(), highest.getValues()));
+
+            synchronized (_readList) {
+
+                //print _readList before
+                System.out.println("Print _readList before");
+                for (AtomicValue val : _readList.values()) {
+                    System.out.println("val before " + val);
+                }
+                System.out.flush();
+
+                _readList.put(pm.getPublicKey(), av);
+
+                // print _readList after
+                System.out.println("Print _readList after");
+                for (AtomicValue val : _readList.values()) {
+                    System.out.println("val after " + val);
+                }
+                System.out.flush();
+
+                _readList.put(pm.getPublicKey(), av);
+                if (_readList.size() > _client._nServers / 2) {
+                    AtomicValue highest = highest();
+                    resetReadList();
+                    _client.writeBack(new RegisterMessage(rid, highest.getTimeStamp(), highest.getValues()));
+                }
+
             }
         }
         return null;
@@ -63,11 +90,14 @@ public class AtomicRegister1N {
     public AtomicValue highest() {
         int ts = -1;
         AtomicValue highestValue = new AtomicValue(-1, new ArrayList<>());
-        for(Map.Entry<PublicKey, AtomicValue> r : _readList.entrySet()) {
-            if (r.getValue().getTimeStamp() > ts) {
-                highestValue = r.getValue();
-                _readval = new ArrayList<Announcement>(highestValue.getValues());
-                ts = highestValue.getTimeStamp();
+        synchronized (lock) {
+            List<Map.Entry<PublicKey, AtomicValue>> readEntries = new ArrayList<>(_readList.entrySet());
+            for (Map.Entry<PublicKey, AtomicValue> r : readEntries) {
+                if (r.getValue().getTimeStamp() > ts) {
+                    highestValue = r.getValue();
+                    _readval = new ArrayList<Announcement>(highestValue.getValues());
+                    ts = highestValue.getTimeStamp();
+                }
             }
         }
         return highestValue;
@@ -75,21 +105,22 @@ public class AtomicRegister1N {
 
     public void write() {
         //System.out.println("write");
-        _rid += 1;
-        _wts += 1;
+        _rid.incrementAndGet();
+        _wts.incrementAndGet();
         _acks.set(0);
     }
 
     public void writeReturn(int r) {
         //System.out.println("writeReturn");
-        if (r == _rid) {
+        if (r == _rid.get()) {
             _acks.incrementAndGet();
             synchronized(_acks) {
                 if (_acks.get() > _client._nServers / 2) {
                     _acks.set(0);
-                    if(_reading) {
-                        _reading = false;
+                    if(_reading.compareAndSet(true, false)) {
+                        //_reading = false;
                         System.out.println("_readVal size before calling deliverRead() " + _readval.size());
+                        System.out.flush();
                         _client.deliverRead(_readval);
                     }
                     else
@@ -105,7 +136,7 @@ public class AtomicRegister1N {
     }
 
     public int getRid() {
-        return _rid;
+        return _rid.get();
     }
 
     public int getAcks() {
@@ -117,11 +148,11 @@ public class AtomicRegister1N {
     }
 
     public boolean isReading() {
-        return _reading;
+        return _reading.get();
     }
 
     public int getWts() {
-        return _wts;
+        return _wts.get();
     }
 
     public List<Announcement> getReadVal() {

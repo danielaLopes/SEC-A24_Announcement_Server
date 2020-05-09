@@ -4,29 +4,35 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AtomicRegisterMessages implements Serializable {
+public class RegisterMessage implements Serializable {
     private int _rid;
     private int _wts;
     private List<Announcement> _values;
 
-    public AtomicRegisterMessages(int rid, int wts, List<Announcement> values) {
+    public RegisterMessage(int rid, int wts, List<Announcement> values) {
         _rid = rid;
         _wts = wts;
         _values = values;
     }
 
-    public AtomicRegisterMessages(int rid) {
+    public RegisterMessage(int rid) {
         _rid = rid;
         _wts = 0;
         _values = new ArrayList<Announcement>();
     }
 
-    public AtomicRegisterMessages(int wts, List<Announcement> values) {
+    public RegisterMessage() {
+        _values = new ArrayList<Announcement>();
+    }
+
+    public RegisterMessage(int wts, List<Announcement> values) {
         _wts = wts;
         _values = values;
     }
 
     public int getRid() { return _rid; }
+    public void setRid(int rid) { _rid = rid; }
     public int getWts() { return _wts; }
+    public void setWts(int wts) { _wts = wts; }
     public List<Announcement> getValues() { return _values; }
 }
