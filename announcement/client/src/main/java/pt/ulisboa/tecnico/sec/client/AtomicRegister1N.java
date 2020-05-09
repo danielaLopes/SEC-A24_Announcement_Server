@@ -3,6 +3,7 @@ package pt.ulisboa.tecnico.sec.client;
 import pt.ulisboa.tecnico.sec.communication_lib.Announcement;
 import pt.ulisboa.tecnico.sec.communication_lib.RegisterMessage;
 import pt.ulisboa.tecnico.sec.communication_lib.ProtocolMessage;
+import pt.ulisboa.tecnico.sec.crypto_lib.ProtocolMessageConverter;
 
 import java.security.PublicKey;
 import java.util.ArrayList;
@@ -24,7 +25,7 @@ public class AtomicRegister1N {
     private Client _client;
 
     // in order to lock both _readList and _readval
-    private Object lock = new Object();
+    private Object _lock = new Object();
 
     public AtomicRegister1N(Client client) {
         _atomicValue = new AtomicValue(0, new ArrayList<Announcement>());
@@ -53,9 +54,10 @@ public class AtomicRegister1N {
     }
 
     public RegisterMessage writeBack(ProtocolMessage pm) {
+        RegisterMessage registerMessage = new RegisterMessage(pm.getAtomicRegisterMessages());
         int rid = _rid.get();
-        if (rid == pm.getAtomicRegisterMessages().getRid()) {
-            AtomicValue av = new AtomicValue(pm.getAtomicRegisterMessages().getWts(), pm.getAtomicRegisterMessages().getValues());
+        if (rid == registerMessage.getRid()) {
+            AtomicValue av = new AtomicValue(registerMessage.getWts(), registerMessage.getValues());
 
             synchronized (_readList) {
 
@@ -90,7 +92,7 @@ public class AtomicRegister1N {
     public AtomicValue highest() {
         int ts = -1;
         AtomicValue highestValue = new AtomicValue(-1, new ArrayList<>());
-        synchronized (lock) {
+        synchronized (_lock) {
             List<Map.Entry<PublicKey, AtomicValue>> readEntries = new ArrayList<>(_readList.entrySet());
             for (Map.Entry<PublicKey, AtomicValue> r : readEntries) {
                 if (r.getValue().getTimeStamp() > ts) {
@@ -114,7 +116,7 @@ public class AtomicRegister1N {
         //System.out.println("writeReturn");
         if (r == _rid.get()) {
             _acks.incrementAndGet();
-            synchronized(_acks) {
+            synchronized(_lock) {
                 if (_acks.get() > _client._nServers / 2) {
                     _acks.set(0);
                     if(_reading.compareAndSet(true, false)) {

@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import pt.ulisboa.tecnico.sec.communication_lib.Announcement;
 import pt.ulisboa.tecnico.sec.communication_lib.RegisterMessage;
 import pt.ulisboa.tecnico.sec.communication_lib.ProtocolMessage;
+import pt.ulisboa.tecnico.sec.crypto_lib.ProtocolMessageConverter;
 
 public class RegularRegisterNN {
     private AtomicValue _atomicValue;
@@ -37,8 +38,9 @@ public class RegularRegisterNN {
 
     public void readReturn(ProtocolMessage pm) {
         //System.out.println("readreturn");
-        if(_rid == pm.getAtomicRegisterMessages().getRid()) {
-            AtomicValue av = new AtomicValue(pm.getAtomicRegisterMessages().getWts(), pm.getAtomicRegisterMessages().getValues());
+        RegisterMessage registerMessage = new RegisterMessage(pm.getAtomicRegisterMessages());
+        if(_rid == registerMessage.getRid()) {
+            AtomicValue av = new AtomicValue(registerMessage.getWts(), registerMessage.getValues());
 
             synchronized(_readList) {
                 // print _readList before

@@ -3,6 +3,7 @@ package pt.ulisboa.tecnico.sec.server;
 import pt.ulisboa.tecnico.sec.communication_lib.Announcement;
 import pt.ulisboa.tecnico.sec.communication_lib.RegisterMessage;
 import pt.ulisboa.tecnico.sec.communication_lib.ProtocolMessage;
+import pt.ulisboa.tecnico.sec.crypto_lib.ProtocolMessageConverter;
 
 import java.security.PublicKey;
 import java.util.List;
@@ -22,7 +23,7 @@ public class RegularRegisterNN {
 
     public RegisterMessage acknowledge(ProtocolMessage pm) {
         //System.out.println("acknowledge");
-        RegisterMessage arm = pm.getAtomicRegisterMessages();
+        RegisterMessage arm = (RegisterMessage) ProtocolMessageConverter.byteArrayToObj(pm.getAtomicRegisterMessages());
         PublicKey clientPubKey = pm.getPublicKey();
         if (arm.getWts() > getLastUserTimeStamp(clientPubKey)) {
             RegisterValue rv = new RegisterValue(arm.getWts(), arm.getValues().get(0), clientPubKey);
@@ -37,7 +38,7 @@ public class RegularRegisterNN {
 
     public RegisterMessage value(ProtocolMessage pm) {
         //System.out.println("value");
-        RegisterMessage arm = pm.getAtomicRegisterMessages();
+        RegisterMessage arm = new RegisterMessage(pm.getAtomicRegisterMessages());
         int n = pm.getReadNumberAnnouncements();
         return new RegisterMessage(arm.getRid(), getLastTimeStamp(), getAnnouncements(n));
     }

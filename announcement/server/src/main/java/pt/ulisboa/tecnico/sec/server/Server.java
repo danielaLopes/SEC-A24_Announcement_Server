@@ -465,7 +465,8 @@ public class Server extends Thread {
             return sc;
         }
 
-        if(!vpm.getProtocolMessage().getPublicKey().equals(vpm.getProtocolMessage().getAtomicRegisterMessages().getValues().get(0).getClientPublicKey()))
+        RegisterMessage registerMessage = new RegisterMessage(vpm.getProtocolMessage().getAtomicRegisterMessages());
+        if(!vpm.getProtocolMessage().getPublicKey().equals(registerMessage.getValues().get(0).getClientPublicKey()))
             return StatusCode.INVALID_ANNOUNCEMENT_PUBLIC_KEY;
         return sc;
     }
@@ -651,10 +652,11 @@ public class Server extends Thread {
             }
             return;
         }
-        
-        RegisterMessage arm = _users.get(clientPubKey).getAtomicRegister1N().acknowledge(vpm.getProtocolMessage().getAtomicRegisterMessages());
+
+        RegisterMessage registerMessage = new RegisterMessage(vpm.getProtocolMessage().getAtomicRegisterMessages());
+        RegisterMessage arm = _users.get(clientPubKey).getAtomicRegister1N().acknowledge(registerMessage);
         ProtocolMessage p = new ProtocolMessage("ACK", sc, _pubKey, newToken, token);
-        p.setAtomicRegisterMessages(arm);
+        p.setAtomicRegisterMessages(arm.getBytes());
         cmh.sendMessage(createVerifiableMessage(p));
         return;
 
@@ -698,10 +700,11 @@ public class Server extends Thread {
             }
             return;
         }
-        
-        RegisterMessage arm = _users.get(clientPubKey).getAtomicRegister1N().acknowledge(vpm.getProtocolMessage().getAtomicRegisterMessages());
+
+        RegisterMessage registerMessage = new RegisterMessage(vpm.getProtocolMessage().getAtomicRegisterMessages());
+        RegisterMessage arm = _users.get(clientPubKey).getAtomicRegister1N().acknowledge(registerMessage);
         ProtocolMessage p = new ProtocolMessage("ACK", sc, _pubKey, newToken, token);
-        p.setAtomicRegisterMessages(arm);
+        p.setAtomicRegisterMessages(arm.getBytes());
         cmh.sendMessage(createVerifiableMessage(p));
         return;
 
@@ -754,7 +757,7 @@ public class Server extends Thread {
 
         RegisterMessage arm = _regularRegisterNN.acknowledge(vpm.getProtocolMessage());
         ProtocolMessage p = new ProtocolMessage("ACK", sc, _pubKey, newToken, token);
-        p.setAtomicRegisterMessages(arm);
+        p.setAtomicRegisterMessages(arm.getBytes());
         cmh.sendMessage(createVerifiableMessage(p));
     }
 
@@ -771,8 +774,6 @@ public class Server extends Thread {
      */
     public void read(VerifiableProtocolMessage vpm, ClientMessageHandler cmh) {
         StatusCode sc;
-
-        VerifiableProtocolMessage response;
 
         PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
         int number = vpm.getProtocolMessage().getReadNumberAnnouncements();
@@ -812,10 +813,14 @@ public class Server extends Thread {
             return;
         }
 
-        RegisterMessage arm = _users.get(clientPubKey).getAtomicRegister1N().value(vpm.getProtocolMessage().getAtomicRegisterMessages(), number);
+        RegisterMessage registerMessage = new RegisterMessage(vpm.getProtocolMessage().getAtomicRegisterMessages());
+        RegisterMessage arm = _users.get(clientPubKey).getAtomicRegister1N().value(registerMessage, number);
         ProtocolMessage p = new ProtocolMessage("VALUE", sc, _pubKey, newToken, token);
-        p.setAtomicRegisterMessages(arm);
-        cmh.sendMessage(createVerifiableMessage(p));
+        p.setAtomicRegisterMessages(arm.getBytes());
+        VerifiableProtocolMessage response = createVerifiableMessage(p);
+        registerMessage = new RegisterMessage(response.getProtocolMessage().getAtomicRegisterMessages());
+        System.out.println("Sending " + registerMessage.getValues().size() + " announcements.");
+        cmh.sendMessage(response);
         return;
 
         // Broadcast, each thread sends to a server
@@ -865,7 +870,7 @@ public class Server extends Thread {
 
         RegisterMessage arm = _regularRegisterNN.value(vpm.getProtocolMessage());
         ProtocolMessage p = new ProtocolMessage("VALUEGENERAL", sc, _pubKey, newToken, token);
-        p.setAtomicRegisterMessages(arm);
+        p.setAtomicRegisterMessages(arm.getBytes());
         cmh.sendMessage(createVerifiableMessage(p));
     }
 

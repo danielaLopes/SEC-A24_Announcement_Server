@@ -485,10 +485,11 @@ public class Client {
                     System.out.flush();
                     if (response != null && verifyReceivedMessage(response) == StatusCode.OK) {
                         //TODO CHECK HOW MANY SERVERS NEED TO CALL WRITE RETURN
+                        RegisterMessage registerMessage = new RegisterMessage(response.getProtocolMessage().getAtomicRegisterMessages());
                         if (general)
-                            _regularRegisterNN.writeReturn(response.getProtocolMessage().getAtomicRegisterMessages());
+                            _regularRegisterNN.writeReturn(registerMessage);
                         else
-                            _atomicRegister1N.writeReturn(response.getProtocolMessage().getAtomicRegisterMessages().getRid());
+                            _atomicRegister1N.writeReturn(registerMessage.getRid());
                         responses.put(pm.getKey(), response);
                         //printStatusCode(response.getProtocolMessage().getStatusCode());
                     }
@@ -502,7 +503,7 @@ public class Client {
         Map<PublicKey, ProtocolMessage> pms = new HashMap<>();
             for (Map.Entry<PublicKey, CommunicationServer> entry : _serverCommunications.entrySet()) {
                 ProtocolMessage p = new ProtocolMessage("WRITEBACK", _pubKey, entry.getValue().getToken());
-                p.setAtomicRegisterMessages(arm);
+                p.setAtomicRegisterMessages(arm.getBytes());
                 pms.put(entry.getKey(), p);
             }
         write(pms, false);
@@ -573,6 +574,8 @@ public class Client {
             try {
                 _communication.sendMessage(vpm, serverCommunication.getObjOutStream());
                 rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(serverCommunication.getObjInStream());
+
+
                 if (rvpm == null) {
                     return null;
                 }
@@ -697,7 +700,7 @@ public class Client {
             Map<PublicKey, ProtocolMessage> pms = new HashMap<>();
             for (Map.Entry<PublicKey, CommunicationServer> entry : _serverCommunications.entrySet()) {
                 ProtocolMessage p = new ProtocolMessage("POST", _pubKey, a, entry.getValue().getToken());
-                p.setAtomicRegisterMessages(arm);
+                p.setAtomicRegisterMessages(arm.getBytes());
                 pms.put(entry.getKey(), p);
             }
 
@@ -749,7 +752,7 @@ public class Client {
         Map<PublicKey, ProtocolMessage> pms = new HashMap<>();
         for (Map.Entry<PublicKey, CommunicationServer> entry : _serverCommunications.entrySet()) {
             ProtocolMessage p = new ProtocolMessage("POSTGENERAL", _pubKey, a, entry.getValue().getToken());
-            p.setAtomicRegisterMessages(arm);
+            p.setAtomicRegisterMessages(arm.getBytes());
             pms.put(entry.getKey(), p);
         }
 
@@ -774,7 +777,7 @@ public class Client {
         Map<PublicKey, ProtocolMessage> pms = new HashMap<>();
         for (Map.Entry<PublicKey, CommunicationServer> entry : _serverCommunications.entrySet()) {
             ProtocolMessage pm = new ProtocolMessage("READ", _pubKey, entry.getValue().getToken(), number, user);
-            pm.setAtomicRegisterMessages(arm);
+            pm.setAtomicRegisterMessages(arm.getBytes());
             pms.put(entry.getKey(), pm);
         }
 
@@ -795,7 +798,7 @@ public class Client {
         Map<PublicKey, ProtocolMessage> pms = new HashMap<>();
         for (Map.Entry<PublicKey, CommunicationServer> entry : _serverCommunications.entrySet()) {
             ProtocolMessage pm = new ProtocolMessage("READGENERAL", _pubKey, entry.getValue().getToken(), number);
-            pm.setAtomicRegisterMessages(arm);
+            pm.setAtomicRegisterMessages(arm.getBytes());
             pms.put(entry.getKey(), pm);
         }
         

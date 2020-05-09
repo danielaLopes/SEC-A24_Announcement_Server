@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RegisterMessage implements Serializable {
+public class RegisterMessage extends SerializableObject {
     private int _rid;
     private int _wts;
     private List<Announcement> _values;
@@ -30,9 +30,25 @@ public class RegisterMessage implements Serializable {
         _values = values;
     }
 
+    public RegisterMessage(byte[] bytes) {
+        RegisterMessage registerMessage = (RegisterMessage) super.byteArrayToObj(bytes);
+        _rid = registerMessage.getRid();
+        _wts = registerMessage.getWts();
+        _values = registerMessage.getValues();
+    }
+
     public int getRid() { return _rid; }
     public void setRid(int rid) { _rid = rid; }
     public int getWts() { return _wts; }
     public void setWts(int wts) { _wts = wts; }
     public List<Announcement> getValues() { return _values; }
+
+    public byte[] getBytes() {
+        return super.objToByteArray(this);
+    }
+
+    @Override
+    public Object byteArrayToObj(byte[] b) {
+        return super.byteArrayToObj(b);
+    }
 }
