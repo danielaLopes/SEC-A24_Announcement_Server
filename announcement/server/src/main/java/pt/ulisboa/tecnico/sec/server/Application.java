@@ -26,19 +26,22 @@ public class Application {
             }
         });
 
-        if(args.length < 6) {
-            System.out.println("\"Usage: <nServers> <port> <keyStorePassword> <entryPassword> <alias> <pubKeyPath> <keyStorePath>");
+        if(args.length < 7) {
+            System.out.println("\"Usage: <nServers> <nFaults> <port> <keyStorePassword> <entryPassword> <alias> <pubKeyPath> <keyStorePath>");
             return;
         }
 
         int nServers = Integer.parseInt(args[0]);
         System.out.println(nServers + " servers running.");
 
-        int port = Integer.parseInt(args[1]);
+        int nFaults = Integer.parseInt(args[1]);
+        System.out.println("Number of fults:  " + nFaults);
+
+        int port = Integer.parseInt(args[2]);
         System.out.println("Server running at port " + port);
 
-        Server server = new Server(false, nServers, port, args[2].toCharArray(), args[3].toCharArray(), args[4],
-                args[5], args[6]);
+        Server server = new Server(false, nServers, nFaults, port, args[3].toCharArray(), args[4].toCharArray(), args[5],
+                args[6], args[7]);
         server.start();
 
         // test ComparePost

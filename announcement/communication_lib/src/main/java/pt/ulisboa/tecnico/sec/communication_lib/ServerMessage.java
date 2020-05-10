@@ -1,11 +1,13 @@
 package pt.ulisboa.tecnico.sec.communication_lib;
 
 import java.security.PublicKey;
+import java.util.List;
 
 public class ServerMessage extends SerializableObject {
+    private String _command;
     private PublicKey _publicKey;
     private VerifiableProtocolMessage _clientVPM;
-    private String _command;
+    private byte[] _sigma; 
 
     public ServerMessage(PublicKey publicKey, String command, VerifiableProtocolMessage clientVPM) {
         _publicKey = publicKey;
@@ -18,6 +20,10 @@ public class ServerMessage extends SerializableObject {
         _publicKey = sm.getPublicKey();
         _command = sm.getCommand();
         _clientVPM = sm.getClientMessage();
+    }
+
+    public void setSigma(byte[] sigma) {
+        _sigma = sigma;
     }
 
     public byte[] getBytes() {

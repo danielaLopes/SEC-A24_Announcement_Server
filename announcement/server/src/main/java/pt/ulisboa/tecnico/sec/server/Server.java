@@ -19,7 +19,8 @@ public class Server extends Thread {
     private Socket _socket;
     private List<Socket> _serverSocketList;
     private int _port;
-    private int _nServers;
+    protected int _nServers;
+    protected int _nFaults;
 
     private PublicKey _pubKey;
     private PrivateKey _privateKey;
@@ -52,9 +53,10 @@ public class Server extends Thread {
     // maps client public key -> server broadcast data
     protected ConcurrentHashMap<PublicKey, ServerBroadcast> _serverBroadcasts = new ConcurrentHashMap<>();
 
-    public Server(boolean activateCC, int nServers, int port, char[] keyStorePasswd, char[] entryPasswd, String alias, String pubKeyPath,
+    public Server(boolean activateCC, int nServers, int nFaults, int port, char[] keyStorePasswd, char[] entryPasswd, String alias, String pubKeyPath,
             String keyStorePath) {
 
+        _nFaults = nFaults;
         _port = port;
         _nServers = nServers;
         loadPublicKey(pubKeyPath);
@@ -203,6 +205,12 @@ public class Server extends Thread {
             System.out.println(e);
         }
         return null;
+    }
+
+    public void sendToAllServers(ServerMessage sm) {
+        for (ServerThread t: _serverThreads) {
+            t.sendServerMessage(sm);
+        }
     }
 
     public void serverBroadcast(PublicKey clientPubKey, ServerMessage sm, VerifiableProtocolMessage clientMessage) {
@@ -667,7 +675,11 @@ public class Server extends Thread {
             return;
         }
 
+        
+        System.out.println("vpm");
+        System.out.println(vpm);
         ServerMessage sm = new ServerMessage(_pubKey, "SERVER_POST", vpm);
+        System.out.println("sm" + sm);
         serverBroadcast(clientPubKey, sm, vpm);
 
         RegisterMessage registerMessage = new RegisterMessage(vpm.getProtocolMessage().getAtomicRegisterMessages());

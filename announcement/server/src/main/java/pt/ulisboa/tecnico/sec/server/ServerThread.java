@@ -24,7 +24,7 @@ public class ServerThread extends Thread {
     private ObjectInputStream _ois;
     private Communication _communication = new Communication();
 
-    private ConcurrentHashMap<PublicKey, ServerMessage> _serverMessageQueue = new ConcurrentHashMap<>();
+    protected ConcurrentHashMap<PublicKey, ServerMessage> _serverMessageQueue = new ConcurrentHashMap<>();
 
     public ServerThread(Server server, int nServers, int otherPort, int selfPort, ServerSocket serverSocket) {
         _server = server;
@@ -35,8 +35,7 @@ public class ServerThread extends Thread {
     }
 
     public void sendServerMessage(ServerMessage sm) {
-        //System.out.println("Sending broadcast message: " + vsm.getServerMessage().getCommand() + " " + vsm.getServerMessage().getPublicKey());
-        //System.out.println(_socket);
+        System.out.println("Sending broadcast message: " + sm.getCommand());
         VerifiableServerMessage vsm = _server.createVerifiableServerMessage(sm);
         try{
             _communication.sendMessage(vsm, _oos);
@@ -47,8 +46,6 @@ public class ServerThread extends Thread {
     }
 
     public void receiveMessage() throws IOException {
-        _oos = new ObjectOutputStream(_socket.getOutputStream());
-        _ois = new ObjectInputStream(_socket.getInputStream());
         // TODO: put timeout
         while(true) {
             try {
@@ -57,7 +54,6 @@ public class ServerThread extends Thread {
                 Thread thread = new Thread() {
                     public void run() {
                         //System.out.println("server sig: " + vsm.getServerMessage().getPublicKey());
-                        System.out.println("status code: " + verifySignature(vsm).getDescription() + " command " + vsm.getServerMessage().getCommand());
                         if (verifySignature(vsm) == StatusCode.OK) {
                             ServerMessage sm = vsm.getServerMessage();
                             System.out.println("Received broadcast message: " + sm.getCommand() + "from" + _socket.getPort());
@@ -66,7 +62,10 @@ public class ServerThread extends Thread {
                                     handleServerPost(sm);
                                     break;
                                 case "ECHO":
-                                    handleEcho(sm);
+                                    handleEcho(vsm);
+                                    break;
+                                case "FINAL":
+                                    handleFinal(vsm);
                                     break;
                                 default:
                                     break;
@@ -101,19 +100,26 @@ public class ServerThread extends Thread {
     public void sendQueueMessages(PublicKey clientPubKey) {
         System.out.println("sendQueueMessages");
         ServerBroadcast sb = _server._serverBroadcasts.get(clientPubKey);
-        for (Map.Entry<PublicKey, ServerMessage> entry : _serverMessageQueue.entrySet()) {
-            System.out.println("sending queue message");
-            sendServerMessage(sb.echo(entry.getValue()));
+        if(_serverMessageQueue.containsKey(clientPubKey)) {
+            sendServerMessage(sb.echo(_serverMessageQueue.get(clientPubKey)));
+            _serverMessageQueue.remove(clientPubKey);
         }
     }
 
-    public void handleEcho(ServerMessage sm) {
+    public void handleEcho(VerifiableServerMessage vsm) {
         System.out.println("handleEcho");
+        ServerMessage sm = vsm.getServerMessage();
         VerifiableProtocolMessage vpm = sm.getClientMessage();
         PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
         ServerBroadcast sb = _server._serverBroadcasts.get(clientPubKey);
         if (sb == null) return;
-        sendServerMessage(sb.ready(sm));
+        ServerMessage s = sb.ready(vsm);
+        if(s != null)
+            _server.sendToAllServers(s);
+    }
+
+    public void handleFinal(VerifiableServerMessage vsm) {
+        System.out.println("FINALMENTE");
     }
 
     public void acceptCommunications() {
@@ -121,7 +127,9 @@ public class ServerThread extends Thread {
             _socket = _communication.accept(_serverSocket);
             
             System.out.println("Server has accepted communications in port:" + _selfPort);
-
+            
+            _oos = new ObjectOutputStream(_socket.getOutputStream());
+            _ois = new ObjectInputStream(_socket.getInputStream());
             receiveMessage();
 
             
@@ -139,7 +147,9 @@ public class ServerThread extends Thread {
             System.out.println("Starting client socket in port: " + _otherPort);
 
 
-
+            
+            _oos = new ObjectOutputStream(_socket.getOutputStream());
+            _ois = new ObjectInputStream(_socket.getInputStream());
             receiveMessage();
         }
         catch(IOException e) {
