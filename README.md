@@ -71,9 +71,9 @@ Inside project root directory (announcement/):
     - Example 3 servers:
         ```
         cd server/
-        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="3 9001 password password alias src/main/resources/crypto/public1.key src/main/resources/crypto/server_keystore.jks"
-        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="3 9002 password password alias src/main/resources/crypto/public2.key src/main/resources/crypto/server2_keystore2.jks"
-        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="3 9003 password password alias src/main/resources/crypto/public3.key src/main/resources/crypto/server3_keystore3.jks"
+        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="3 1 9001 password password alias src/main/resources/crypto/public1.key src/main/resources/crypto/server_keystore.jks"
+        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="3 1 9002 password password alias src/main/resources/crypto/public2.key src/main/resources/crypto/server2_keystore2.jks"
+        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="3 1 9003 password password alias src/main/resources/crypto/public3.key src/main/resources/crypto/server3_keystore3.jks"
         ```
 4. Run client:
     - General:
