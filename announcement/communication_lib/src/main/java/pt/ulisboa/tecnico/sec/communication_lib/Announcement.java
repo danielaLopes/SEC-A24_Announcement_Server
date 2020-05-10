@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.security.PublicKey;
 import java.util.List;
 
-public class Announcement implements Serializable{
+public class Announcement implements Serializable, Comparable{
     private String _announcement;
     private List<String> _references;
     private String _announcementID;
@@ -39,5 +39,10 @@ public class Announcement implements Serializable{
 
     public PublicKey getClientPublicKey() { return _clientPublicKey; }
 
-
+    public int compareTo(Announcement other) {
+        if (_announcement.equals(other.getAnnouncement()) && _references.equals(other.getReferences())
+            && _clientPublicKey.equals(other.getClientPublicKey()))
+            return 0;
+        return -1;
+    }
 }

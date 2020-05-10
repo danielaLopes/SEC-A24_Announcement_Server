@@ -49,6 +49,9 @@ public class Server extends Thread {
 
     private List<ServerThread> _serverThreads = new ArrayList<ServerThread>();
 
+    // maps client public key -> server broadcast data
+    protected ConcurrentHashMap<PublicKey, ServerBroadcast> _serverBroadcasts = new ConcurrentHashMap<>();
+
     public Server(boolean activateCC, int nServers, int port, char[] keyStorePasswd, char[] entryPasswd, String alias, String pubKeyPath,
             String keyStorePath) {
 
@@ -191,15 +194,26 @@ public class Server extends Thread {
         }
     }
 
-    // 1 9002 9003 9001
-    // 2 9001 9003
-    // 3 9001 9002
+    public VerifiableServerMessage createVerifiableServerMessage(ServerMessage sm) {
+        try {
+            byte[] spm = ProtocolMessageConverter.objToByteArray(sm);
+            byte[] signedsm = SignatureUtil.sign(spm, getPrivateKey());
+            return new VerifiableServerMessage(sm, signedsm);
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+            System.out.println(e);
+        }
+        return null;
+    }
 
-    public void bestEffortBroadcast(VerifiableServerMessage vsm) {
+    public void serverBroadcast(PublicKey clientPubKey, ServerMessage sm, VerifiableProtocolMessage clientMessage) {
+        System.out.println("Broadcast to other servers!");
+        ServerBroadcast sb = new ServerBroadcast(this, clientMessage);
+        // TODO: deliver if 1 server
+        sb.localEcho();
+        _serverBroadcasts.put(clientPubKey, sb);
         for (ServerThread t: _serverThreads) {
-            System.out.println(t);
-            System.out.println(vsm);
-            t.bestEffortBroadcast(vsm);
+            t.sendQueueMessages(clientPubKey);
+            t.sendServerMessage(sm);
         }
     }
 
@@ -652,6 +666,9 @@ public class Server extends Thread {
             }
             return;
         }
+
+        ServerMessage sm = new ServerMessage(_pubKey, "SERVER_POST", vpm);
+        serverBroadcast(clientPubKey, sm, vpm);
 
         RegisterMessage registerMessage = new RegisterMessage(vpm.getProtocolMessage().getAtomicRegisterMessages());
         RegisterMessage arm = _users.get(clientPubKey).getAtomicRegister1N().acknowledge(registerMessage);
