@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.security.PublicKey;
 import java.util.List;
 
-public class Announcement implements Serializable, Comparable{
+public class Announcement implements Serializable, Comparable<Announcement> {
     private String _announcement;
     private List<String> _references;
     private String _announcementID;

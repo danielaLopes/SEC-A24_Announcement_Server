@@ -71,13 +71,22 @@ public class ServerBroadcast {
     }
 
     public int consensusEchos() {
-        // Map<Announcement, Integer> echos; 
-        // for (Map.Entry<PublicKey, ServerBroadcastData> entry : _data.entrySet()) {
-
-        // }
+        int echos;
+        switch(operation()) {
+            case "POST":
+                // echos = comparePostOperations();
+                break;
+            default:
+                break;
+        }
+        return echos;
     }
 
     public void setClientMessage(VerifiableProtocolMessage clientMessage) {
         _clientMessage = clientMessage;
-    }    
+    }
+
+    public String operation() {
+        return _clientMessage.getProtocolMessage().getCommand();
+    }
 }
