@@ -22,6 +22,7 @@ public class ServerMessage extends SerializableObject {
         _clientVPM = sm.getClientMessage();
     }
 
+    public byte[] getSigma() { return _sigma; }
     public void setSigma(byte[] sigma) {
         _sigma = sigma;
     }

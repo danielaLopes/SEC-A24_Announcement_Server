@@ -7,21 +7,15 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import pt.ulisboa.tecnico.sec.communication_lib.MessageComparator;
-import pt.ulisboa.tecnico.sec.communication_lib.ServerMessage;
-import pt.ulisboa.tecnico.sec.communication_lib.VerifiableProtocolMessage;
-import pt.ulisboa.tecnico.sec.communication_lib.VerifiableServerMessage;
+import pt.ulisboa.tecnico.sec.communication_lib.*;
 import pt.ulisboa.tecnico.sec.crypto_lib.ProtocolMessageConverter;
 
 public class ServerBroadcast {
 
-    private int _quorum;
-    private AtomicBoolean _sentFinal;
-
     public class ServerBroadcastData {
-        VerifiableProtocolMessage _echo;
-        VerifiableServerMessage _sigma;
-        AtomicBoolean _sentEcho;
+        VerifiableProtocolMessage _echo; // client message received by this server
+        VerifiableServerMessage _sigma; // signed message sent by this server
+        AtomicBoolean _sentEcho; // tells whether we already sent an echo to this server
 
         public ServerBroadcastData() {
             _sentEcho = new AtomicBoolean(false);
@@ -33,6 +27,9 @@ public class ServerBroadcast {
     protected AtomicBoolean _delivered;
     protected VerifiableProtocolMessage _clientMessage;
     protected Server _server;
+
+    private int _quorum;
+    private AtomicBoolean _sentFinal;
 
     public ServerBroadcast(Server server, VerifiableProtocolMessage clientMessage) {
         _delivered = new AtomicBoolean(false);
@@ -61,14 +58,36 @@ public class ServerBroadcast {
     public ServerMessage echo(ServerMessage sm) {
         System.out.println("echo");
         ServerBroadcastData sbd = _data.get(sm.getPublicKey());
-        if (sbd == null)
-            sbd = _data.put(sm.getPublicKey(), new ServerBroadcastData());
+        // first echo message received by this server
+        if (sbd == null) {
+            sbd = new ServerBroadcastData();
+            sbd._echo = sm.getClientMessage();
+            _data.put(sm.getPublicKey(), sbd);
+        }
+        // we already received an echo from this server, so we don't consider this message
         else {
             // TODO: repeated broadcast
             return null;
         }
 
         return new ServerMessage(_server.getPublicKey(), "ECHO", _clientMessage);
+    }
+
+    public void localReady() {
+        System.out.println("localReady");
+        ServerBroadcastData sbd = _data.get(_server.getPublicKey());
+
+        List<VerifiableProtocolMessage> echos = new ArrayList<>();
+        for(Map.Entry<PublicKey, ServerBroadcastData> entry : _data.entrySet()) {
+            echos.add(entry.getValue()._echo);
+        }
+        if(echos.size() > _quorum) {
+            VerifiableProtocolMessage vpmToDeliver = MessageComparator.compareClientMessages(echos, _quorum);
+            if (vpmToDeliver != null)
+                _server.deliver(vpmToDeliver);
+            else
+                _server.deliverFailed(_clientMessage.getProtocolMessage().getPublicKey());
+        }
     }
 
     public ServerMessage ready(VerifiableServerMessage vsm) {
@@ -88,29 +107,38 @@ public class ServerBroadcast {
         if(echos.size() > _quorum) {
             VerifiableProtocolMessage vpm = MessageComparator.compareClientMessages(echos, _quorum);
             if (vpm != null && _sentFinal.compareAndSet(false, true)) {
-                List<VerifiableServerMessage> sigma = new ArrayList<>();
+                List<VerifiableServerMessage> sigmas = new ArrayList<>();
                 for (Map.Entry<PublicKey, ServerBroadcastData> v: _data.entrySet()) {
-                    sigma.add(v.getValue()._sigma);
+                    sigmas.add(v.getValue()._sigma);
                 }
                 ServerMessage s = new ServerMessage(_server.getPublicKey(), "FINAL", vpm);
-                s.setSigma(ProtocolMessageConverter.objToByteArray(sigma));
+                s.setSigma(ProtocolMessageConverter.objToByteArray(sigmas));
                 return s; 
             }
         }
         return null;
     }
 
-    /*public int consensusEchos() {
-        int echos;
-        switch(operation()) {
-            case "POST":
-                // echos = comparePostOperations();
-                break;
-            default:
-                break;
+    public synchronized ServerMessage finalDelivery(VerifiableServerMessage vsm) {
+        System.out.println("final delivery");
+        if (_delivered.get() == false) {
+            ServerMessage sm = vsm.getServerMessage();
+            List<VerifiableServerMessage> sigmas = (List<VerifiableServerMessage>)(ProtocolMessageConverter.byteArrayToObj(sm.getSigma()));
+
+            int nSigVerified = 0;
+            for (VerifiableServerMessage sigma : sigmas) {
+                if (_server.verifyServerSignature(sigma).equals(StatusCode.OK))
+                    nSigVerified++;
+            }
+            if (nSigVerified > _quorum) {
+                _delivered.getAndSet(true);
+                VerifiableProtocolMessage vpmToDeliver = sm.getClientMessage();
+                _server.deliver(vpmToDeliver);
+            }
         }
-        return echos;
-    }*/
+
+        return null;
+    }
 
     public void setClientMessage(VerifiableProtocolMessage clientMessage) {
         _clientMessage = clientMessage;

@@ -10,8 +10,6 @@ import java.security.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
-
 import sun.misc.Signal;
 import sun.misc.SignalHandler;
 
@@ -42,7 +40,7 @@ public class Application {
 
         Server server = new Server(false, nServers, nFaults, port, args[3].toCharArray(), args[4].toCharArray(), args[5],
                 args[6], args[7]);
-        //server.start();
+        server.start();
 
         // test ComparePost
         /*List<VerifiableProtocolMessage> vpms = new ArrayList<>();

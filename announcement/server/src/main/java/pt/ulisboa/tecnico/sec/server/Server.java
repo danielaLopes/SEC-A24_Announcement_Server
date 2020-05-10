@@ -236,6 +236,15 @@ public class Server extends Thread {
         return otherPorts;
     }
 
+    public void deliver(VerifiableProtocolMessage vpm) {
+        System.out.println("DELIVER");
+    }
+
+    public void deliverFailed(PublicKey clientPubKey) {
+        System.out.println("DELIVER FAILED");
+    }
+
+
     // TODO: verify if every time this is called  vpm is defined
     public void deliverPost(VerifiableProtocolMessage vpm, ClientMessageHandler cmh, String token, String newToken) {
         System.out.println("DELIVERPOST");
@@ -359,6 +368,31 @@ public class Server extends Thread {
             byte[] bpm = ProtocolMessageConverter.objToByteArray(vpm.getProtocolMessage());
             boolean verified = SignatureUtil.verifySignature(vpm.getSignedProtocolMessage(),
                     vpm.getProtocolMessage().getPublicKey(), bpm);
+            if (verified == true)
+                return StatusCode.OK;
+            else
+                return StatusCode.INVALID_SIGNATURE;
+        } catch (NoSuchAlgorithmException e) {
+            System.out.println(StatusCode.INVALID_ALGORITHM + "\n" + e);
+            return StatusCode.INVALID_ALGORITHM;
+        } catch (InvalidKeyException e) {
+            System.out.println(StatusCode.INVALID_KEY + "\n" + e);
+            return StatusCode.INVALID_KEY;
+        } catch (SignatureException e) {
+            System.out.println(StatusCode.INVALID_SIGNATURE + "\n" + e);
+            return StatusCode.INVALID_SIGNATURE;
+        }
+    }
+
+    public StatusCode verifyServerSignature(VerifiableServerMessage vsm) {
+
+        if (vsm == null || vsm.getServerMessage() == null || vsm.getSignedServerMessage() == null) {
+            return StatusCode.NULL_FIELD;
+        }
+        try {
+            byte[] bsm = ProtocolMessageConverter.objToByteArray(vsm.getServerMessage());
+            boolean verified = SignatureUtil.verifySignature(vsm.getSignedServerMessage(),
+                    vsm.getServerMessage().getPublicKey(), bsm);
             if (verified == true)
                 return StatusCode.OK;
             else

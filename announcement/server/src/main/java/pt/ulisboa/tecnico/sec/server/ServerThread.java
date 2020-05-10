@@ -54,21 +54,27 @@ public class ServerThread extends Thread {
                 Thread thread = new Thread() {
                     public void run() {
                         //System.out.println("server sig: " + vsm.getServerMessage().getPublicKey());
-                        if (verifySignature(vsm) == StatusCode.OK) {
-                            ServerMessage sm = vsm.getServerMessage();
-                            System.out.println("Received broadcast message: " + sm.getCommand() + "from" + _socket.getPort());
-                            switch (sm.getCommand()) {
-                                case "SERVER_POST":
-                                    handleServerPost(sm);
-                                    break;
-                                case "ECHO":
-                                    handleEcho(vsm);
-                                    break;
-                                case "FINAL":
-                                    handleFinal(vsm);
-                                    break;
-                                default:
-                                    break;
+                        System.out.println("server thread vsm: " + vsm);
+                        if (_server.verifyServerSignature(vsm) == StatusCode.OK) {
+                            if (verifyServerMessage(vsm) == StatusCode.OK) {
+                                ServerMessage sm = vsm.getServerMessage();
+                                System.out.println("Received broadcast message: " + sm.getCommand() + "from" + _socket.getPort());
+                                switch (sm.getCommand()) {
+                                    case "SERVER_POST":
+                                        handleServerPost(sm);
+                                        break;
+                                    case "ECHO":
+                                        handleEcho(vsm);
+                                        break;
+                                    case "FINAL":
+                                        handleFinal(vsm);
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }
+                            else {
+                                System.out.println("Server message is invalid");
                             }
                         } else {
                             System.out.println("Could not verify signature");
@@ -85,6 +91,7 @@ public class ServerThread extends Thread {
     public void handleServerPost(ServerMessage sm) {
         System.out.println("handleServerPost");
         VerifiableProtocolMessage vpm = sm.getClientMessage();
+        verifyClientMessage(vpm);
         PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
         if (_server.verifySignature(vpm).equals(StatusCode.OK)) {
             if (_server._serverBroadcasts.containsKey(clientPubKey)) {
@@ -116,10 +123,17 @@ public class ServerThread extends Thread {
         ServerMessage s = sb.ready(vsm);
         if(s != null)
             _server.sendToAllServers(s);
+        sb.localReady();
     }
 
     public void handleFinal(VerifiableServerMessage vsm) {
         System.out.println("FINALMENTE");
+        ServerMessage sm = vsm.getServerMessage();
+        VerifiableProtocolMessage vpm = sm.getClientMessage();
+        PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
+        ServerBroadcast sb = _server._serverBroadcasts.get(clientPubKey);
+        if (sb == null) return;
+        sb.finalDelivery(vsm);
     }
 
     public void acceptCommunications() {
@@ -158,25 +172,37 @@ public class ServerThread extends Thread {
         }
     }
 
-    public StatusCode verifySignature(VerifiableServerMessage vsm) {
-        try {
-            byte[] bsm = ProtocolMessageConverter.objToByteArray(vsm.getServerMessage());
-            boolean verified = SignatureUtil.verifySignature(vsm.getSignedServerMessage(),
-                    vsm.getServerMessage().getPublicKey(), bsm);
-            if (verified == true)
-                return StatusCode.OK;
-            else
-                return StatusCode.INVALID_SIGNATURE;
-        } catch (NoSuchAlgorithmException e) {
-            System.out.println(StatusCode.INVALID_ALGORITHM + "\n" + e);
-            return StatusCode.INVALID_ALGORITHM;
-        } catch (InvalidKeyException e) {
-            System.out.println(StatusCode.INVALID_KEY + "\n" + e);
-            return StatusCode.INVALID_KEY;
-        } catch (SignatureException e) {
-            System.out.println(StatusCode.INVALID_SIGNATURE + "\n" + e);
-            return StatusCode.INVALID_SIGNATURE;
+    public StatusCode verifyServerMessage(VerifiableServerMessage vsm) {
+        ServerMessage sm = vsm.getServerMessage();
+        if (sm.getCommand() == null || sm.getPublicKey() == null || sm.getClientMessage() == null) {
+            return StatusCode.NULL_FIELD;
         }
+        return StatusCode.OK;
+    }
+
+    // TODO: finish
+    public StatusCode verifyClientMessage(VerifiableProtocolMessage vpm) {
+        ProtocolMessage pm = vpm.getProtocolMessage();
+        // TODO: verify client signature ?????
+        if (pm.getCommand() == null) {
+            return StatusCode.NULL_FIELD;
+        }
+        if (pm.getCommand().equals("POST")) {
+            //_server.verifyPost();
+        }
+        else if (pm.getCommand().equals("READ")) {
+
+        }
+        else if (pm.getCommand().equals("POSTGENERAL")) {
+
+        }
+        else if (pm.getCommand().equals("READGENERAL")) {
+
+        }
+        else {
+            return StatusCode.INVALID_COMMAND;
+        }
+        return StatusCode.OK;
     }
 
     public Server getServer() {return _server; }
