@@ -70,7 +70,7 @@ public class ServerBroadcast {
         return null;
     }
 
-    public int consensusEchos() {
+    /*public int consensusEchos() {
         int echos;
         switch(operation()) {
             case "POST":
@@ -80,7 +80,7 @@ public class ServerBroadcast {
                 break;
         }
         return echos;
-    }
+    }*/
 
     public void setClientMessage(VerifiableProtocolMessage clientMessage) {
         _clientMessage = clientMessage;

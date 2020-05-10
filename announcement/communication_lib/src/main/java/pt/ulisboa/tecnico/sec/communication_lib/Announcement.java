@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.security.PublicKey;
 import java.util.List;
 
-public class Announcement implements Serializable, Comparable<Announcement> {
+public class Announcement implements Serializable{
     private String _announcement;
     private List<String> _references;
     private String _announcementID;
@@ -39,10 +39,25 @@ public class Announcement implements Serializable, Comparable<Announcement> {
 
     public PublicKey getClientPublicKey() { return _clientPublicKey; }
 
-    public int compareTo(Announcement other) {
-        if (_announcement.equals(other.getAnnouncement()) && _references.equals(other.getReferences())
-            && _clientPublicKey.equals(other.getClientPublicKey()))
-            return 0;
-        return -1;
+    @Override
+    public boolean equals(Object o) {
+        // If the object is compared with itself then return true
+        if (o == this) {
+            return true;
+        }
+
+        /* Check if o is an instance of Complex or not
+          "null instanceof [type]" also returns false */
+        if (!(o instanceof Announcement)) {
+            return false;
+        }
+
+        // typecast o to Complex so that we can compare data members
+        Announcement a = (Announcement) o;
+
+        // Compare the data members and return accordingly
+        return this._announcement.equals(a._announcement) &&
+                this._references.equals(a._references) &&
+                this._clientPublicKey.equals(a._clientPublicKey);
     }
 }

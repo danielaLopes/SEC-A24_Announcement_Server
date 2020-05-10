@@ -15,4 +15,26 @@ public class VerifiableProtocolMessage implements Serializable{
     public byte[] getSignedProtocolMessage() { return _signedpm; }
 
     public void setProtocolMessage(ProtocolMessage pm) { _pm = pm; }
+
+    @Override
+    public boolean equals(Object o) {
+
+        if (o == this) {
+            return true;
+        }
+
+        if (!(o instanceof VerifiableProtocolMessage)) {
+            return false;
+        }
+
+        VerifiableProtocolMessage vpm = (VerifiableProtocolMessage) o;
+
+        if (this.getProtocolMessage().getCommand().equals("POST")) {
+            System.out.println("equals");
+            return this.getProtocolMessage().getPostAnnouncement().equals(
+                    vpm.getProtocolMessage().getPostAnnouncement());
+        }
+
+        return false;
+    }
 }

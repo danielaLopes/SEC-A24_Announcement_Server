@@ -1,5 +1,9 @@
 package pt.ulisboa.tecnico.sec.server;
 
+import pt.ulisboa.tecnico.sec.communication_lib.Announcement;
+import pt.ulisboa.tecnico.sec.communication_lib.MessageComparator;
+import pt.ulisboa.tecnico.sec.communication_lib.ProtocolMessage;
+import pt.ulisboa.tecnico.sec.communication_lib.VerifiableProtocolMessage;
 import pt.ulisboa.tecnico.sec.crypto_lib.SignatureUtil;
 
 import java.security.*;
@@ -37,27 +41,20 @@ public class Application {
                 args[5], args[6]);
         server.start();
 
+        // test ComparePost
+        /*List<VerifiableProtocolMessage> vpms = new ArrayList<>();
 
-        // testing
-        KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
-        kpg.initialize(2048);
-        KeyPair kp = kpg.generateKeyPair();
-        PublicKey userPubKey = kp.getPublic();
-        PrivateKey userPrivateKey = kp.getPrivate();
+        Announcement a = new Announcement("ola", new ArrayList<>());
+        a.setPublicKey(server.getPublicKey());
+        ProtocolMessage pm = new ProtocolMessage("POST", server.getPublicKey(), a, null);
+        vpms.add(new VerifiableProtocolMessage(pm, null));
 
-        //server.registerUser(userPubKey);
+        Announcement a1 = new Announcement("ola", new ArrayList<>());
+        a1.setPublicKey(server.getPublicKey());
+        ProtocolMessage pm1 = new ProtocolMessage("POST", server.getPublicKey(), a1, null);
+        vpms.add(new VerifiableProtocolMessage(pm1, null));
 
-        // generate signature
-        // message + references
-        String toSign = "1" + "|" + "message1" + "|" + "1";
-        byte[] signature = SignatureUtil.sign(toSign.getBytes(), userPrivateKey);
-
-        List<Integer> references = new ArrayList<>();
-        references.add(1);
-        //server.postGeneral(userPubKey, "message1", 1, references, signature);
-        //List<PostOperation> announcements1 = server.readGeneral(1);
-        //for (PostOperation announcement: announcements1) {
-        //    System.out.println(announcement.getMessage());
-        //}
+        System.out.println(MessageComparator.compareClientMessages(vpms, 1));
+*/
     }
 }
