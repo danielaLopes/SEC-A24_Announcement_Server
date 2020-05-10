@@ -29,10 +29,21 @@ public class VerifiableProtocolMessage implements Serializable{
 
         VerifiableProtocolMessage vpm = (VerifiableProtocolMessage) o;
 
-        if (this.getProtocolMessage().getCommand().equals("POST")) {
-            System.out.println("equals");
+        if (this.getProtocolMessage().getCommand().equals("POST") ||
+                this.getProtocolMessage().getCommand().equals("POSTGENERAL")) {
             return this.getProtocolMessage().getPostAnnouncement().equals(
                     vpm.getProtocolMessage().getPostAnnouncement());
+        }
+        else if (this.getProtocolMessage().getCommand().equals("READ")) {
+            return this.getProtocolMessage().getReadNumberAnnouncements() ==
+                    vpm.getProtocolMessage().getReadNumberAnnouncements() &&
+                    this.getProtocolMessage().getToReadPublicKey().equals(
+                            vpm.getProtocolMessage().getToReadPublicKey()
+                    );
+        }
+        else if (this.getProtocolMessage().getCommand().equals("READGENERAL")) {
+            return this.getProtocolMessage().getReadNumberAnnouncements() ==
+                    vpm.getProtocolMessage().getReadNumberAnnouncements();
         }
 
         return false;

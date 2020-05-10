@@ -20,34 +20,34 @@ public class MessageComparator {
                 .filter(message -> message.getProtocolMessage().getCommand().equals("POST"))
                 .collect(Collectors.toList());
         if (posts.size() > required) {
-            return comparePostMessages(posts,required);
+            return compareMessages(posts, required);
         }
 
         List<VerifiableProtocolMessage> reads = clientMessages.stream()
                 .filter(message -> message.getProtocolMessage().getCommand().equals("READ"))
                 .collect(Collectors.toList());
         if (reads.size() > required) {
-
+            return compareMessages(reads, required);
         }
 
         List<VerifiableProtocolMessage> postGenerals = clientMessages.stream()
                 .filter(message -> message.getProtocolMessage().getCommand().equals("POSTGENERAL"))
                 .collect(Collectors.toList());
         if (postGenerals.size() > required) {
-
+            return compareMessages(postGenerals, required);
         }
 
         List<VerifiableProtocolMessage> readGenerals = clientMessages.stream()
                 .filter(message -> message.getProtocolMessage().getCommand().equals("READGENERAL"))
                 .collect(Collectors.toList());
         if (readGenerals.size() > required) {
-
+            return compareMessages(readGenerals, required);
         }
         return null; // indicates no quorum is achieved
     }
 
 
-    public static VerifiableProtocolMessage comparePostMessages(List<VerifiableProtocolMessage> clientMessages, int required) {
+    public static VerifiableProtocolMessage compareMessages(List<VerifiableProtocolMessage> clientMessages, int required) {
         // we need to compare announcement
         Map<VerifiableProtocolMessage, Integer> occurrences = new HashMap<>();
         for (VerifiableProtocolMessage vpm : clientMessages) {
