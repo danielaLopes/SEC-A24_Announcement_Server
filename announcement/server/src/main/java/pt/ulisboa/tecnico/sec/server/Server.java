@@ -214,15 +214,25 @@ public class Server extends Thread {
     }
 
     public void serverBroadcast(PublicKey clientPubKey, ServerMessage sm, VerifiableProtocolMessage clientMessage) {
-        System.out.println("Broadcast to other servers!");
-        ServerBroadcast sb = new ServerBroadcast(this, clientMessage);
-        // TODO: deliver if 1 server
-        sb.localEcho();
-        _serverBroadcasts.put(clientPubKey, sb);
-        for (ServerThread t: _serverThreads) {
-            t.sendQueueMessages(clientPubKey);
-            t.sendServerMessage(sm);
+
+        // no other servers to contact
+        if (_nServers == 1) {
+            deliver(clientMessage);
         }
+        else {
+            System.out.println("Broadcast to other servers!");
+            ServerBroadcast sb = new ServerBroadcast(this, clientMessage);
+            String bcb = UUIDGenerator.generateUUID();
+            sb.setBcb(bcb);
+            sb.localEcho();
+            _serverBroadcasts.put(clientPubKey, sb);
+            sm.setBcb(bcb);
+            for (ServerThread t: _serverThreads) {
+                t.sendQueueMessages(clientPubKey);
+                t.sendServerMessage(sm);
+            }
+        }
+
     }
 
     public List<Integer> getOtherServersPorts() {
@@ -385,7 +395,8 @@ public class Server extends Thread {
     }
 
     public StatusCode verifyServerSignature(VerifiableServerMessage vsm) {
-
+        //System.out.println("VSM: " + vsm);
+        //System.out.println("SIGNED SERVER MESSAGE: " + vsm.getSignedServerMessage());
         if (vsm == null || vsm.getServerMessage() == null || vsm.getSignedServerMessage() == null) {
             return StatusCode.NULL_FIELD;
         }

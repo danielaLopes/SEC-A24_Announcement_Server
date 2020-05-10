@@ -35,6 +35,7 @@ public class ServerThread extends Thread {
     }
 
     public void sendServerMessage(ServerMessage sm) {
+        // TODO: sometimes sm is null
         System.out.println("Sending broadcast message: " + sm.getCommand());
         VerifiableServerMessage vsm = _server.createVerifiableServerMessage(sm);
         try{
@@ -60,12 +61,15 @@ public class ServerThread extends Thread {
                                 ServerMessage sm = vsm.getServerMessage();
                                 System.out.println("Received broadcast message: " + sm.getCommand() + "from" + _socket.getPort());
                                 switch (sm.getCommand()) {
+                                    // broadcaster server initiates broadcast
                                     case "SERVER_POST":
                                         handleServerPost(sm);
                                         break;
+                                    // other servers answer our broadcast
                                     case "ECHO":
                                         handleEcho(vsm);
                                         break;
+                                    // broadcaster server sends ready message
                                     case "FINAL":
                                         handleFinal(vsm);
                                         break;
@@ -96,7 +100,9 @@ public class ServerThread extends Thread {
         if (_server.verifySignature(vpm).equals(StatusCode.OK)) {
             if (_server._serverBroadcasts.containsKey(clientPubKey)) {
                 ServerBroadcast sb = _server._serverBroadcasts.get(clientPubKey);
-                sendServerMessage(sb.echo(sm));
+                ServerMessage smToEcho = sb.echo(sm);
+                if (smToEcho != null)
+                    sendServerMessage(smToEcho);
             }
             else {
                 addServerMessageToQueue(clientPubKey, sm);
