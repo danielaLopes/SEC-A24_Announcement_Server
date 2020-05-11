@@ -16,7 +16,6 @@ public class ServerBroadcast {
         VerifiableProtocolMessage _echo; // client message received by this server
         VerifiableServerMessage _sigma; // signed message sent by this server
         AtomicBoolean _sentEcho; // tells whether we already sent an echo to this server
-        AtomicBoolean _sentReady; // perform amplification step
 
         public ServerBroadcastData() {
             _sentEcho = new AtomicBoolean(false);
@@ -31,7 +30,9 @@ public class ServerBroadcast {
 
     private String _bcb; // prevent replay attacks
     private int _quorum;
-    private AtomicBoolean _sentFinal;
+    private int _quorumF;
+    private int _quorum2F;
+    private AtomicBoolean _sentReady;
 
     public ServerBroadcast(Server server, VerifiableProtocolMessage clientMessage) {
         _delivered = new AtomicBoolean(false);
@@ -39,7 +40,9 @@ public class ServerBroadcast {
         _clientMessage = clientMessage;
         _data = new ConcurrentHashMap<>();
         _quorum = (_server._nServers + _server._nFaults) / 2;
-        _sentFinal = new AtomicBoolean(false);
+        _quorumF = _server._nFaults;
+        _quorum2F = 2 * _server._nFaults;
+        _sentReady = new AtomicBoolean(false);
     }
 
     public ServerBroadcast(Server server) {
@@ -47,7 +50,9 @@ public class ServerBroadcast {
         _server = server;
         _data = new ConcurrentHashMap<>();
         _quorum = (_server._nServers + _server._nFaults) / 2;
-        _sentFinal = new AtomicBoolean(false);
+        _quorumF = _server._nFaults;
+        _quorum2F = 2 * _server._nFaults;
+        _sentReady = new AtomicBoolean(false);
     }
 
     public void setBcb(String bcb) { _bcb = bcb; }
@@ -127,7 +132,7 @@ public class ServerBroadcast {
         
         if(echos.size() > _quorum) {
             VerifiableProtocolMessage vpm = MessageComparator.compareClientMessages(echos, _quorum);
-            if (vpm != null && _sentFinal.compareAndSet(false, true)) {
+            if (vpm != null && _sentReady.compareAndSet(false, true)) {
                 List<VerifiableServerMessage> sigmas = new ArrayList<>();
                 for (Map.Entry<PublicKey, ServerBroadcastData> v: _data.entrySet()) {
                     sigmas.add(v.getValue()._sigma);
@@ -142,6 +147,32 @@ public class ServerBroadcast {
 
     public void finalDelivery(VerifiableServerMessage vsm) {
         System.out.println("final delivery");
+        
+        //Amplification step
+        synchronized(_sentReady) {
+            if (_sentReady.get() == false) {
+                ServerMessage sm = vsm.getServerMessage();
+                List<VerifiableServerMessage> sigmas = (List<VerifiableServerMessage>)(ProtocolMessageConverter.byteArrayToObj(sm.getSigma()));
+
+                int nReadys = 0;
+                // TODO: deliverFailed should not happen with no byzantine servers
+                for (VerifiableServerMessage sigma : sigmas) {
+                    //if (_server.verifyServerSignature(sigma).equals(StatusCode.OK))
+                    StatusCode sc = _server.verifyServerSignature(sigma);
+                    if (sc.equals(StatusCode.OK) && sigma.getServerMessage().getClientMessage().equals(sm.getClientMessage()))
+                        nReadys++;
+                }
+                if (nReadys > _quorumF) {
+                    System.out.println("Amplification step");
+                    _sentReady.getAndSet(true);
+                    ServerMessage s = new ServerMessage(_server.getPublicKey(), "FINAL", sm.getClientMessage(), _bcb);
+                    s.setSigma(ProtocolMessageConverter.objToByteArray(sigmas));
+                    _server.sendToAllServers(s); 
+                }
+            }
+        }
+        //End Amplification step
+
         synchronized(_delivered) {
             if (_delivered.get() == false) {
                 ServerMessage sm = vsm.getServerMessage();
@@ -152,10 +183,10 @@ public class ServerBroadcast {
                 for (VerifiableServerMessage sigma : sigmas) {
                     //if (_server.verifyServerSignature(sigma).equals(StatusCode.OK))
                     StatusCode sc = _server.verifyServerSignature(sigma);
-                    if (sc.equals(StatusCode.OK))
+                    if (sc.equals(StatusCode.OK) && sigma.getServerMessage().getClientMessage().equals(sm.getClientMessage()));
                         nSigVerified++;
                 }
-                if (nSigVerified > _quorum) {
+                if (nSigVerified > _quorum2F) {
                     _delivered.getAndSet(true);
                     VerifiableProtocolMessage vpmToDeliver = sm.getClientMessage();
                     _server.deliver(vpmToDeliver, _clientMessage);

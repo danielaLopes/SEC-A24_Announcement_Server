@@ -42,7 +42,8 @@ public class ServerThread extends Thread {
             _communication.sendMessage(vsm, _oos);
         }
         catch (IOException e) {
-            System.out.println("Could not broadcast message" + e);
+            System.out.println("Server in port " + _otherPort + " is down");
+            acceptCommunications();
         }
     }
 

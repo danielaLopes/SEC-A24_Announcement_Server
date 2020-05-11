@@ -60,8 +60,8 @@ public class Client {
 
     Integer _acks = 0;
 
-    protected static final int TIMEOUT = 500000;
-    protected static final int MAX_REQUESTS = 5;
+    protected static final int TIMEOUT = 1000;
+    protected static final int MAX_REQUESTS = 3;
     protected static final int MAX_REFRESH = 3;
 
     public Client(String pubKeyPath, String keyStorePath,
@@ -483,10 +483,8 @@ public class Client {
                 public void run() {
                     VerifiableProtocolMessage response = requestServer(pm.getValue(), _serverCommunications.get(pm.getKey()));
                     StatusCode sc = verifyReceivedMessage(response);
-                    System.out.println("Received [" + response.getProtocolMessage().getCommand() + "]: " + sc);
-                    System.out.flush();
                     if (sc.equals(StatusCode.OK)) {
-                        System.out.println("General: " + general);
+                        System.out.println("Received [" + response.getProtocolMessage().getCommand() + "]: " + sc);
                         //TODO CHECK HOW MANY SERVERS NEED TO CALL WRITE RETURN
                         RegisterMessage registerMessage = new RegisterMessage(response.getProtocolMessage().getAtomicRegisterMessages());
                         if (general)
@@ -520,15 +518,14 @@ public class Client {
             Thread thread = new Thread(){
                 public void run() {
                     VerifiableProtocolMessage response = requestServer(pm.getValue(), _serverCommunications.get(pm.getKey()));
-                    System.out.println("Response pm " + response.getProtocolMessage() + " announcements");
-                    System.out.println("Received register messages" + response.getProtocolMessage().getAtomicRegisterMessages());
-                    // TODO: null pointer here, are announcements null?
-                    //System.out.println("Received " + response.getProtocolMessage().getAnnouncements().size() + " announcements");
-                    System.out.println("Received [" + response.getProtocolMessage().getCommand() + "]");
-                    System.out.flush();
 
-                    if (response != null && (response.getProtocolMessage().getCommand().equals("VALUE") || 
-                    response.getProtocolMessage().getCommand().equals("VALUEGENERAL")) && verifyReceivedMessage(response) == StatusCode.OK) {
+                    if (verifyReceivedMessage(response) == StatusCode.OK && (response.getProtocolMessage().getCommand().equals("VALUE") || 
+                    response.getProtocolMessage().getCommand().equals("VALUEGENERAL"))) {
+                            
+                        System.out.println("Response pm " + response.getProtocolMessage() + " announcements");
+                        System.out.println("Received register messages" + response.getProtocolMessage().getAtomicRegisterMessages());
+                        System.out.println("Received [" + response.getProtocolMessage().getCommand() + "]");
+                        System.out.flush();
                         //TODO CHECK HOW MANY SERVERS NEED TO CALL WRITE RETURN
                         if (general)
                             _regularRegisterNN.readReturn(response.getProtocolMessage());
@@ -543,6 +540,7 @@ public class Client {
         }
     }
 
+
     /**
      * Makes a request to the Server, receiving a response as a VerifiableProtocolMessage
      * @param pm is the ProtocolMessage to be sent
@@ -556,6 +554,14 @@ public class Client {
             if (serverCommunication.getAlive() == false) {
                 CommunicationServer newServerCommunication = createServerCommunication(serverCommunication.getPort());
                 serverCommunication = newServerCommunication;
+                System.out.println("token refresh");
+                ProtocolMessage p = new ProtocolMessage("TOKEN", _pubKey);
+                VerifiableProtocolMessage vpm = requestServer(p, serverCommunication);
+                if (vpm != null && vpm.getProtocolMessage().getStatusCode().equals(StatusCode.USER_NOT_REGISTERED))
+                    register(serverCommunication);
+                else 
+                    if(vpm != null)
+                        serverCommunication.setToken(getTokenFromVPM(vpm));                            
             }
         }
         catch (IOException e) {
@@ -597,6 +603,8 @@ public class Client {
             catch(SocketTimeoutException e) {
                 System.out.println("Could not receive a response on request " + (++requestsCounter) + 
                 ". Trying again...");
+                if(requestsCounter == MAX_REQUESTS && _clientUI != null)
+                    _clientUI.start();
             }
             catch (SocketException e) {
                 System.out.println("A server is dead!");
@@ -646,27 +654,19 @@ public class Client {
      * Must be the first operation to be done in the Client-Server communication.
      * @return the StatusCode of the operation
      */
-    public StatusCode register() {
+    public StatusCode register(CommunicationServer cs) {
         ProtocolMessage pm = new ProtocolMessage("REGISTER", _pubKey);
-        System.out.println("going to call requests server from register");
+        VerifiableProtocolMessage vpm = requestServer(pm, cs);
 
-        CommunicationServer serverCommunication = _serverCommunications.get(_serverPubKey);
-        VerifiableProtocolMessage vpm = requestServer(pm, serverCommunication);
-
-        StatusCode rsc = null;
         if (vpm == null) {
             System.out.println("Could not register: could not receive a response");
-            closeCommunication(serverCommunication);
-            System.exit(-1);
         }
         else {
-            rsc = getStatusCodeFromVPM(vpm);
-            serverCommunication.setToken(getTokenFromVPM(vpm));
+            cs.setToken(getTokenFromVPM(vpm));
+            return StatusCode.OK;
         }
 
-        System.out.flush();
-        
-        return rsc;
+        return StatusCode.NO_RESPONSE;
     }
 
     public List<StatusCode> post(String message, List<String> references) {
