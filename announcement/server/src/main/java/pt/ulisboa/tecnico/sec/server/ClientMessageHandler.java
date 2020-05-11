@@ -77,10 +77,8 @@ public class ClientMessageHandler extends Thread {
                         break;
                 }
             }
-            // catch (InterruptedException e) {
-            // }
             catch (IOException | ClassNotFoundException e) {
-                // System.out.println(e);
+                System.out.println(e);
             }
         }
     }
