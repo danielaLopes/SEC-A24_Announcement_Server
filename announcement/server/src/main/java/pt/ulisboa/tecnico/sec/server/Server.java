@@ -63,7 +63,7 @@ public class Server extends Thread {
         String db = "announcement" + port;
         _db = new Database(db);
 
-        //retrieveDataStructures();
+        retrieveDataStructures();
     }
 
     public RegularRegisterNN getRegularRegisterNN() {
@@ -105,7 +105,8 @@ public class Server extends Thread {
 
         // Retrieve RegularRegisterNN from database
         RegularRegisterNNStructure rr = dbs.getRegularRegisterNN();
-        _regularRegisterNN = (RegularRegisterNN) ProtocolMessageConverter.byteArrayToObj(rr.getGeneralBoard());
+        if(rr != null)
+            _regularRegisterNN = (RegularRegisterNN) ProtocolMessageConverter.byteArrayToObj(rr.getGeneralBoard());
         
         // Retrieve _announcementMapper from database
         // List<UserBoardStructure> ubs = dbs.getUserBoard();
@@ -230,6 +231,10 @@ public class Server extends Thread {
         String newToken = user.getToken();
         RegisterMessage registerMessage = new RegisterMessage(highestVPM.getProtocolMessage().getAtomicRegisterMessages());
         RegisterMessage arm = _users.get(clientPubKey).getAtomicRegister1N().acknowledge(registerMessage);
+
+        byte[] b = ProtocolMessageConverter.objToByteArray(_users.get(clientPubKey).getAtomicRegister1N());
+        _db.updateUserAtomicRegister1N(_users.get(clientPubKey).getdbTableName(), b);
+
         System.out.println("deliver token: " + token);
         System.out.println("deliver new token: " + newToken);
         ProtocolMessage p = new ProtocolMessage("POST",  StatusCode.OK, _pubKey, newToken, token);
@@ -670,6 +675,10 @@ public class Server extends Thread {
 
         RegisterMessage registerMessage = new RegisterMessage(vpm.getProtocolMessage().getAtomicRegisterMessages());
         RegisterMessage arm = _users.get(clientPubKey).getAtomicRegister1N().acknowledge(registerMessage);
+
+        byte[] b = ProtocolMessageConverter.objToByteArray(_users.get(clientPubKey).getAtomicRegister1N());
+        _db.updateUserAtomicRegister1N(_users.get(clientPubKey).getdbTableName(), b);
+
         ProtocolMessage p = new ProtocolMessage("ACK", sc, _pubKey, newToken, token);
         p.setAtomicRegisterMessages(arm.getBytes());
         cmh.sendMessage(createVerifiableMessage(p));
@@ -724,6 +733,10 @@ public class Server extends Thread {
         }
 
         RegisterMessage arm = _regularRegisterNN.acknowledge(vpm.getProtocolMessage());
+
+        byte[] b = ProtocolMessageConverter.objToByteArray(_regularRegisterNN);
+        _db.updateRegularRegisterNNTable(b);
+
         ProtocolMessage p = new ProtocolMessage("ACK", sc, _pubKey, newToken, token);
         p.setAtomicRegisterMessages(arm.getBytes());
         cmh.sendMessage(createVerifiableMessage(p));
@@ -783,6 +796,10 @@ public class Server extends Thread {
 
         RegisterMessage registerMessage = new RegisterMessage(vpm.getProtocolMessage().getAtomicRegisterMessages());
         RegisterMessage arm = _users.get(clientPubKey).getAtomicRegister1N().value(registerMessage, number);
+
+        byte[] b = ProtocolMessageConverter.objToByteArray(_users.get(clientPubKey).getAtomicRegister1N());
+        _db.updateUserAtomicRegister1N(_users.get(clientPubKey).getdbTableName(), b);
+
         ProtocolMessage p = new ProtocolMessage("VALUE", sc, _pubKey, newToken, token);
         p.setAtomicRegisterMessages(arm.getBytes());
         VerifiableProtocolMessage response = createVerifiableMessage(p);
@@ -838,6 +855,10 @@ public class Server extends Thread {
         }
 
         RegisterMessage arm = _regularRegisterNN.value(vpm.getProtocolMessage());
+
+        byte[] b = ProtocolMessageConverter.objToByteArray(_regularRegisterNN);
+        _db.updateRegularRegisterNNTable(b);
+        
         ProtocolMessage p = new ProtocolMessage("VALUEGENERAL", sc, _pubKey, newToken, token);
         p.setAtomicRegisterMessages(arm.getBytes());
         cmh.sendMessage(createVerifiableMessage(p));

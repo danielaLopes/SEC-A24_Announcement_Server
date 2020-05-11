@@ -5,6 +5,7 @@ import pt.ulisboa.tecnico.sec.communication_lib.MessageComparator;
 import pt.ulisboa.tecnico.sec.communication_lib.ProtocolMessage;
 import pt.ulisboa.tecnico.sec.communication_lib.VerifiableProtocolMessage;
 import pt.ulisboa.tecnico.sec.crypto_lib.SignatureUtil;
+import pt.ulisboa.tecnico.sec.database_lib.Database;
 
 import java.security.*;
 import java.util.ArrayList;
@@ -19,7 +20,8 @@ public class Application {
         //CTRL+C signal handler. Allows to clean databases.
         Signal.handle(new Signal("INT"), new SignalHandler() {
             public void handle(Signal sig) {
-                System.out.println("sigint");
+                System.out.println("Ctrl-c: Deleting tables from database");
+                Database.dropDatabase();
                 System.exit(-1);
             }
         });
