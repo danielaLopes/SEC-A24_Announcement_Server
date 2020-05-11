@@ -87,6 +87,7 @@ public class ClientMessageHandler extends Thread {
 
     public void sendMessage(VerifiableProtocolMessage vpm) {
         try {
+            System.out.println("MANDO MENSAGEM AO CLIENTE: " + vpm.getProtocolMessage().getCommand());
             _communication.sendMessage(vpm, _oos);
         }
         catch (IOException e) {

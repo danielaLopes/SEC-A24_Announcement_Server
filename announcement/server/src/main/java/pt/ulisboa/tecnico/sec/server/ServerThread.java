@@ -55,7 +55,6 @@ public class ServerThread extends Thread {
                 Thread thread = new Thread() {
                     public void run() {
                         //System.out.println("server sig: " + vsm.getServerMessage().getPublicKey());
-                        System.out.println("server thread vsm: " + vsm);
                         if (_server.verifyServerSignature(vsm) == StatusCode.OK) {
                             if (verifyServerMessage(vsm) == StatusCode.OK) {
                                 ServerMessage sm = vsm.getServerMessage();

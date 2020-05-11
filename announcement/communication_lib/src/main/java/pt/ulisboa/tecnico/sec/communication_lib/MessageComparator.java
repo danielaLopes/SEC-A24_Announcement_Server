@@ -17,7 +17,6 @@ public class MessageComparator {
      */
     public static VerifiableProtocolMessage compareClientMessages(List<VerifiableProtocolMessage> clientMessages, int required) {
 
-        System.out.println("client messages to compare: " + clientMessages);
         List<VerifiableProtocolMessage> posts = clientMessages.stream()
                 .filter(message -> message.getProtocolMessage().getCommand().equals("POST"))
                 .collect(Collectors.toList());
@@ -55,12 +54,10 @@ public class MessageComparator {
         for (VerifiableProtocolMessage vpm : clientMessages) {
             VerifiableProtocolMessage key = containsKey(occurrences, vpm);
             if (key != null) {
-                System.out.println("same occur");
                 int nOccur = occurrences.get(key);
                 occurrences.put(key, ++nOccur);
             }
             else {
-                System.out.println("new occur");
                 occurrences.put(vpm, 1);
             }
         }

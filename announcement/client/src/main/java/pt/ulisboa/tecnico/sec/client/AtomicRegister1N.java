@@ -113,10 +113,11 @@ public class AtomicRegister1N {
     }
 
     public void writeReturn(int r) {
-        //System.out.println("writeReturn");
+        System.out.println("writeReturn");
         if (r == _rid.get()) {
             _acks.incrementAndGet();
             synchronized(_lock) {
+                System.out.println(_acks.get());
                 if (_acks.get() > _client._nServers / 2) {
                     _acks.set(0);
                     if(_reading.compareAndSet(true, false)) {

@@ -217,7 +217,7 @@ public class Server extends Thread {
 
         // no other servers to contact
         if (_nServers == 1) {
-            deliver(clientMessage);
+            deliver(clientMessage, clientMessage);
         }
         else {
             System.out.println("Broadcast to other servers!");
@@ -246,100 +246,26 @@ public class Server extends Thread {
         return otherPorts;
     }
 
-    public void deliver(VerifiableProtocolMessage vpm) {
+    public void deliver(VerifiableProtocolMessage highestVPM, VerifiableProtocolMessage clientVPM) {
         System.out.println("DELIVER");
+        PublicKey clientPubKey = highestVPM.getProtocolMessage().getPublicKey();
+        String token = clientVPM.getProtocolMessage().getToken();
+        User user = _users.get(clientPubKey);
+        ClientMessageHandler cmh = user.getCMH();
+        String newToken = user.getToken();
+        RegisterMessage registerMessage = new RegisterMessage(highestVPM.getProtocolMessage().getAtomicRegisterMessages());
+        RegisterMessage arm = _users.get(clientPubKey).getAtomicRegister1N().acknowledge(registerMessage);
+        System.out.println("deliver token: " + token);
+        System.out.println("deliver new token: " + newToken);
+        ProtocolMessage p = new ProtocolMessage("POST",  StatusCode.OK, _pubKey, newToken, token);
+        p.setAtomicRegisterMessages(arm.getBytes());
+        cmh.sendMessage(createVerifiableMessage(p));
     }
 
-    public void deliverFailed(PublicKey clientPubKey) {
+    public void deliverFailed(VerifiableProtocolMessage clientVPM) {
         System.out.println("DELIVER FAILED");
     }
 
-
-    // TODO: verify if every time this is called  vpm is defined
-    public void deliverPost(VerifiableProtocolMessage vpm, ClientMessageHandler cmh, String token, String newToken) {
-        System.out.println("DELIVERPOST");
-        // Save Operation
-        String announcementUuid = UUIDGenerator.generateUUID();
-        ProtocolMessage pm = vpm.getProtocolMessage();
-        Announcement a = pm.getPostAnnouncement();
-        a.setAnnouncementID(announcementUuid);
-        a.setPublicKey(pm.getPublicKey());
-        byte[] ref = ProtocolMessageConverter.objToByteArray(a.getReferences());
-
-        byte[] b = ProtocolMessageConverter.objToByteArray(vpm);
-
-        _db.insertAnnouncement(a.getAnnouncement(), ref, announcementUuid, getUserUUID(pm.getPublicKey()),b);
-
-        int index = _users.get(pm.getPublicKey()).postAnnouncementBoard(a);
-        // client's public key is used to indicate it's stored in that client's PostOperation Board
-        _announcementMapper.put(announcementUuid, new AnnouncementLocation(pm.getPublicKey(), index));
-
-        _atomicRegisters1N.remove(pm.getPublicKey());
-
-        System.out.flush();
-
-        if (cmh != null) {
-            cmh.sendMessage(createVerifiableMessage(
-                    new ProtocolMessage("POST", StatusCode.OK, _pubKey, a, newToken, token)));
-        }
-    }
-
-    public void deliverRead(VerifiableProtocolMessage vpm, ClientMessageHandler cmh, String token, String newToken, List<Announcement> announcements) {
-        System.out.println("DELIVERREAD");
-
-        ProtocolMessage pm = vpm.getProtocolMessage();
-
-        _atomicRegisters1N.remove(pm.getPublicKey());
-
-        System.out.flush();
-
-        if (cmh != null) {
-            cmh.sendMessage(createVerifiableMessage(
-                    new ProtocolMessage("READ", StatusCode.OK, _pubKey, announcements, newToken, token)));
-        }
-    }
-/*
-    public void deliverPostGeneral(VerifiableProtocolMessage vpm, ClientMessageHandler cmh, String token, String newToken) {
-        System.out.println("DELIVERPOSTGENERAL");
-        // Save Operation
-        String announcementUuid = UUIDGenerator.generateUUID();
-        ProtocolMessage pm = vpm.getProtocolMessage();
-        Announcement a = pm.getPostAnnouncement();
-        a.setAnnouncementID(announcementUuid);
-        a.setPublicKey(pm.getPublicKey());
-        byte[] ref = ProtocolMessageConverter.objToByteArray(a.getReferences());
-
-        byte[] b = ProtocolMessageConverter.objToByteArray(vpm);
-
-        _db.insertAnnouncement(a.getAnnouncement(), ref, announcementUuid, getUserUUID(pm.getPublicKey()),b);
-
-        int index = _users.get(pm.getPublicKey()).postAnnouncementBoard(a);
-        // client's public key is used to indicate it's stored in that client's PostOperation Board
-        _announcementMapper.put(announcementUuid, new AnnouncementLocation(pm.getPublicKey(), index));
-
-        System.out.flush();
-
-        if (cmh != null) {
-            cmh.sendMessage(createVerifiableMessage(
-                    new ProtocolMessage("POSTGENERAL", StatusCode.OK, _pubKey, a, newToken, token)));
-        }
-    }
-
-    public void deliverReadGeneral(List<Announcement> announcements, PublicKey clientPublicKey) {
-        System.out.println("DELIVERREADGENERAL");
-
-        System.out.flush();
-
-        ClientMessageHandler cmh = _users.get(clientPublicKey).getCmh();
-
-        String token= null;
-        String newToken = null;
-
-        if (cmh != null) {
-            cmh.sendMessage(createVerifiableMessage(
-                    new ProtocolMessage("READGENERAL", StatusCode.OK, _pubKey, announcements, newToken, token)));
-        }
-    }*/
 
     public void startServerCommunication() {
         try{
@@ -691,7 +617,7 @@ public class Server extends Thread {
         String message = vpm.getProtocolMessage().getPostAnnouncement().getAnnouncement();
         List<String> references = vpm.getProtocolMessage().getPostAnnouncement().getReferences();
         String token = vpm.getProtocolMessage().getToken();
-        System.out.println("token: " + token);
+        System.out.println("post token: " + token);
 
         // verifications
         sc = verifyPost(token, vpm, message, references, clientPubKey);
@@ -703,7 +629,7 @@ public class Server extends Thread {
         User user = _users.get(clientPubKey);
         user.setRandomToken();
         String newToken = user.getToken();
-        System.out.println("newtoken: " + newToken);
+        System.out.println("post newtoken: " + newToken);
         _db.updateOperationUserRow(user.getdbTableName(), newToken);
         if (sc.equals(StatusCode.INVALID_TOKEN)) {
             cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
@@ -726,18 +652,7 @@ public class Server extends Thread {
         ServerMessage sm = new ServerMessage(_pubKey, "SERVER_POST", vpm);
         System.out.println("sm" + sm);
         serverBroadcast(clientPubKey, sm, vpm);
-
-        RegisterMessage registerMessage = new RegisterMessage(vpm.getProtocolMessage().getAtomicRegisterMessages());
-        RegisterMessage arm = _users.get(clientPubKey).getAtomicRegister1N().acknowledge(registerMessage);
-        ProtocolMessage p = new ProtocolMessage("ACK", sc, _pubKey, newToken, token);
-        p.setAtomicRegisterMessages(arm.getBytes());
-        cmh.sendMessage(createVerifiableMessage(p));
         return;
-
-        // Broadcast, each thread sends to a server
-        /*for(ServerThread t: _serverThreads) {
-            t.writeValue(clientPubKey, vpm.getProtocolMessage().getPostAnnouncement());
-        }*/
 
     }
 

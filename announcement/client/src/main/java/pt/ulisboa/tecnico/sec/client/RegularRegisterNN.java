@@ -87,7 +87,6 @@ public class RegularRegisterNN {
     }
 
     public void writeReturn(RegisterMessage arm) {
-        System.out.println("writeReturn");
         if (arm.getWts() == _wts) {
             _acks.incrementAndGet();
             synchronized(_acks) {

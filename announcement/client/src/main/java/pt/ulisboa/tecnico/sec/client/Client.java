@@ -452,6 +452,7 @@ public class Client {
     }
 
     public void deliverPost() {
+        System.out.println("deliverPost");
         if (_clientUI != null)
             _clientUI.deliverPost(StatusCode.OK);
         
@@ -481,9 +482,11 @@ public class Client {
             Thread thread = new Thread(){
                 public void run() {
                     VerifiableProtocolMessage response = requestServer(pm.getValue(), _serverCommunications.get(pm.getKey()));
-                    System.out.println("Received [" + response.getProtocolMessage().getCommand() + "]");
+                    StatusCode sc = verifyReceivedMessage(response);
+                    System.out.println("Received [" + response.getProtocolMessage().getCommand() + "]: " + sc);
                     System.out.flush();
-                    if (response != null && verifyReceivedMessage(response) == StatusCode.OK) {
+                    if (sc.equals(StatusCode.OK)) {
+                        System.out.println("General: " + general);
                         //TODO CHECK HOW MANY SERVERS NEED TO CALL WRITE RETURN
                         RegisterMessage registerMessage = new RegisterMessage(response.getProtocolMessage().getAtomicRegisterMessages());
                         if (general)
