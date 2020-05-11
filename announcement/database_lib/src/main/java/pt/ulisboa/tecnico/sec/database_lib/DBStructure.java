@@ -1,26 +1,17 @@
 package pt.ulisboa.tecnico.sec.database_lib;
 
 import java.util.List;
-import java.util.ArrayList;
 
 public class DBStructure {
-    private List<GeneralBoardStructure> _generalBoard = new ArrayList<GeneralBoardStructure>();
-    private List<UserBoardStructure> _userBoard = new ArrayList<UserBoardStructure>();
-    private List<UserStructure> _users = new ArrayList<UserStructure>();
-    private List<OperationsBoardStructure> _operations = new ArrayList<OperationsBoardStructure>();
+    private List<UserStructure> _users;
+    private RegularRegisterNNStructure _regularRegisterNN;
 
-    public DBStructure(List<GeneralBoardStructure> generalBoard, List<UserBoardStructure> userBoard, List<UserStructure> users, List<OperationsBoardStructure> operations) {
-        _generalBoard = generalBoard;
-        _userBoard = userBoard;
+    public DBStructure(List<UserStructure> users, RegularRegisterNNStructure regularRegisterNN) {
         _users = users;
-        _operations = operations;
+        _regularRegisterNN = regularRegisterNN;
     }
-
-    public List<GeneralBoardStructure> getGeneralBoard() { return _generalBoard; }
-
-    public List<UserBoardStructure> getUserBoard() { return _userBoard; }
 
     public List<UserStructure> getUsers() { return _users; }
 
-    public List<OperationsBoardStructure> getOperations() { return _operations; }
+    public RegularRegisterNNStructure getRegularRegisterNN() { return _regularRegisterNN; }
 }

@@ -17,7 +17,6 @@ public class Server extends Thread {
 
     private ServerSocket _serverSocket;
     private Socket _socket;
-    private List<Socket> _serverSocketList;
     private int _port;
     protected int _nServers;
     protected int _nFaults;
@@ -39,14 +38,10 @@ public class Server extends Thread {
      * PostOperation Board
      */
     private ConcurrentHashMap<String, AnnouncementLocation> _announcementMapper;
-    private List<Announcement> _generalBoard;
     private Communication _communication;
 
-    private ConcurrentHashMap<PublicKey, AtomicRegister1N> _atomicRegisters1N = new ConcurrentHashMap<>();
     private RegularRegisterNN _regularRegisterNN = new RegularRegisterNN(this, _nServers);
 
-    /** maps client token to current clientHandler processing the request with that token */
-    //private ConcurrentHashMap<String, ClientMessageHandler> _processingRequests;
 
     private List<ServerThread> _serverThreads = new ArrayList<ServerThread>();
 
@@ -63,21 +58,12 @@ public class Server extends Thread {
         loadPrivateKey(keyStorePath, keyStorePasswd, entryPasswd, alias);
         _users = new ConcurrentHashMap<>();
         _announcementMapper = new ConcurrentHashMap<>();
-        // TODO: see if a CopyOnWriteArrayList is more suitable (if very few writes and
-        // lots of reads)
-        _generalBoard = new ArrayList<>();
         _communication = new Communication();
-
-        //_processingRequests = new ConcurrentHashMap<>();
 
         String db = "announcement" + port;
         _db = new Database(db);
 
-        retrieveDataStructures();
-    }
-
-    public AtomicRegister1N getAtomicRegister1N(PublicKey clientPubKey) {
-        return _atomicRegisters1N.get(clientPubKey);
+        //retrieveDataStructures();
     }
 
     public RegularRegisterNN getRegularRegisterNN() {
@@ -94,65 +80,47 @@ public class Server extends Thread {
     }
 
     public void resetDatabase() {
-        _db.resetDatabaseTest();
+        //_db.resetDatabaseTest();
     }
 
     public void printDataStructures() {
         System.out.println("_users: " + _users + "END");
-        System.out.println("_generalBoard: " + _generalBoard + "END");
         System.out.println("_announcementMapper: " + _announcementMapper + "END");
     }
 
     public void retrieveDataStructures() {
         DBStructure dbs = _db.retrieveStructure();
-        // // Retrieve _users from database
-        // List<UserStructure> us = dbs.getUsers();
-        // for (UserStructure i : us) {
-        //     PublicKey pk = (PublicKey) ProtocolMessageConverter.byteArrayToObj(i.getPublicKey());
-        //     User u = new User(pk, i.getClientUUID());
-        //     _users.put(pk, u);
-        // }
 
-        // Retrieve _generalBoard from database
-        List<GeneralBoardStructure> gbs = dbs.getGeneralBoard();
-        for (GeneralBoardStructure i : gbs) {
-            List<String> references = (List<String>) ProtocolMessageConverter.byteArrayToObj(i.getReferences());
-            Announcement a = new Announcement(i.getAnnouncement(), references, i.getAnnouncementID(),
-                    i.getClientUUID());
-            a.setPublicKey(getUserUUID(i.getClientUUID()));
-
-            int index;
-            synchronized (_generalBoard) {
-                index = _generalBoard.size();
-                _generalBoard.add(a);
-            }
-            // server's public key is used to indicate it's stored in the General Board
-            _announcementMapper.put(i.getAnnouncementID(), new AnnouncementLocation(_pubKey, index));
+        // Retrieve _users from database
+        List<UserStructure> us = dbs.getUsers();
+        for (UserStructure i : us) {
+            PublicKey pk = (PublicKey) ProtocolMessageConverter.byteArrayToObj(i.getPublicKey());
+            AtomicRegister1N ar = (AtomicRegister1N) ProtocolMessageConverter.byteArrayToObj(i.getAtomicRegister1N());
+            ClientMessageHandler cmh = (ClientMessageHandler) ProtocolMessageConverter.byteArrayToObj(i.getCMH());
+            String token = i.getToken(); 
+            User u = new User(pk, i.getClientUUID(), ar, cmh);
+            u.setToken(token);
+            _users.put(pk, u);
         }
 
+        // Retrieve RegularRegisterNN from database
+        RegularRegisterNNStructure rr = dbs.getRegularRegisterNN();
+        _regularRegisterNN = (RegularRegisterNN) ProtocolMessageConverter.byteArrayToObj(rr.getGeneralBoard());
+        
         // Retrieve _announcementMapper from database
-        List<UserBoardStructure> ubs = dbs.getUserBoard();
-        for (UserBoardStructure i : ubs) {
-            List<String> references = (List<String>) ProtocolMessageConverter.byteArrayToObj(i.getReferences());
-            Announcement a = new Announcement(i.getAnnouncement(), references, i.getAnnouncementID(),
-                    i.getClientUUID());
-            PublicKey clientPubKey = getUserUUID(i.getClientUUID());
-            a.setPublicKey(clientPubKey);
+        // List<UserBoardStructure> ubs = dbs.getUserBoard();
+        // for (UserBoardStructure i : ubs) {
+        //     List<String> references = (List<String>) ProtocolMessageConverter.byteArrayToObj(i.getReferences());
+        //     Announcement a = new Announcement(i.getAnnouncement(), references, i.getAnnouncementID(),
+        //             i.getClientUUID());
+        //     PublicKey clientPubKey = getUserUUID(i.getClientUUID());
+        //     a.setPublicKey(clientPubKey);
 
-            int index = _users.get(clientPubKey).postAnnouncementBoard(a);
+            //int index = _users.get(clientPubKey).postAnnouncementBoard(a);
             // client's public key is used to indicate it's stored in that client's
             // PostOperation Board
-            _announcementMapper.put(i.getAnnouncementID(), new AnnouncementLocation(clientPubKey, index));
-        }
-
-        // Retrieve _operations from database
-
-        List<OperationsBoardStructure> obs = dbs.getOperations();
-        for (OperationsBoardStructure i: obs) {
-            User u = _users.get(getUserUUID(i.getClientUUID()));
-            u.setToken(i.getOpUUID());
-        }
-
+            //_announcementMapper.put(i.getAnnouncementID(), new AnnouncementLocation(clientPubKey, index));
+        // }
     }
 
     public void loadPublicKey(String pubKeyPath) {
@@ -571,37 +539,38 @@ public class Server extends Thread {
         if (sc.equals(StatusCode.USER_NOT_REGISTERED)) {
             String i = UUIDGenerator.generateUUID();
             String uuid = "T" + i;
-            User user = new User(clientPubKey, uuid, new AtomicRegister1N(), cmh);
+            AtomicRegister1N ar = new AtomicRegister1N();
+            User user = new User(clientPubKey, uuid, ar, cmh);
             user.setRandomToken();
+            _db.updateUserToken(user.getdbTableName(), user.getToken());
             String token = user.getToken();
             _users.put(clientPubKey, user);
             _db.createUserTable(uuid);
 
-            byte[] b = ProtocolMessageConverter.objToByteArray(clientPubKey);
+            byte[] b1 = ProtocolMessageConverter.objToByteArray(clientPubKey);
+            byte[] b2 = ProtocolMessageConverter.objToByteArray(ar);
+            byte[] b3 = ProtocolMessageConverter.objToByteArray(cmh);
 
-            _db.insertUser(b, uuid);
+            _db.insertUser(b1, uuid, b2, b3);
 
             System.out.println("register token: " + token);
 
             response = createVerifiableMessage(new ProtocolMessage(
                 "REGISTER", StatusCode.OK, _pubKey, token));
 
-            _db.createOperationUserRow(uuid, user.getToken());
-
             return response;
         }
         // user is already registered
         User user = _users.get(clientPubKey);
         user.setRandomToken();
+        _db.updateUserToken(user.getdbTableName(), user.getToken());
         String token = user.getToken();
 
         System.out.println("user is already registered token: " + token);
         response = createVerifiableMessage(new ProtocolMessage(
                 "REGISTER", sc, _pubKey, token));
 
-        _db.updateOperationUserRow(user.getdbTableName(), user.getToken());
-        
-        return response;
+                return response;
     }
 
     /**
@@ -628,9 +597,10 @@ public class Server extends Thread {
         }
         User user = _users.get(clientPubKey);
         user.setRandomToken();
+        _db.updateUserToken(user.getdbTableName(), user.getToken());
         String newToken = user.getToken();
         System.out.println("post newtoken: " + newToken);
-        _db.updateOperationUserRow(user.getdbTableName(), newToken);
+        
         if (sc.equals(StatusCode.INVALID_TOKEN)) {
             cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
                 "POST", sc, _pubKey, newToken, token)));
@@ -672,9 +642,10 @@ public class Server extends Thread {
         }
         User user = _users.get(clientPubKey);
         user.setRandomToken();
+        _db.updateUserToken(user.getdbTableName(), user.getToken());
         String newToken = user.getToken();
         System.out.println("newtoken: " + newToken);
-        _db.updateOperationUserRow(user.getdbTableName(), newToken);
+        
         if (sc.equals(StatusCode.INVALID_TOKEN)) {
             cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
                 "POST", sc, _pubKey, newToken, token)));
@@ -728,8 +699,9 @@ public class Server extends Thread {
         }
         User user = _users.get(clientPubKey);
         user.setRandomToken();
+        _db.updateUserToken(user.getdbTableName(), user.getToken());
         String newToken = user.getToken();
-        _db.updateOperationUserRow(user.getdbTableName(), user.getToken());
+        
         if (sc.equals(StatusCode.INVALID_TOKEN)) {
             cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
                 "POSTGENERAL", sc, _pubKey, newToken, token)));
@@ -787,7 +759,7 @@ public class Server extends Thread {
         
         User user = _users.get(clientPubKey);
         String newToken = user.getToken();
-        _db.updateOperationUserRow(user.getdbTableName(), newToken);
+        
         if (sc.equals(StatusCode.INVALID_TOKEN)) {
             cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
                 "READ", sc, _pubKey, newToken, token)));
@@ -846,8 +818,9 @@ public class Server extends Thread {
 
         User user = _users.get(clientPubKey);
         user.setRandomToken();
+        _db.updateUserToken(user.getdbTableName(), user.getToken());
         String newToken = user.getToken();
-        _db.updateOperationUserRow(user.getdbTableName(), user.getToken());
+        
 
         if (!sc.equals(StatusCode.OK)) {
             cmh.sendMessage(createVerifiableMessage(new ProtocolMessage("READGENERAL", sc, _pubKey, newToken, token)));   
@@ -872,8 +845,9 @@ public class Server extends Thread {
 
         User user = _users.get(clientPubKey);
         user.setRandomToken();
+        _db.updateUserToken(user.getdbTableName(), user.getToken());
         String newToken = user.getToken();
-        _db.updateOperationUserRow(user.getdbTableName(), newToken);
+        
 
         return createVerifiableMessage(new ProtocolMessage(
                 "INVALID", StatusCode.INVALID_COMMAND, _pubKey, newToken, token));
@@ -905,31 +879,15 @@ public class Server extends Thread {
         }
         User user = _users.get(clientPubKey);
         user.setRandomToken();
+        _db.updateUserToken(user.getdbTableName(), user.getToken());
         String newToken = user.getToken();
 
         response = createVerifiableMessage(new ProtocolMessage(
                 "TOKEN", StatusCode.OK, _pubKey, newToken));
 
-        _db.updateOperationUserRow(user.getdbTableName(), user.getToken());
         
         return response;
     }
-
-    public List<Announcement> getUserAnnouncements(PublicKey clientPublicKey) {
-        return _users.get(clientPublicKey).getAllAnnouncements();
-    }
-
-    /*public List<Announcement> getUserAnnouncements(PublicKey clientPublicKey, int number) {
-        // TODO: synchronize ????
-        User user = _users.get(clientPublicKey);
-        int nAnnouncements = user.getNumAnnouncements();
-        if ((0 < number) && (number <= nAnnouncements)) {
-            return new ArrayList<>(user.getAnnouncements(number));
-        }
-        else {
-            return user.getAllAnnouncements();
-        }
-    }*/
 
     public PublicKey getPublicKey() { return _pubKey; }
     protected PrivateKey getPrivateKey() { return _privateKey; }
