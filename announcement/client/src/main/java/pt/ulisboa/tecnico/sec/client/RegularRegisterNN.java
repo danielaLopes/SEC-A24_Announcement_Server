@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import pt.ulisboa.tecnico.sec.communication_lib.Announcement;
 import pt.ulisboa.tecnico.sec.communication_lib.RegisterMessage;
+import pt.ulisboa.tecnico.sec.communication_lib.StatusCode;
 import pt.ulisboa.tecnico.sec.communication_lib.ProtocolMessage;
 import pt.ulisboa.tecnico.sec.crypto_lib.ProtocolMessageConverter;
 
@@ -62,7 +63,7 @@ public class RegularRegisterNN {
                 if (_readList.size() > _client._nServers / 2) {
                     AtomicValue highest = highest();
                     _readList.clear();
-                    _client.deliverReadGeneral(highest.getValues());
+                    _client.deliverReadGeneral(StatusCode.OK, highest.getValues());
                 }
             }
         }
@@ -92,7 +93,7 @@ public class RegularRegisterNN {
             synchronized(_acks) {
                 if (_acks.get() > _client._nServers / 2) {
                     _acks.set(0);
-                    _client.deliverPostGeneral();
+                    _client.deliverPostGeneral(StatusCode.OK);
                 }
             }
         }

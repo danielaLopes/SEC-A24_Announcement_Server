@@ -159,4 +159,5 @@ public class ProtocolMessage implements Serializable {
 
     public int getReadNumberAnnouncements() { return _numberAnnouncements; }
 
+    public void setToken(String token) { _token = token; }
 }
