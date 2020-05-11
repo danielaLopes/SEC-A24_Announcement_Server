@@ -227,10 +227,17 @@ public class Server extends Thread {
             sb.localEcho();
             _serverBroadcasts.put(clientPubKey, sb);
             sm.setBcb(bcb);
-            for (ServerThread t: _serverThreads) {
-                t.sendQueueMessages(clientPubKey);
-                t.sendServerMessage(sm);
-            }
+            System.out.println("Sending messages to other servers");
+            Thread thread = new Thread() {
+                public void run() {
+                    for (ServerThread t: _serverThreads) {
+                        t.sendQueueMessages(clientPubKey);
+                        t.sendServerMessage(sm);
+                    }
+                }
+            };
+            thread.start();
+            System.out.println("Sent message to other servers");
         }
 
     }
@@ -357,8 +364,8 @@ public class Server extends Thread {
 
         if (!_users.get(userPubKey).getToken().equals(token)) {
             System.out.println("verifyInvalidToken");
-            System.out.println("Invalid token: " + _users.get(userPubKey).getToken());
-            System.out.println("token that should be: " + token);
+            System.out.println("token should be: " + _users.get(userPubKey).getToken());
+            System.out.println("receiving token: " + token);
             return StatusCode.INVALID_TOKEN;
         }
         else

@@ -87,13 +87,14 @@ public class ServerThread extends Thread {
                 };
                 thread.start();
             } catch (IOException | ClassNotFoundException e) {
-                //System.out.println(e);
+                System.out.println("Server in port " + _otherPort + " is down");
+                acceptCommunications();
             }
         }
     }
 
     public void handleServerPost(ServerMessage sm) {
-        System.out.println("handleServerPost");
+        // System.out.println("handleServerPost");
         VerifiableProtocolMessage vpm = sm.getClientMessage();
         verifyClientMessage(vpm);
         PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
@@ -111,7 +112,7 @@ public class ServerThread extends Thread {
     }
 
     public void sendQueueMessages(PublicKey clientPubKey) {
-        System.out.println("sendQueueMessages");
+        // System.out.println("sendQueueMessages");
         ServerBroadcast sb = _server._serverBroadcasts.get(clientPubKey);
         if(_serverMessageQueue.containsKey(clientPubKey)) {
             sendServerMessage(sb.echo(_serverMessageQueue.get(clientPubKey)));
@@ -120,7 +121,7 @@ public class ServerThread extends Thread {
     }
 
     public void handleEcho(VerifiableServerMessage vsm) {
-        System.out.println("handleEcho");
+        // System.out.println("handleEcho");
         ServerMessage sm = vsm.getServerMessage();
         VerifiableProtocolMessage vpm = sm.getClientMessage();
         PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
@@ -133,7 +134,7 @@ public class ServerThread extends Thread {
     }
 
     public void handleFinal(VerifiableServerMessage vsm) {
-        System.out.println("FINALMENTE");
+        // System.out.println("FINALMENTE");
         ServerMessage sm = vsm.getServerMessage();
         VerifiableProtocolMessage vpm = sm.getClientMessage();
         PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();

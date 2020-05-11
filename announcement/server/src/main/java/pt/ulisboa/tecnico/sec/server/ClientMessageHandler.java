@@ -11,6 +11,7 @@ public class ClientMessageHandler extends Thread {
     private ObjectInputStream _ois;
     private ObjectOutputStream _oos;
     private Communication _communication;
+    private boolean _running = true;
 
     public ClientMessageHandler(Server server, Socket socket) throws IOException {
         System.out.println("received new client connection");
@@ -25,9 +26,9 @@ public class ClientMessageHandler extends Thread {
     public void run() {
         String command = "";
 
-        while(!command.equals("LOGOUT")) {
+        while(!command.equals("LOGOUT") && _running) {
             try {
-                
+                System.out.println("WAITING FOR CLIENT MESSAGE");
                 VerifiableProtocolMessage vpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
                 System.out.println("Received [" + vpm.getProtocolMessage().getCommand() + "] from: " + _socket);
                 //System.out.println("Received [" + vpm.getProtocolMessage().getPublicKey() + "] from: " + _socket);
@@ -43,6 +44,7 @@ public class ClientMessageHandler extends Thread {
                     case "POST":
                         System.out.println("------------------------POST------------------------");
                         _server.post(vpm, this);
+                        System.out.println("END POST, WAITING FOR DELIVER");
                         break;
                     //Writeback phase
                     case "WRITEBACK":
@@ -78,7 +80,8 @@ public class ClientMessageHandler extends Thread {
                 }
             }
             catch (IOException | ClassNotFoundException e) {
-                System.out.println(e);
+                System.out.println("Client disconnected.");
+                _running = false;
             }
         }
     }

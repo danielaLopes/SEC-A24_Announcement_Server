@@ -2,6 +2,7 @@ package pt.ulisboa.tecnico.sec.client;
 
 import pt.ulisboa.tecnico.sec.communication_lib.Announcement;
 import pt.ulisboa.tecnico.sec.communication_lib.RegisterMessage;
+import pt.ulisboa.tecnico.sec.communication_lib.StatusCode;
 import pt.ulisboa.tecnico.sec.communication_lib.ProtocolMessage;
 import pt.ulisboa.tecnico.sec.crypto_lib.ProtocolMessageConverter;
 
@@ -124,10 +125,10 @@ public class AtomicRegister1N {
                         //_reading = false;
                         System.out.println("_readVal size before calling deliverRead() " + _readval.size());
                         System.out.flush();
-                        _client.deliverRead(_readval);
+                        _client.deliverRead(StatusCode.OK, _readval);
                     }
                     else
-                        _client.deliverPost();
+                        _client.deliverPost(StatusCode.OK);
                 }
             }
         }

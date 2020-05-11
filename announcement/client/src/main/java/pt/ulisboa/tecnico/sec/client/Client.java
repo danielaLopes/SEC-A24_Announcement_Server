@@ -60,8 +60,8 @@ public class Client {
 
     Integer _acks = 0;
 
-    protected static final int TIMEOUT = 1000;
-    protected static final int MAX_REQUESTS = 3;
+    protected static final int TIMEOUT = 3000;
+    protected static final int MAX_REQUESTS = 1;
     protected static final int MAX_REFRESH = 3;
 
     public Client(String pubKeyPath, String keyStorePath,
@@ -451,27 +451,27 @@ public class Client {
         return responses;
     }
 
-    public void deliverPost() {
+    public void deliverPost(StatusCode sc) {
         System.out.println("deliverPost");
         if (_clientUI != null)
-            _clientUI.deliverPost(StatusCode.OK);
+            _clientUI.deliverPost(sc);
         
     }
 
-    public void deliverPostGeneral() {
+    public void deliverPostGeneral(StatusCode sc) {
         System.out.println("deliverPostGeneral");
         if (_clientUI != null)
-            _clientUI.deliverPostGeneral(StatusCode.OK);  
+            _clientUI.deliverPostGeneral(sc);  
     }
 
-    public void deliverRead(List<Announcement> announcements) {
+    public void deliverRead(StatusCode sc, List<Announcement> announcements) {
         if (_clientUI != null)
-            _clientUI.deliverRead(StatusCode.OK, announcements);
+            _clientUI.deliverRead(sc, announcements);
     }
 
-    public void deliverReadGeneral(List<Announcement> announcements) {
+    public void deliverReadGeneral(StatusCode sc, List<Announcement> announcements) {
         if (_clientUI != null)
-            _clientUI.deliverReadGeneral(StatusCode.OK, announcements);
+            _clientUI.deliverReadGeneral(sc, announcements);
     }
 
     public void write(Map<PublicKey, ProtocolMessage> pms, boolean general) {
@@ -493,6 +493,18 @@ public class Client {
                             _atomicRegister1N.writeReturn(registerMessage.getRid());
                         responses.put(pm.getKey(), response);
                         //printStatusCode(response.getProtocolMessage().getStatusCode());
+                    } else {
+                        if (response == null)
+                            responses.put(pm.getKey(), createVerifiableMessage(new ProtocolMessage(StatusCode.NO_CONSENSUS)));
+                        else
+                            responses.put(pm.getKey(), response);
+                        if (responses.size() == _nServers) {
+                            if (general)
+                                deliverPostGeneral(StatusCode.NO_CONSENSUS);
+                            else
+                                deliverPost(StatusCode.NO_CONSENSUS);
+                        }
+                            
                     }
                 }
             };
@@ -534,6 +546,19 @@ public class Client {
                         responses.put(pm.getKey(), response);
                         //printStatusCode(response.getProtocolMessage().getStatusCode());
                     }
+                    else {
+                        if (response == null)
+                            responses.put(pm.getKey(), createVerifiableMessage(new ProtocolMessage(StatusCode.NO_CONSENSUS)));
+                        else
+                            responses.put(pm.getKey(), response);
+                        if (responses.size() == _nServers) {
+                            if (general)
+                                deliverReadGeneral(StatusCode.NO_CONSENSUS, new ArrayList<Announcement>());
+                            else
+                                deliverRead(StatusCode.NO_CONSENSUS, new ArrayList<Announcement>());
+                        }
+                            
+                    }
                 }
             };
             thread.start();
@@ -554,14 +579,8 @@ public class Client {
             if (serverCommunication.getAlive() == false) {
                 CommunicationServer newServerCommunication = createServerCommunication(serverCommunication.getPort());
                 serverCommunication = newServerCommunication;
-                System.out.println("token refresh");
-                ProtocolMessage p = new ProtocolMessage("TOKEN", _pubKey);
-                VerifiableProtocolMessage vpm = requestServer(p, serverCommunication);
-                if (vpm != null && vpm.getProtocolMessage().getStatusCode().equals(StatusCode.USER_NOT_REGISTERED))
-                    register(serverCommunication);
-                else 
-                    if(vpm != null)
-                        serverCommunication.setToken(getTokenFromVPM(vpm));                            
+                register(serverCommunication);
+                pm.setToken(serverCommunication.getToken());
             }
         }
         catch (IOException e) {
@@ -581,7 +600,7 @@ public class Client {
 
         while (rvpm == null && requestsCounter < MAX_REQUESTS) {
             try {
-                System.out.println("A enviar para " + serverCommunication.getObjOutStream());
+                System.out.println("A enviar para " + serverCommunication.getPort());
                 _communication.sendMessage(vpm, serverCommunication.getObjOutStream());
                 rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(serverCommunication.getObjInStream());
                 System.out.println("Recebi de " + serverCommunication.getPort() + vpm.getProtocolMessage().getCommand());
@@ -602,10 +621,12 @@ public class Client {
 
             }
             catch(SocketTimeoutException e) {
-                System.out.println("Could not receive a response on request " + (++requestsCounter) + 
-                ". Trying again...");
-                if(requestsCounter == MAX_REQUESTS && _clientUI != null)
-                    _clientUI.start();
+                // System.out.println("Could not receive a response on request " + (++requestsCounter) + 
+                // " for port " + serverCommunication.getPort() + ". Trying again...");
+                System.out.println("Could not receive a response for port " + serverCommunication.getPort()
+                    + ". Refreshing token...");
+                refreshToken(serverCommunication);
+                return null;
             }
             catch (SocketException e) {
                 System.out.println("A server is dead!");
@@ -663,6 +684,7 @@ public class Client {
             System.out.println("Could not register: could not receive a response");
         }
         else {
+            System.out.println("register received token: " + getTokenFromVPM(vpm));
             cs.setToken(getTokenFromVPM(vpm));
             return StatusCode.OK;
         }
@@ -845,5 +867,12 @@ public class Client {
     }
 
     public Map<PublicKey, CommunicationServer> getServerCommunications() { return _serverCommunications; }
+
+    public void refreshToken(CommunicationServer sc) {
+        ProtocolMessage p = new ProtocolMessage("TOKEN", _pubKey);
+        VerifiableProtocolMessage vpm = requestServer(p, sc);
+        sc.setToken(getTokenFromVPM(vpm));
+        System.out.println("REFRESHED TOKEN!");
+    }
 
 }
