@@ -81,8 +81,8 @@ public class MessageComparator {
         return null;
     }
 
-    public static Announcement containsKey(Map<Announcement, Integer> occurrences, Announcement other) {
-        for (Map.Entry<Announcement, Integer> entry : occurrences.entrySet()) {
+    public static VerifiableAnnouncement containsKey(Map<VerifiableAnnouncement, Integer> occurrences, VerifiableAnnouncement other) {
+        for (Map.Entry<VerifiableAnnouncement, Integer> entry : occurrences.entrySet()) {
             if (entry.getKey().equals(other)) {
                 return entry.getKey();
             }
@@ -90,9 +90,9 @@ public class MessageComparator {
         return null;
     }
 
-    public static Map.Entry<StatusCode, List<Announcement>> compareServerResponses(
+    public static Map.Entry<StatusCode, List<VerifiableAnnouncement>> compareServerResponses(
                 List<VerifiableProtocolMessage> responses, int required) {
-        Map.Entry<StatusCode, List<Announcement>> quorumSc = compareServerStatusCodes(responses, required);
+        Map.Entry<StatusCode, List<VerifiableAnnouncement>> quorumSc = compareServerStatusCodes(responses, required);
         // returns null to tell there is still no quorum of messages with same status code
         if (quorumSc == null) return null;
 
@@ -108,14 +108,14 @@ public class MessageComparator {
     }
 
     // Gathers the list of announcements that have a quorum
-    public static List<Announcement> compareOkResponses(List<VerifiableProtocolMessage> responses, int required) {
+    public static List<VerifiableAnnouncement> compareOkResponses(List<VerifiableProtocolMessage> responses, int required) {
         // maintains number of occurrences for each announcement
-        Map<Announcement, Integer> occurrences = new HashMap<>();
+        Map<VerifiableAnnouncement, Integer> occurrences = new HashMap<>();
         for (VerifiableProtocolMessage response : responses) {
             RegisterMessage rm = new RegisterMessage(response.getProtocolMessage().getAtomicRegisterMessages());
-            List<Announcement> announcements = rm.getValues();
-            for (Announcement a : announcements) {
-                Announcement key = containsKey(occurrences, a);
+            List<VerifiableAnnouncement> announcements = rm.getValues();
+            for (VerifiableAnnouncement a : announcements) {
+                VerifiableAnnouncement key = containsKey(occurrences, a);
                 if (key != null) {
                     int nOccur = occurrences.get(key);
                     occurrences.put(key, ++nOccur);
@@ -126,15 +126,15 @@ public class MessageComparator {
             }
         }
 
-        List<Announcement> quorumAnnouncements = new ArrayList<>();
-        for (Map.Entry<Announcement, Integer> entry : occurrences.entrySet()) {
+        List<VerifiableAnnouncement> quorumAnnouncements = new ArrayList<>();
+        for (Map.Entry<VerifiableAnnouncement, Integer> entry : occurrences.entrySet()) {
             if (entry.getValue() > required) quorumAnnouncements.add(entry.getKey());
         }
 
         return quorumAnnouncements;
     }
 
-    public static Map.Entry<StatusCode, List<Announcement>> compareServerStatusCodes(
+    public static Map.Entry<StatusCode, List<VerifiableAnnouncement>> compareServerStatusCodes(
                 List<VerifiableProtocolMessage> responses, int required) {
         // Counts number of responses by status code
         Map<StatusCode, List<VerifiableProtocolMessage>> responsesBySc = new HashMap<>();

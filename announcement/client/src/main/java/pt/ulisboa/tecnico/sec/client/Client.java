@@ -356,6 +356,20 @@ public class Client {
         return null;
     }
 
+    public VerifiableAnnouncement createVerifiableAnnouncement(Announcement a) {
+        if (a == null) return null;
+
+        try {
+            byte[] bpm = ProtocolMessageConverter.objToByteArray(a);
+            byte[] signedpm = SignatureUtil.sign(bpm, _privateKey);
+            return new VerifiableAnnouncement(a, signedpm);
+        }
+        catch(NoSuchAlgorithmException | InvalidKeyException | SignatureException e) { 
+            System.out.println(e);
+        }
+        return null;
+    }
+
     /**
      * Verifies if the signed ProtocolMessage inside vpm is valid, i.e.
      * if we sign the ProtocolMessage inside vpm it should be equivalent
@@ -368,6 +382,24 @@ public class Client {
         try {
             byte[] bpm = ProtocolMessageConverter.objToByteArray(vpm.getProtocolMessage());
             return SignatureUtil.verifySignature(vpm.getSignedProtocolMessage(), serverPubKey, bpm);
+        }
+        catch (NoSuchAlgorithmException e) {
+            System.out.println("Error: Algorithm used to verify signature is not valid.\n" + e);
+        }
+        catch (InvalidKeyException e) {
+            System.out.println(StatusCode.INVALID_KEY + "\n" + e);
+        } 
+        catch (SignatureException e) {
+            System.out.println(StatusCode.INVALID_SIGNATURE + "\n" + e);
+        }
+        return false;
+    }
+
+    public boolean verifySignature(VerifiableAnnouncement vpm, PublicKey serverPubKey) {
+        if (vpm == null) return false;
+        try {
+            byte[] bpm = ProtocolMessageConverter.objToByteArray(vpm.getAnnouncement());
+            return SignatureUtil.verifySignature(vpm.getSignedAnnouncement(), serverPubKey, bpm);
         }
         catch (NoSuchAlgorithmException e) {
             System.out.println("Error: Algorithm used to verify signature is not valid.\n" + e);
@@ -474,18 +506,29 @@ public class Client {
             _clientUI.deliverPostGeneral(sc);  
     }
 
-    public void deliverRead(StatusCode sc, List<Announcement> announcements) {
+    public void deliverRead(StatusCode sc, List<VerifiableAnnouncement> vas) {
         resetResponses();
+        System.out.println(vas.size());
+        List<Announcement> announcements = new ArrayList<Announcement>();
+        for (VerifiableAnnouncement va : vas) {
+            if(verifySignature(va, va.getAnnouncement().getClientPublicKey()))
+                announcements.add(va.getAnnouncement());
+        }
         if (_clientUI != null)
             _clientUI.deliverRead(sc, announcements);
     }
 
-    public void deliverReadGeneral(StatusCode sc, List<Announcement> quorumAnnouncements) {
+    public void deliverReadGeneral(StatusCode sc, List<VerifiableAnnouncement> vas) {
         System.out.println("deliver read general");
+        List<Announcement> announcements = new ArrayList<Announcement>();
+        for (VerifiableAnnouncement va : vas) {
+            if(verifySignature(va, va.getAnnouncement().getClientPublicKey()))
+                announcements.add(va.getAnnouncement());
+        }
         //System.out.println("status read general: " + sc);
         resetResponses();
         if (_clientUI != null) {
-            _clientUI.deliverReadGeneral(sc, quorumAnnouncements);
+            _clientUI.deliverReadGeneral(sc, announcements);
         }
     }
 
@@ -581,9 +624,9 @@ public class Client {
                         if (responses.size() == _nServers) {
                             System.out.println("DELIVERING READ WITHOUT CONSENSUS");
                             if (general)
-                                deliverReadGeneral(StatusCode.NO_CONSENSUS, new ArrayList<Announcement>());
+                                deliverReadGeneral(StatusCode.NO_CONSENSUS, new ArrayList<VerifiableAnnouncement>());
                             else
-                                deliverRead(StatusCode.NO_CONSENSUS, new ArrayList<Announcement>());
+                                deliverRead(StatusCode.NO_CONSENSUS, new ArrayList<VerifiableAnnouncement>());
                         }
                             
                     }
@@ -747,7 +790,11 @@ public class Client {
             _atomicRegister1N.write();
             int rid = _atomicRegister1N.getRid();
             int wts = _atomicRegister1N.getWts();
-            List<Announcement> values = new ArrayList<Announcement>(Arrays.asList(a));
+
+            
+            VerifiableAnnouncement va = createVerifiableAnnouncement(a);
+
+            List<VerifiableAnnouncement> values = new ArrayList<VerifiableAnnouncement>(Arrays.asList(va));
 
             RegisterMessage arm = new RegisterMessage(rid, wts, values);
  
@@ -799,7 +846,9 @@ public class Client {
 
         _regularRegisterNN.write();
         int wts = _regularRegisterNN.getWts();
-        List<Announcement> values = new ArrayList<Announcement>(Arrays.asList(a));
+
+        VerifiableAnnouncement va = createVerifiableAnnouncement(a);
+        List<VerifiableAnnouncement> values = new ArrayList<VerifiableAnnouncement>(Arrays.asList(va));
 
         RegisterMessage arm = new RegisterMessage(wts, values);
 

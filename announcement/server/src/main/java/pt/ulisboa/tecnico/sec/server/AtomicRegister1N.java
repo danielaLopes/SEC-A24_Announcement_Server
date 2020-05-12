@@ -11,10 +11,10 @@ public class AtomicRegister1N {
     private Server _server;
     private int _nServers;
     private AtomicInteger _ts = new AtomicInteger(0);
-    private List<Announcement> _values = new ArrayList<>();
+    private List<VerifiableAnnouncement> _values = new ArrayList<>();
 
     public int getTimeStamp() { return _ts.get(); }
-    public List<Announcement> getValues() { return _values; }
+    public List<VerifiableAnnouncement> getValues() { return _values; }
 
     public RegisterMessage acknowledge(RegisterMessage arm) {
         //System.out.println("acknowledge");
@@ -32,11 +32,11 @@ public class AtomicRegister1N {
         return new RegisterMessage(arm.getRid(), _ts.get(), getUserAnnouncements(n));
     }
 
-    public List<Announcement> getUserAnnouncements(int number) {
+    public List<VerifiableAnnouncement> getUserAnnouncements(int number) {
         int nAnnouncements = _values.size();
         if ((0 < number) && (number <= nAnnouncements)) {
             System.out.println("returning " + number + " announcements");
-            return new ArrayList<>(_values.subList(nAnnouncements - number, nAnnouncements));
+            return new ArrayList<VerifiableAnnouncement>(_values.subList(nAnnouncements - number, nAnnouncements));
         }
         else {
             System.out.println("returning all " + _values.size() + " announcements");

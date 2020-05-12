@@ -1,15 +1,15 @@
 package pt.ulisboa.tecnico.sec.communication_lib;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 public class RegisterMessage extends SerializableObject {
     private int _rid;
     private int _wts;
-    private List<Announcement> _values;
+    private List<VerifiableAnnouncement> _values;
 
-    public RegisterMessage(int rid, int wts, List<Announcement> values) {
+
+    public RegisterMessage(int rid, int wts, List<VerifiableAnnouncement> values) {
         _rid = rid;
         _wts = wts;
         _values = values;
@@ -18,14 +18,14 @@ public class RegisterMessage extends SerializableObject {
     public RegisterMessage(int rid) {
         _rid = rid;
         _wts = 0;
-        _values = new ArrayList<Announcement>();
+        _values = new ArrayList<VerifiableAnnouncement>();
     }
 
     public RegisterMessage() {
-        _values = new ArrayList<Announcement>();
+        _values = new ArrayList<VerifiableAnnouncement>();
     }
 
-    public RegisterMessage(int wts, List<Announcement> values) {
+    public RegisterMessage(int wts, List<VerifiableAnnouncement> values) {
         _wts = wts;
         _values = values;
     }
@@ -41,7 +41,7 @@ public class RegisterMessage extends SerializableObject {
     public void setRid(int rid) { _rid = rid; }
     public int getWts() { return _wts; }
     public void setWts(int wts) { _wts = wts; }
-    public List<Announcement> getValues() { return _values; }
+    public List<VerifiableAnnouncement> getValues() { return _values; }
 
     public byte[] getBytes() {
         return super.objToByteArray(this);

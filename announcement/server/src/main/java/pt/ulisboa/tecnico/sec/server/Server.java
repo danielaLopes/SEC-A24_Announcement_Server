@@ -527,7 +527,7 @@ public class Server extends Thread {
         }
 
         RegisterMessage registerMessage = new RegisterMessage(vpm.getProtocolMessage().getAtomicRegisterMessages());
-        if(!vpm.getProtocolMessage().getPublicKey().equals(registerMessage.getValues().get(0).getClientPublicKey()))
+        if(!vpm.getProtocolMessage().getPublicKey().equals(registerMessage.getValues().get(0).getAnnouncement().getClientPublicKey()))
             return StatusCode.INVALID_ANNOUNCEMENT_PUBLIC_KEY;
         return sc;
     }
