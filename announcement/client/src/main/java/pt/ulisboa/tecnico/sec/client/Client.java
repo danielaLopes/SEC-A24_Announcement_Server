@@ -5,6 +5,7 @@ import pt.ulisboa.tecnico.sec.crypto_lib.KeyPairUtil;
 import pt.ulisboa.tecnico.sec.crypto_lib.KeyStorage;
 import pt.ulisboa.tecnico.sec.crypto_lib.ProtocolMessageConverter;
 import pt.ulisboa.tecnico.sec.crypto_lib.SignatureUtil;
+import pt.ulisboa.tecnico.sec.crypto_lib.UUIDGenerator;
 
 import java.net.Socket;
 import java.net.SocketException;
@@ -24,6 +25,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import javax.lang.model.element.AnnotationMirror;
 
 public class Client {
 
@@ -220,7 +223,7 @@ public class Client {
      */
     public void printOtherUsersPubKeys() {
         for (int i = 0; i < _usersPubKeys.size(); i++) {
-            System.out.println("* " + i + ": " + _usersPubKeys.get(i));
+            System.out.println("* " + i + ": " + _usersPubKeys.get(i).toString().substring(0, 120) + "...");
         }
     }
 
@@ -785,6 +788,8 @@ public class Client {
         // TODO: fix this -> loop!
         //while (refreshCounter < MAX_REFRESH) {
             Announcement a = new Announcement(message, references);
+            String announcementID = UUIDGenerator.generateUUID();
+            a.setAnnouncementID(announcementID);
             a.setPublicKey(_pubKey);
 
             _atomicRegister1N.write();
@@ -806,18 +811,6 @@ public class Client {
             }
 
             write(pms, false);
-
-            /*for(Map.Entry<PublicKey, VerifiableProtocolMessage> vpm : vpms.entrySet()) {
-
-                rsc = verifyReceivedMessage(vpm.getValue()); // returns StatusCode.NO_RESPONSE if vpm is null
-                rscs.add(rsc);
-                if (rsc.equals(StatusCode.INVALID_TOKEN)) {
-                    refreshToken(_serverCommunications.get(vpm.getKey()));
-                    refreshCounter++;
-                } else {
-                    refreshCounter = MAX_REFRESH;
-                }
-            }*/
 
         return rscs;
     }
@@ -842,6 +835,8 @@ public class Client {
         List<StatusCode> rscs = new ArrayList<>();
 
         Announcement a = new Announcement(message, references);
+        String announcementID = UUIDGenerator.generateUUID();
+        a.setAnnouncementID(announcementID);
         a.setPublicKey(_pubKey);
 
         _regularRegisterNN.write();
