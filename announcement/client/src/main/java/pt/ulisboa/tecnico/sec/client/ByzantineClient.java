@@ -149,7 +149,9 @@ public class ByzantineClient extends Client {
         getAtomicRegister1N().write();
         int rid = getAtomicRegister1N().getRid();
         int wts = getAtomicRegister1N().getWts();
-        List<Announcement> values = new ArrayList<Announcement>(Arrays.asList(a));
+
+        VerifiableAnnouncement va = createVerifiableAnnouncement(a);
+        List<VerifiableAnnouncement> values = new ArrayList<VerifiableAnnouncement>(Arrays.asList(va));
 
         RegisterMessage arm = new RegisterMessage(rid, wts, values);
 

@@ -568,7 +568,7 @@ public class Client {
     }
 
     public StatusCode verifyStatusConsensus() {
-        Map.Entry<StatusCode, List<Announcement>> quorum =
+        Map.Entry<StatusCode, List<VerifiableAnnouncement>> quorum =
                 MessageComparator.compareServerStatusCodes(new ArrayList<>(_responses.values()), _quorum);
 
         if (quorum != null) return quorum.getKey();
