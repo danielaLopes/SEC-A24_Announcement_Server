@@ -16,13 +16,8 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SignatureException;
 import java.io.*;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Arrays;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.HashMap;
 import java.util.concurrent.ConcurrentMap;
 
 public class Client {
@@ -39,6 +34,7 @@ public class Client {
 
     protected final int _nServers;
     protected final int _nFaults;
+    protected final int _quorum;
 
     // maps server public keys to the corresponding serverIndex to access for _oos,_ois or _clientSockets
     private Map<PublicKey, CommunicationServer> _serverCommunications;
@@ -75,6 +71,7 @@ public class Client {
 
         _nServers = nServers;
         _nFaults = nFaults;
+        _quorum = (nServers + nFaults) / 2;
 
         _serverCommunications = new HashMap<>();
         List<PublicKey> serversPubKeys = loadServersGroupPublicKeys();
@@ -101,6 +98,7 @@ public class Client {
 
         _nServers = nServers;
         _nFaults = nFaults;
+        _quorum = (nServers + nFaults) / 2;
 
         _serverCommunications = new HashMap<>();
         List<PublicKey> serversPubKeys = loadServersGroupPublicKeys();
@@ -433,32 +431,6 @@ public class Client {
         return responses;
     }
 
-    /**
-     * Makes a request to the group of active Servers, receiving a list of responses as VerifiableProtocolMessage's
-     * @param pms is a List the ProtocolMessages to be sent to each server (each server has a different token)
-     * @return the servers' responses
-     */
-    public Map<PublicKey, VerifiableProtocolMessage> requestServersGroup(Map<PublicKey, ProtocolMessage> pms) {
-        Map<PublicKey, VerifiableProtocolMessage> responses = new ConcurrentHashMap<>();
-        for (Map.Entry<PublicKey, ProtocolMessage> pm : pms.entrySet()) {
-            /*String opUuid = UUIDGenerator.generateUUID();
-            pm.getValue().setOpUuid(opUuid);*/
-            Thread thread = new Thread(){
-                public void run() {
-                    VerifiableProtocolMessage response = requestServer(pm.getValue(), _serverCommunications.get(pm.getKey()));
-                    if (response != null) {
-                        responses.put(pm.getKey(), response);
-                    }
-                }
-            };
-            thread.start();
-        }
-        // TODO: change number of responses
-        while (responses.size() < _nServers);
-        //System.out.println("got out");
-        return responses;
-    }
-
     public void deliverPost(StatusCode sc) {
         System.out.println("deliverPost");
         resetResponses();
@@ -524,17 +496,27 @@ public class Client {
                         else
                             _responses.put(pm.getKey(), response);
                         if (_responses.size() == _nServers) {
+                            StatusCode finalSc = verifyStatusConsensus();
                             System.out.println("DELIVERING WRITE WITHOUT CONSENSUS");
                             if (general)
-                                deliverPostGeneral(StatusCode.NO_CONSENSUS);
+                                deliverPostGeneral(finalSc);
                             else
-                                deliverPost(StatusCode.NO_CONSENSUS);
+                                deliverPost(finalSc);
                         }
                     }
                 }
             };
             thread.start();
         }
+    }
+
+    public StatusCode verifyStatusConsensus() {
+        Map.Entry<StatusCode, List<Announcement>> quorum =
+                MessageComparator.compareServerStatusCodes(new ArrayList<>(_responses.values()), _quorum);
+
+        if (quorum != null) return quorum.getKey();
+
+        return StatusCode.NO_CONSENSUS;
     }
 
     public void writeBack(RegisterMessage arm) {
@@ -875,22 +857,22 @@ public class Client {
     }
 
     public StatusCode verifyReceivedMessage(VerifiableProtocolMessage vpm) {
-        StatusCode rsc = StatusCode.OK;
+        StatusCode rsc = null;
         if (vpm == null) {
-            return StatusCode.NO_RESPONSE;
+            rsc = StatusCode.NO_RESPONSE;
         }
         else {
-
+            rsc = getStatusCodeFromVPM(vpm);
             PublicKey serverPubKey = getServerPublicKeyFromVPM(vpm);
 
             if (invalidToken(getOldTokenFromVPM(vpm), serverPubKey)) {
                 rsc = StatusCode.INVALID_TOKEN;
             }
             else {
+                //_token = getTokenFromVPM(vpm);
                 _serverCommunications.get(serverPubKey).setToken(getTokenFromVPM(vpm));
             }
         }
-
         return rsc;
     }
 
