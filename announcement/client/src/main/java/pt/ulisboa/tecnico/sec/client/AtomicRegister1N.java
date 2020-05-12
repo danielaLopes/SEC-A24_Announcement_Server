@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -20,7 +21,7 @@ public class AtomicRegister1N {
     private AtomicValue _atomicValue;
     private AtomicInteger _rid;
     private AtomicInteger _acks;
-    private HashMap<PublicKey, AtomicValue> _readList = new HashMap<>();
+    private ConcurrentHashMap<PublicKey, AtomicValue> _readList = new ConcurrentHashMap<>();
     private AtomicBoolean _reading;
     private AtomicInteger _wts;
     private List<VerifiableAnnouncement> _readval;
@@ -135,7 +136,7 @@ public class AtomicRegister1N {
         return _acks.get();
     }
 
-    public HashMap<PublicKey, AtomicValue> getReadList() {
+    public ConcurrentHashMap<PublicKey, AtomicValue> getReadList() {
         return _readList;
     }
 

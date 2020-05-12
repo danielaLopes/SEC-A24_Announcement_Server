@@ -44,7 +44,7 @@ public class Client {
     protected final int _nFaults;
 
     // maps server public keys to the corresponding serverIndex to access for _oos,_ois or _clientSockets
-    private Map<PublicKey, CommunicationServer> _serverCommunications;
+    private ConcurrentHashMap<PublicKey, CommunicationServer> _serverCommunications;
     // TODO: change this
     private PublicKey _serverPubKey;
 
@@ -79,7 +79,7 @@ public class Client {
         _nServers = nServers;
         _nFaults = nFaults;
 
-        _serverCommunications = new HashMap<>();
+        _serverCommunications = new ConcurrentHashMap<>();
         List<PublicKey> serversPubKeys = loadServersGroupPublicKeys();
 
         _usersPubKeys = new ArrayList<>();
@@ -105,7 +105,7 @@ public class Client {
         _nServers = nServers;
         _nFaults = nFaults;
 
-        _serverCommunications = new HashMap<>();
+        _serverCommunications = new ConcurrentHashMap<>();
         List<PublicKey> serversPubKeys = loadServersGroupPublicKeys();
 
         _communication = new Communication();
@@ -675,7 +675,7 @@ public class Client {
                 serverCommunication.setAlive(false);
                 return null;
             }
-            catch (IOException | ClassNotFoundException e) {
+            catch (IOException | ClassNotFoundException | ClassCastException e) {
                 System.out.println("ola erro estupido");
                 reset(serverCommunication);
                 System.out.println(e);

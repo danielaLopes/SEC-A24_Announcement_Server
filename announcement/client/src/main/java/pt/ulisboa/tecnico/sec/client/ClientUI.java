@@ -51,7 +51,7 @@ public class ClientUI {
                     // Exit and close communication
                     case "0":
                         closeCommunication();
-                        System.exit(0);
+                        // System.exit(0);
                         break;
                     default:
                         repeat = true;

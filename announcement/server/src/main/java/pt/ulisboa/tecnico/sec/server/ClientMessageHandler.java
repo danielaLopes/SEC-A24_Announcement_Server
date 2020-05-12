@@ -93,6 +93,7 @@ public class ClientMessageHandler extends Thread {
         }
         catch (IOException e) {
           System.out.println(e);
+          _running = false;
         }
     }
 

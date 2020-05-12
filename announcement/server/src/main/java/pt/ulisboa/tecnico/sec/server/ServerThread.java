@@ -95,7 +95,7 @@ public class ServerThread extends Thread {
                     }
                 };
                 thread.start();
-            } catch (IOException | ClassNotFoundException e) {
+            } catch (IOException | ClassNotFoundException | ClassCastException e) {
                 System.out.println("Server in port " + _otherPort + " is down");
                 acceptCommunications();
             }
