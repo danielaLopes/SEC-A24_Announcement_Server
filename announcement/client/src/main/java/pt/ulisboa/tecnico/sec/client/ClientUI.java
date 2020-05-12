@@ -29,7 +29,7 @@ public class ClientUI {
     public void start() {
 
         boolean repeat = false;
-        do {
+        //do {
             String option = promptGeneralMenu();
             if (!option.equals("\n")) {
                 switch (option) {
@@ -57,8 +57,8 @@ public class ClientUI {
                         repeat = true;
                         break;
                 }
-            }
-        } while(repeat == true);
+           }
+        //} while(repeat == true);
     }
 
     /**
@@ -212,16 +212,22 @@ public class ClientUI {
      * Prompts the user for an action.
      */
     public String promptGeneralMenu() {
-        System.out.println();
-        System.out.println(Message.WELCOME);
-        System.out.println("1 - " + Message.POST);
-        System.out.println("2 - " + Message.POST_GENERAL);
-        System.out.println("3 - " + Message.READ);
-        System.out.println("4 - " + Message.READ_GENERAL);
-        System.out.println("0 - " + Message.EXIT);
+        try{
+            System.out.println();
+            System.out.println(Message.WELCOME);
+            System.out.println("1 - " + Message.POST);
+            System.out.println("2 - " + Message.POST_GENERAL);
+            System.out.println("3 - " + Message.READ);
+            System.out.println("4 - " + Message.READ_GENERAL);
+            System.out.println("0 - " + Message.EXIT);
 
-        String cmd = _scanner.nextLine();
-        return cmd;
+            String cmd = _scanner.nextLine();
+            return cmd;
+        }
+        catch(IndexOutOfBoundsException e) {
+            System.out.println("vai po carvalho");
+            return "";
+        }
     }
 
     /**

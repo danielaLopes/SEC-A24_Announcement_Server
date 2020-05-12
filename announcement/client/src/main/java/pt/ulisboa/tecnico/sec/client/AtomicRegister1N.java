@@ -63,21 +63,8 @@ public class AtomicRegister1N {
 
             synchronized (_readList) {
 
-                //print _readList before
-                /*System.out.println("Print _readList before");
-                for (AtomicValue val : _readList.values()) {
-                    System.out.println("val before " + val);
-                }
-                System.out.flush();*/
-
                 _readList.put(pm.getPublicKey(), av);
-
-                // print _readList after
-                /*System.out.println("Print _readList after");
-                for (AtomicValue val : _readList.values()) {
-                    System.out.println("val after " + val);
-                }
-                System.out.flush();*/
+                System.out.flush();
 
                 _readList.put(pm.getPublicKey(), av);
                 if (_readList.size() > _client._nServers / 2) {
@@ -119,7 +106,7 @@ public class AtomicRegister1N {
         if (r == _rid.get()) {
             _acks.incrementAndGet();
             synchronized(_lock) {
-                System.out.println(_acks.get());
+                //System.out.println(_acks.get());
                 if (_acks.get() > _client._nServers / 2) {
                     _acks.set(0);
                     if(_reading.compareAndSet(true, false)) {
