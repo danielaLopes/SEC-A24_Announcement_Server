@@ -112,19 +112,28 @@ public class ClientUI {
 
     public void deliverPost(StatusCode sc) {
         System.out.print("POST: ");
-        _client.printStatusCode(sc);
+        if (sc.equals(StatusCode.NO_CONSENSUS))
+            System.out.println("Could not post announcement.");
+        else
+            _client.printStatusCode(sc);
         start();
     }
 
     public void deliverPostGeneral(StatusCode sc) {
         System.out.print("POSTGENERAL: ");
-        _client.printStatusCode(sc);
+        if (sc.equals(StatusCode.NO_CONSENSUS))
+            System.out.println("Could not post announcement.");
+        else
+            _client.printStatusCode(sc);
         start();
     }
 
     public void deliverRead(StatusCode sc, List<Announcement> announcements) {
         System.out.print("READ: ");
-        _client.printStatusCode(sc);
+        if (sc.equals(StatusCode.NO_CONSENSUS))
+            System.out.println("Could not post announcement.");
+        else
+            _client.printStatusCode(sc);
         if(sc == StatusCode.OK)
             printAnnouncements(announcements, "USER");
         start();
@@ -132,7 +141,10 @@ public class ClientUI {
 
     public void deliverReadGeneral(StatusCode sc, List<Announcement> announcements) {
         System.out.print("READGENERAL: ");
-        _client.printStatusCode(sc);
+        if (sc.equals(StatusCode.NO_CONSENSUS))
+            System.out.println("Could not post announcement.");
+        else
+            _client.printStatusCode(sc);
         if(sc == StatusCode.OK)
             printAnnouncements(announcements, "USER");
         start();

@@ -58,7 +58,7 @@ public class ServerBroadcast {
     public void setBcb(String bcb) { _bcb = bcb; }
 
     public void localEcho() {
-        System.out.println("localEcho");
+        // System.out.println("localEcho");
         ServerBroadcastData sbd = new ServerBroadcastData();
         sbd._echo = _clientMessage;
         VerifiableServerMessage vsm = _server.createVerifiableServerMessage(new ServerMessage(_server.getPublicKey(), "ECHO", _clientMessage, _bcb));
@@ -67,7 +67,7 @@ public class ServerBroadcast {
     }
 
     public ServerMessage echo(ServerMessage sm) {
-        System.out.println("echo");
+        // System.out.println("echo");
         ServerBroadcastData sbd = _data.get(sm.getPublicKey());
         // first echo message received by this server
         if (sbd == null) {
@@ -78,7 +78,7 @@ public class ServerBroadcast {
         // we already received a broadcast from this server, so we don't consider this message
         else {
             // TODO: repeated broadcast
-            System.out.println("REPEATED BROADCAST");
+            // System.out.println("REPEATED BROADCAST");
             return null;
         }
 
@@ -86,21 +86,20 @@ public class ServerBroadcast {
     }
 
     public void localReady() {
-        System.out.println("localReady");
+        // System.out.println("localReady");
 
         List<VerifiableProtocolMessage> echos = new ArrayList<>();
         for(Map.Entry<PublicKey, ServerBroadcastData> entry : _data.entrySet()) {
             echos.add(entry.getValue()._echo);
         }
         synchronized(_delivered) {
+            System.out.println(echos.size());
             if(echos.size() > _quorum && _delivered.get() == false) {
                 VerifiableProtocolMessage vpmToDeliver = MessageComparator.compareClientMessages(echos, _quorum);
                 if (vpmToDeliver != null) {
                     _server.deliver(vpmToDeliver, _clientMessage);
                     _delivered.set(true);
                 }
-                else
-                    _server.deliverFailed(_clientMessage);
             }
         }
     }
@@ -110,7 +109,7 @@ public class ServerBroadcast {
      * after checking if there isa quorum in the echos
      */
     public ServerMessage ready(VerifiableServerMessage vsm) {
-        System.out.println("ready");
+        // System.out.println("ready");
         ServerMessage sm = vsm.getServerMessage();
 
         // verify freshness with bcb
@@ -163,7 +162,7 @@ public class ServerBroadcast {
                         nReadys++;
                 }
                 if (nReadys > _quorumF) {
-                    System.out.println("Amplification step");
+                    // System.out.println("Amplification step");
                     _sentReady.getAndSet(true);
                     ServerMessage s = new ServerMessage(_server.getPublicKey(), "FINAL", sm.getClientMessage(), _bcb);
                     s.setSigma(ProtocolMessageConverter.objToByteArray(sigmas));
@@ -186,13 +185,12 @@ public class ServerBroadcast {
                     if (sc.equals(StatusCode.OK) && sigma.getServerMessage().getClientMessage().equals(sm.getClientMessage()));
                         nSigVerified++;
                 }
+                System.out.println("sig funky " +  nSigVerified);
+                System.out.println("quorum " + _quorum2F);
                 if (nSigVerified > _quorum2F) {
                     _delivered.getAndSet(true);
                     VerifiableProtocolMessage vpmToDeliver = sm.getClientMessage();
                     _server.deliver(vpmToDeliver, _clientMessage);
-                }
-                else {
-                    _server.deliverFailed(_clientMessage);
                 }
             }
         }

@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import pt.ulisboa.tecnico.sec.communication_lib.*;
-import pt.ulisboa.tecnico.sec.crypto_lib.ProtocolMessageConverter;
+
 
 public class RegularRegisterNN {
     private AtomicValue _atomicValue;
@@ -73,7 +73,7 @@ public class RegularRegisterNN {
                         // TODO: why highest then ????
                         // TODO: Verify client Signatures of the announcements!
                         //_client.deliverReadGeneral(highest.getValues());
-                        _client.deliverReadGeneral(quorumMessages);
+                        _client.deliverReadGeneral(quorumMessages.getKey(), quorumMessages.getValue());
                     }
                 }
             }
@@ -104,7 +104,7 @@ public class RegularRegisterNN {
             synchronized(_acks) {
                 if (_acks.get() > _client._nServers / 2) {
                     _acks.set(0);
-                    _client.deliverPostGeneral();
+                    _client.deliverPostGeneral(StatusCode.OK);
                 }
             }
         }
