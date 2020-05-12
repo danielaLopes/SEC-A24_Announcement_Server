@@ -3,12 +3,11 @@ package pt.ulisboa.tecnico.sec.client;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import pt.ulisboa.tecnico.sec.communication_lib.Announcement;
-import pt.ulisboa.tecnico.sec.communication_lib.RegisterMessage;
-import pt.ulisboa.tecnico.sec.communication_lib.ProtocolMessage;
+import pt.ulisboa.tecnico.sec.communication_lib.*;
 import pt.ulisboa.tecnico.sec.crypto_lib.ProtocolMessageConverter;
 
 public class RegularRegisterNN {
@@ -17,6 +16,7 @@ public class RegularRegisterNN {
     private int _wts;
     private AtomicInteger _acks;
     private HashMap<PublicKey, AtomicValue> _readList = new HashMap<>();
+    private final int _quorum;
 
     private Client _client;
 
@@ -27,6 +27,7 @@ public class RegularRegisterNN {
         _wts = 0;
         _client = client;
         _readList.clear();
+        _quorum = (_client._nServers + _client._nFaults) / 2;
     }
 
     public RegisterMessage read() {
@@ -36,7 +37,7 @@ public class RegularRegisterNN {
         return new RegisterMessage(_rid);
     }
 
-    public void readReturn(ProtocolMessage pm) {
+    public void readReturn(ProtocolMessage pm, List<VerifiableProtocolMessage> responses) {
         //System.out.println("readreturn");
         RegisterMessage registerMessage = new RegisterMessage(pm.getAtomicRegisterMessages());
         if(_rid == registerMessage.getRid()) {
@@ -59,10 +60,19 @@ public class RegularRegisterNN {
                 }
                 System.out.flush();
 
-                if (_readList.size() > _client._nServers / 2) {
-                    AtomicValue highest = highest();
-                    _readList.clear();
-                    _client.deliverReadGeneral(highest.getValues());
+                // TODO: readlist needs to have a quorum
+                if (_readList.size() > _quorum) {
+                    Map.Entry<StatusCode, List<Announcement>> quorumMessages =
+                            MessageComparator.compareServerResponses(responses, responses.size() / 2);
+                    if (quorumMessages != null) {
+                        if (quorumMessages.getValue().size() > 0) {
+                            AtomicValue highest = highest();
+                            _readList.clear();
+                            // TODO: why highest then ????
+                            // TODO: Verify client Signatures of the announcements!
+                            _client.deliverReadGeneral(highest.getValues());
+                        }
+                    }
                 }
             }
         }

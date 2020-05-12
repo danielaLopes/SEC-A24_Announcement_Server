@@ -1,10 +1,7 @@
 package pt.ulisboa.tecnico.sec.communication_lib;
 
 import java.security.PublicKey;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class MessageComparator {
@@ -79,6 +76,85 @@ public class MessageComparator {
         for (Map.Entry<VerifiableProtocolMessage, Integer> entry : occurrences.entrySet()) {
             if (entry.getKey().equals(other)) {
                 return entry.getKey();
+            }
+        }
+        return null;
+    }
+
+    public static Announcement containsKey(Map<Announcement, Integer> occurrences, Announcement other) {
+        for (Map.Entry<Announcement, Integer> entry : occurrences.entrySet()) {
+            if (entry.getKey().equals(other)) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
+
+    public static Map.Entry<StatusCode, List<Announcement>> compareServerResponses(
+                List<VerifiableProtocolMessage> responses, int required) {
+        Map.Entry<StatusCode, List<Announcement>> quorumSc = compareServerStatusCodes(responses, required);
+        // returns null to tell there is still no quorum of messages with same status code
+        if (quorumSc == null) return null;
+
+        if (quorumSc.getKey().equals(StatusCode.OK)) {
+            return new AbstractMap.SimpleEntry<>(StatusCode.OK, compareOkResponses(responses, required));
+        }
+        // quorum is a status code that is not OK
+        // TODO: be careful, announcements here are going to be empty
+        else {
+            return quorumSc;
+        }
+
+    }
+
+    // Gathers the list of announcements that have a quorum
+    public static List<Announcement> compareOkResponses(List<VerifiableProtocolMessage> responses, int required) {
+        // maintains number of occurrences for each announcement
+        Map<Announcement, Integer> occurrences = new HashMap<>();
+        for (VerifiableProtocolMessage response : responses) {
+            RegisterMessage rm = new RegisterMessage(response.getProtocolMessage().getAtomicRegisterMessages());
+            List<Announcement> announcements = rm.getValues();
+            for (Announcement a : announcements) {
+                Announcement key = containsKey(occurrences, a);
+                if (key != null) {
+                    int nOccur = occurrences.get(key);
+                    occurrences.put(key, ++nOccur);
+                }
+                else {
+                    occurrences.put(a, 1);
+                }
+            }
+        }
+
+        List<Announcement> quorumAnnouncements = new ArrayList<>();
+        for (Map.Entry<Announcement, Integer> entry : occurrences.entrySet()) {
+            if (entry.getValue() > required) quorumAnnouncements.add(entry.getKey());
+        }
+
+        return quorumAnnouncements;
+    }
+
+    public static Map.Entry<StatusCode, List<Announcement>> compareServerStatusCodes(
+                List<VerifiableProtocolMessage> responses, int required) {
+        // Counts number of responses by status code
+        Map<StatusCode, List<VerifiableProtocolMessage>> responsesBySc = new HashMap<>();
+
+        for (VerifiableProtocolMessage response : responses) {
+            StatusCode sc = response.getProtocolMessage().getStatusCode();
+            if (responsesBySc.containsKey(sc)) {
+                responsesBySc.get(sc).add(response);
+            }
+            else {
+                List<VerifiableProtocolMessage> lst = new ArrayList<>();
+                lst.add(response);
+                responsesBySc.put(response.getProtocolMessage().getStatusCode(), lst);
+            }
+        }
+
+        // check if there is a status code with a quorum
+        for (Map.Entry<StatusCode, List<VerifiableProtocolMessage>> entry : responsesBySc.entrySet()) {
+            if (entry.getValue().size() > required) {
+                return new AbstractMap.SimpleEntry<>(entry.getKey(), new ArrayList<>());
             }
         }
         return null;
