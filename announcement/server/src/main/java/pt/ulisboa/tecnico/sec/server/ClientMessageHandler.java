@@ -82,6 +82,8 @@ public class ClientMessageHandler extends Thread {
             catch (IOException | ClassNotFoundException e) {
                 System.out.println("Client disconnected.");
                 _running = false;
+                closeCommunication();
+                return;
             }
         }
     }
@@ -94,6 +96,8 @@ public class ClientMessageHandler extends Thread {
         catch (IOException e) {
           System.out.println(e);
           _running = false;
+          closeCommunication();
+          return;
         }
     }
 

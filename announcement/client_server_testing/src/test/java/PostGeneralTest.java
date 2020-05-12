@@ -13,62 +13,85 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class PostGeneralTest extends BaseTest {
 
-    static ClientTest _clientTest;
+    Client _client;
 
     PostGeneralTest() {
-        _clientTest = new ClientTest(PUBLICKEY_PATH1, KEYSTORE_PATH1, CLIENT_KEYSTORE_PASSWD,
-                CLIENT_ENTRY_PASSWD, ALIAS, SERVER_PUBLIC_KEY_PATH);
+        _client = new Client(PUBLICKEY_PATH1, KEYSTORE_PATH1, CLIENT_KEYSTORE_PASSWD, CLIENT_ENTRY_PASSWD, ALIAS, 4, 1);
     }
 
     @Test
     void success() {
-        StatusCode sc = _clientTest.postGeneral("message1", new ArrayList<>());
-        assertEquals(StatusCode.OK, sc);
-    }
+        // List<Server> servers = new ArrayList<Server>();
+        // for (int i = 0; i < 3; i++) {
+        //     char[] password = {'p','a','s','s','w','o','r','d'};
+        //     Server server = new Server(false, 4, 1, 9001+i, password, password,
+        //         "alias", "../server/src/main/resources/crypto/public"+(i+1)+".key",
+        //         "../server/src/main/resources/crypto/server_keystore"+(i+1)+".jks");
+        //     servers.add(server);
+        // }
+        // for (Server server: servers) {
+        //     Thread thread = new Thread(){
+        //         public void run() {
+        //             server.start();
+        //         }
+        //     };
+        //     thread.start();
+        // }
 
-    @Test
-    void tooManyAnnouncements() {
-        for (int i = 0; i < 10; i++) {
-            StatusCode sc = _clientTest.postGeneral("message" + (i+1), new ArrayList<>());
-            assertEquals(StatusCode.OK, sc);
+        _client.postGeneral("Ok. So. We have a question in chat from João Martinho. Yes. That is rright.", new ArrayList<>());
+
+        while (_client.postGeneralDelivered == false) {
+            try {
+                Thread.sleep(1000);
+            } catch(Exception e) {
+
+            }
         }
+
+        assertEquals(StatusCode.OK, _client.postGeneralDeliveredSC);
+        
     }
 
     @Test
-    void repeatMessage() {
-        List<StatusCode> rsc = _clientTest.postGeneralTwice("message1", new ArrayList<>());
-        assertEquals(StatusCode.OK, rsc.get(0));
-        assertEquals(StatusCode.INVALID_TOKEN, rsc.get(1));
-    }
+    void success2() {
+        // List<Server> servers = new ArrayList<Server>();
+        // for (int i = 0; i < 3; i++) {
+        //     char[] password = {'p','a','s','s','w','o','r','d'};
+        //     Server server = new Server(false, 4, 1, 9001+i, password, password,
+        //         "alias", "../server/src/main/resources/crypto/public"+(i+1)+".key",
+        //         "../server/src/main/resources/crypto/server_keystore"+(i+1)+".jks");
+        //     servers.add(server);
+        // }
+        // for (Server server: servers) {
+        //     Thread thread = new Thread(){
+        //         public void run() {
+        //             server.start();
+        //         }
+        //     };
+        //     thread.start();
+        // }
 
-    @Test
-    void tamperedMessage() {
-        StatusCode sc = _clientTest.postGeneralTampered("message1", new ArrayList<>());
-        assertEquals(StatusCode.INVALID_SIGNATURE, sc);
-    }
+        _client.postGeneral("Ok. So. We have a question in chat from João Martinho. Yes. That is rright.", new ArrayList<>());
 
-    @Test
-    void droppedMessage() {
-        StatusCode sc = _clientTest.postGeneralDropped("message1", new ArrayList<>());
-        assertEquals(StatusCode.NO_RESPONSE, sc);
-    }
+        while (_client.postGeneralDelivered == false) {
+            try {
+                Thread.sleep(1000);
+            } catch(Exception e) {
 
-    @Test
-    void receivedNullMessage() {
-        StatusCode sc = _clientTest.postGeneralNull("message1", new ArrayList<>());
-        assertEquals(StatusCode.NO_RESPONSE, sc);
-    }
+            }
+        }
 
-    @Test
-    void invalidRequest() {
-        StatusCode sc = _clientTest.postGeneralInvalid("message1", new ArrayList<>());
-        assertEquals(StatusCode.INVALID_COMMAND, sc);
+        assertEquals(StatusCode.OK, _client.postGeneralDeliveredSC);
+        
     }
 
     @BeforeEach
     void resetClient() {
-        _clientTest = new ClientTest(PUBLICKEY_PATH1, KEYSTORE_PATH1, CLIENT_KEYSTORE_PASSWD,
-                CLIENT_ENTRY_PASSWD, ALIAS, SERVER_PUBLIC_KEY_PATH);
+        try {
+            Thread.sleep(2000);
+        } catch(Exception e) {
+        }
+        _client.postGeneralDelivered = false;
     }
 
 }

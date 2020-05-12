@@ -30,6 +30,17 @@ import javax.lang.model.element.AnnotationMirror;
 
 public class Client {
 
+    // testing purposes only
+    public boolean postDelivered = false;
+    public boolean postGeneralDelivered = false;
+    public boolean readDelivered = false;
+    public boolean readGeneralDelivered = false;
+
+    public StatusCode postDeliveredSC;
+    public StatusCode postGeneralDeliveredSC;
+    public StatusCode readDeliveredSC;
+    public StatusCode readGeneralDeliveredSC;
+
     protected PublicKey _pubKey;
     private PrivateKey _privateKey;
 
@@ -66,7 +77,7 @@ public class Client {
     // responses received for current request
     private ConcurrentMap<PublicKey, VerifiableProtocolMessage> _responses = new ConcurrentHashMap<>();
 
-    protected static final int TIMEOUT = 5000;
+    protected static final int TIMEOUT = 10000;
     protected static final int MAX_REQUESTS = 1;
     protected static final int MAX_REFRESH = 3;
 
@@ -481,8 +492,11 @@ public class Client {
     }
 
     public void deliverPostGeneral(StatusCode sc) {
-        //System.out.println("deliverPostGeneral");
+        System.out.println("deliverPostGeneral");
         resetResponses();
+        postGeneralDelivered = true;
+        System.out.println(postGeneralDelivered);
+        postGeneralDeliveredSC = sc;  
         if (_clientUI != null)
             _clientUI.deliverPostGeneral(sc);  
     }
