@@ -63,7 +63,16 @@ public class ServerThread extends Thread {
                                 switch (sm.getCommand()) {
                                     // broadcaster server initiates broadcast
                                     case "SERVER_POST":
-                                        handleServerPost(sm);
+                                        handleServerBroadcast(sm);
+                                        break;
+                                    case "SERVER_READ":
+                                        handleServerBroadcast(sm);
+                                        break;
+                                    case "SERVER_POSTGENERAL":
+                                        handleServerBroadcast(sm);
+                                        break;
+                                    case "SERVER_READGENERAL":
+                                        handleServerBroadcast(sm);
                                         break;
                                     // other servers answer our broadcast
                                     case "ECHO":
@@ -93,8 +102,8 @@ public class ServerThread extends Thread {
         }
     }
 
-    public void handleServerPost(ServerMessage sm) {
-        // System.out.println("handleServerPost");
+    public void handleServerBroadcast(ServerMessage sm) {
+        System.out.println("handleServerBroadcast");
         VerifiableProtocolMessage vpm = sm.getClientMessage();
         verifyClientMessage(vpm);
         PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();

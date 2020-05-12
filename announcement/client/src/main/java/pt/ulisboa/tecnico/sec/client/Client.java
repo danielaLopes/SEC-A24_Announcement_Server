@@ -455,7 +455,7 @@ public class Client {
         }
         // TODO: change number of responses
         while (responses.size() < _nServers);
-        System.out.println("got out");
+        //System.out.println("got out");
         return responses;
     }
 
@@ -482,7 +482,7 @@ public class Client {
 
     public void deliverReadGeneral(StatusCode sc, List<Announcement> quorumAnnouncements) {
         System.out.println("deliver read general");
-        System.out.println("status read general: " + sc);
+        //System.out.println("status read general: " + sc);
         resetResponses();
         if (_clientUI != null) {
             _clientUI.deliverReadGeneral(sc, quorumAnnouncements);
@@ -490,6 +490,7 @@ public class Client {
     }
 
     public void write(Map<PublicKey, ProtocolMessage> pms, boolean general) {
+        //System.out.println("WRITE op");
 
         for (Map.Entry<PublicKey, ProtocolMessage> pm : pms.entrySet()) {
             /*String opUuid = UUIDGenerator.generateUUID();
@@ -499,25 +500,31 @@ public class Client {
                     VerifiableProtocolMessage response = requestServer(pm.getValue(), _serverCommunications.get(pm.getKey()));
                     StatusCode sc = verifyReceivedMessage(response);
                     if (sc.equals(StatusCode.OK)) {
-                        _responses.put(pm.getKey(), response);
-                        //System.out.println("Received [" + response.getProtocolMessage().getCommand() + "]: " + sc);
+                        System.out.println("Received [" + response.getProtocolMessage().getCommand() + "]: " + sc);
                         //TODO CHECK HOW MANY SERVERS NEED TO CALL WRITE RETURN
                         RegisterMessage registerMessage = new RegisterMessage(response.getProtocolMessage().getAtomicRegisterMessages());
-                        if (general && pm.getValue().getCommand().equals("POSTGENERAL")) {
-                            _responses.put(pm.getKey(), response);
+                        //if (general && response.getProtocolMessage().getCommand().equals("POSTGENERAL")) {
+                        _responses.put(pm.getKey(), response);
+                        if (general) {
+                            System.out.println("Received response to POSTGENERAL");
                             _regularRegisterNN.writeReturn(registerMessage);
                         }
-                        else if (!general && pm.getValue().getCommand().equals("POST")) {
-                            _responses.put(pm.getKey(), response);
+                        //else if (!general && response.getProtocolMessage().getCommand().equals("POST")) {
+                        else {
+                            System.out.println("Received response to POST");
                             _atomicRegister1N.writeReturn(registerMessage.getRid());
                         }
+                        //System.out.println("Did not reach any if due to pm command: " + pm.getValue().getCommand());
+                        //System.out.flush();
                         //printStatusCode(response.getProtocolMessage().getStatusCode());
                     } else {
+                        System.out.println("Verify status code was not ok: " + sc);
                         if (response == null)
                             _responses.put(pm.getKey(), createVerifiableMessage(new ProtocolMessage(StatusCode.NO_CONSENSUS)));
                         else
                             _responses.put(pm.getKey(), response);
                         if (_responses.size() == _nServers) {
+                            System.out.println("DELIVERING WRITE WITHOUT CONSENSUS");
                             if (general)
                                 deliverPostGeneral(StatusCode.NO_CONSENSUS);
                             else
@@ -541,6 +548,7 @@ public class Client {
     }
 
     public void readAnnouncements(Map<PublicKey, ProtocolMessage> pms, boolean general) {
+        //System.out.println("READ op");
         Map<PublicKey, VerifiableProtocolMessage> responses = new ConcurrentHashMap<>();
         for (Map.Entry<PublicKey, ProtocolMessage> pm : pms.entrySet()) {
             /*String opUuid = UUIDGenerator.generateUUID();
@@ -549,8 +557,7 @@ public class Client {
                 public void run() {
                     VerifiableProtocolMessage response = requestServer(pm.getValue(), _serverCommunications.get(pm.getKey()));
 
-                    if (verifyReceivedMessage(response) == StatusCode.OK && (response.getProtocolMessage().getCommand().equals("VALUE") || 
-                    response.getProtocolMessage().getCommand().equals("VALUEGENERAL"))) {
+                    if (verifyReceivedMessage(response) == StatusCode.OK) {
 
                         System.out.println("Response pm " + response.getProtocolMessage() + " announcements");
                         System.out.println("Received register messages" + response.getProtocolMessage().getAtomicRegisterMessages());
@@ -572,6 +579,7 @@ public class Client {
                         else
                             responses.put(pm.getKey(), response);
                         if (responses.size() == _nServers) {
+                            System.out.println("DELIVERING READ WITHOUT CONSENSUS");
                             if (general)
                                 deliverReadGeneral(StatusCode.NO_CONSENSUS, new ArrayList<Announcement>());
                             else
@@ -620,10 +628,10 @@ public class Client {
 
         while (rvpm == null && requestsCounter < MAX_REQUESTS) {
             try {
-                System.out.println("A enviar para " + serverCommunication.getPort());
+                //System.out.println("A enviar para " + serverCommunication.getPort());
                 _communication.sendMessage(vpm, serverCommunication.getObjOutStream());
                 rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(serverCommunication.getObjInStream());
-                System.out.println("Recebi de " + serverCommunication.getPort() + vpm.getProtocolMessage().getCommand());
+                //System.out.println("Recebi de " + serverCommunication.getPort() + vpm.getProtocolMessage().getCommand());
 
                 if (rvpm == null) {
                     return null;
@@ -867,22 +875,22 @@ public class Client {
     }
 
     public StatusCode verifyReceivedMessage(VerifiableProtocolMessage vpm) {
-        StatusCode rsc = null;
+        StatusCode rsc = StatusCode.OK;
         if (vpm == null) {
-            rsc = StatusCode.NO_RESPONSE;
+            return StatusCode.NO_RESPONSE;
         }
         else {
-            rsc = getStatusCodeFromVPM(vpm);
+
             PublicKey serverPubKey = getServerPublicKeyFromVPM(vpm);
 
             if (invalidToken(getOldTokenFromVPM(vpm), serverPubKey)) {
                 rsc = StatusCode.INVALID_TOKEN;
             }
             else {
-                //_token = getTokenFromVPM(vpm);
                 _serverCommunications.get(serverPubKey).setToken(getTokenFromVPM(vpm));
             }
         }
+
         return rsc;
     }
 

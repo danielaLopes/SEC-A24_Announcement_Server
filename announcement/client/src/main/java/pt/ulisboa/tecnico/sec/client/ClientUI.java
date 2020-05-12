@@ -113,7 +113,7 @@ public class ClientUI {
     public void deliverPost(StatusCode sc) {
         System.out.print("POST: ");
         if (sc.equals(StatusCode.NO_CONSENSUS))
-            System.out.println("Could not post announcement.");
+            System.out.println("NO QUORUM: Could not post announcement in user board.");
         else
             _client.printStatusCode(sc);
         start();
@@ -122,7 +122,7 @@ public class ClientUI {
     public void deliverPostGeneral(StatusCode sc) {
         System.out.print("POSTGENERAL: ");
         if (sc.equals(StatusCode.NO_CONSENSUS))
-            System.out.println("Could not post announcement.");
+            System.out.println("NO QUORUM: Could not post announcement in general board.");
         else
             _client.printStatusCode(sc);
         start();
@@ -131,7 +131,7 @@ public class ClientUI {
     public void deliverRead(StatusCode sc, List<Announcement> announcements) {
         System.out.print("READ: ");
         if (sc.equals(StatusCode.NO_CONSENSUS))
-            System.out.println("Could not post announcement.");
+            System.out.println("NO QUORUM: Could not read announcements from user board.");
         else
             _client.printStatusCode(sc);
         if(sc == StatusCode.OK)
@@ -142,7 +142,7 @@ public class ClientUI {
     public void deliverReadGeneral(StatusCode sc, List<Announcement> announcements) {
         System.out.print("READGENERAL: ");
         if (sc.equals(StatusCode.NO_CONSENSUS))
-            System.out.println("Could not post announcement.");
+            System.out.println("NO QUORUM: Could not read announcements from general board.");
         else
             _client.printStatusCode(sc);
         if(sc == StatusCode.OK)
