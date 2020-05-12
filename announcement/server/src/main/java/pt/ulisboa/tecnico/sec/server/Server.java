@@ -735,7 +735,8 @@ public class Server extends Thread {
         RegisterMessage arm = _regularRegisterNN.acknowledge(vpm.getProtocolMessage());
 
         byte[] b = ProtocolMessageConverter.objToByteArray(_regularRegisterNN);
-        _db.updateRegularRegisterNNTable(b);
+        // TODO: uncomment this
+        //_db.updateRegularRegisterNNTable(b);
 
         ProtocolMessage p = new ProtocolMessage("ACK", sc, _pubKey, newToken, token);
         p.setAtomicRegisterMessages(arm.getBytes());
@@ -857,7 +858,8 @@ public class Server extends Thread {
         RegisterMessage arm = _regularRegisterNN.value(vpm.getProtocolMessage());
 
         byte[] b = ProtocolMessageConverter.objToByteArray(_regularRegisterNN);
-        _db.updateRegularRegisterNNTable(b);
+        // TODO: uncomment this
+        //_db.updateRegularRegisterNNTable(b);
         
         ProtocolMessage p = new ProtocolMessage("VALUEGENERAL", sc, _pubKey, newToken, token);
         p.setAtomicRegisterMessages(arm.getBytes());

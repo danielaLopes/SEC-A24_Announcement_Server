@@ -51,4 +51,25 @@ public class RegisterMessage extends SerializableObject {
     public Object byteArrayToObj(byte[] b) {
         return super.byteArrayToObj(b);
     }
+
+    /*@Override
+    public boolean equals(Object o) {
+
+        if (o == this) {
+            return true;
+        }
+
+        if (!(o instanceof VerifiableProtocolMessage)) {
+            return false;
+        }
+
+        RegisterMessage rm = (RegisterMessage) o;
+
+        // There are several possibilities of server responses being the same
+        //
+        if (this.getValues().size() == rm.getValues().size()) {
+            Collections.frequency(list, list.get(0))
+        }
+        return false;
+    }*/
 }

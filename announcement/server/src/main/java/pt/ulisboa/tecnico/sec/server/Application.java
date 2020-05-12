@@ -21,7 +21,8 @@ public class Application {
         Signal.handle(new Signal("INT"), new SignalHandler() {
             public void handle(Signal sig) {
                 System.out.println("Ctrl-c: Deleting tables from database");
-                Database.dropDatabase();
+                // TODO: uncomment this
+                //Database.dropDatabase();
                 System.exit(-1);
             }
         });

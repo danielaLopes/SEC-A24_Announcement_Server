@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class Client {
 
@@ -37,6 +38,7 @@ public class Client {
     protected final String _serverPubKeySufix = ".key";
 
     protected final int _nServers;
+    protected final int _nFaults;
 
     // maps server public keys to the corresponding serverIndex to access for _oos,_ois or _clientSockets
     private Map<PublicKey, CommunicationServer> _serverCommunications;
@@ -58,7 +60,8 @@ public class Client {
 
     //protected String _token;
 
-    Integer _acks = 0;
+    // responses received for current request
+    private ConcurrentMap<PublicKey, VerifiableProtocolMessage> _responses = new ConcurrentHashMap<>();
 
     protected static final int TIMEOUT = 3000;
     protected static final int MAX_REQUESTS = 1;
@@ -66,12 +69,13 @@ public class Client {
 
     public Client(String pubKeyPath, String keyStorePath,
                   String keyStorePasswd, String entryPasswd, String alias,
-                  int nServers, List<String> otherUsersPubKeyPaths, ClientUI clientUI) {
+                  int nServers, int nFaults, List<String> otherUsersPubKeyPaths, ClientUI clientUI) {
         loadPublicKey(pubKeyPath);
         loadPrivateKey(keyStorePath, keyStorePasswd, entryPasswd, alias);
 
-        //loadServerPublicKey(serverPubKeyPath);
         _nServers = nServers;
+        _nFaults = nFaults;
+
         _serverCommunications = new HashMap<>();
         List<PublicKey> serversPubKeys = loadServersGroupPublicKeys();
 
@@ -80,7 +84,6 @@ public class Client {
 
         _communication = new Communication();
 
-        //startServerCommunication(0);
         startServersGroupCommunication(serversPubKeys);
 
         _atomicRegister1N = new AtomicRegister1N(this);
@@ -92,12 +95,13 @@ public class Client {
     }
 
     public Client(String pubKeyPath, String keyStorePath,
-                  String keyStorePasswd, String entryPasswd, String alias, int nServers) {
+                  String keyStorePasswd, String entryPasswd, String alias, int nServers, int nFaults) {
         loadPublicKey(pubKeyPath);
         loadPrivateKey(keyStorePath, keyStorePasswd, entryPasswd, alias);
-        
-        //loadServerPublicKey(serverPubKeyPath);
+
         _nServers = nServers;
+        _nFaults = nFaults;
+
         _serverCommunications = new HashMap<>();
         List<PublicKey> serversPubKeys = loadServersGroupPublicKeys();
 
@@ -109,6 +113,10 @@ public class Client {
 
         _atomicRegister1N = new AtomicRegister1N(this);
         _regularRegisterNN  = new RegularRegisterNN(this);
+    }
+
+    public void resetResponses() {
+        _responses.clear();
     }
 
     /**
@@ -453,6 +461,7 @@ public class Client {
 
     public void deliverPost(StatusCode sc) {
         System.out.println("deliverPost");
+        resetResponses();
         if (_clientUI != null)
             _clientUI.deliverPost(sc);
         
@@ -460,22 +469,28 @@ public class Client {
 
     public void deliverPostGeneral(StatusCode sc) {
         System.out.println("deliverPostGeneral");
+        resetResponses();
         if (_clientUI != null)
             _clientUI.deliverPostGeneral(sc);  
     }
 
     public void deliverRead(StatusCode sc, List<Announcement> announcements) {
+        resetResponses();
         if (_clientUI != null)
             _clientUI.deliverRead(sc, announcements);
     }
 
-    public void deliverReadGeneral(StatusCode sc, List<Announcement> announcements) {
-        if (_clientUI != null)
-            _clientUI.deliverReadGeneral(sc, announcements);
+    public void deliverReadGeneral(StatusCode sc, List<Announcement> quorumAnnouncements) {
+        System.out.println("deliver read general");
+        System.out.println("status read general: " + sc);
+        resetResponses();
+        if (_clientUI != null) {
+            _clientUI.deliverReadGeneral(sc, quorumAnnouncements);
+        }
     }
 
     public void write(Map<PublicKey, ProtocolMessage> pms, boolean general) {
-        Map<PublicKey, VerifiableProtocolMessage> responses = new ConcurrentHashMap<>();
+
         for (Map.Entry<PublicKey, ProtocolMessage> pm : pms.entrySet()) {
             /*String opUuid = UUIDGenerator.generateUUID();
             pm.getValue().setOpUuid(opUuid);*/
@@ -484,27 +499,30 @@ public class Client {
                     VerifiableProtocolMessage response = requestServer(pm.getValue(), _serverCommunications.get(pm.getKey()));
                     StatusCode sc = verifyReceivedMessage(response);
                     if (sc.equals(StatusCode.OK)) {
-                        System.out.println("Received [" + response.getProtocolMessage().getCommand() + "]: " + sc);
+                        _responses.put(pm.getKey(), response);
+                        //System.out.println("Received [" + response.getProtocolMessage().getCommand() + "]: " + sc);
                         //TODO CHECK HOW MANY SERVERS NEED TO CALL WRITE RETURN
                         RegisterMessage registerMessage = new RegisterMessage(response.getProtocolMessage().getAtomicRegisterMessages());
-                        if (general)
+                        if (general && pm.getValue().getCommand().equals("POSTGENERAL")) {
+                            _responses.put(pm.getKey(), response);
                             _regularRegisterNN.writeReturn(registerMessage);
-                        else
+                        }
+                        else if (!general && pm.getValue().getCommand().equals("POST")) {
+                            _responses.put(pm.getKey(), response);
                             _atomicRegister1N.writeReturn(registerMessage.getRid());
-                        responses.put(pm.getKey(), response);
+                        }
                         //printStatusCode(response.getProtocolMessage().getStatusCode());
                     } else {
                         if (response == null)
-                            responses.put(pm.getKey(), createVerifiableMessage(new ProtocolMessage(StatusCode.NO_CONSENSUS)));
+                            _responses.put(pm.getKey(), createVerifiableMessage(new ProtocolMessage(StatusCode.NO_CONSENSUS)));
                         else
-                            responses.put(pm.getKey(), response);
-                        if (responses.size() == _nServers) {
+                            _responses.put(pm.getKey(), response);
+                        if (_responses.size() == _nServers) {
                             if (general)
                                 deliverPostGeneral(StatusCode.NO_CONSENSUS);
                             else
                                 deliverPost(StatusCode.NO_CONSENSUS);
                         }
-                            
                     }
                 }
             };
@@ -533,18 +551,20 @@ public class Client {
 
                     if (verifyReceivedMessage(response) == StatusCode.OK && (response.getProtocolMessage().getCommand().equals("VALUE") || 
                     response.getProtocolMessage().getCommand().equals("VALUEGENERAL"))) {
-                            
+
                         System.out.println("Response pm " + response.getProtocolMessage() + " announcements");
                         System.out.println("Received register messages" + response.getProtocolMessage().getAtomicRegisterMessages());
                         System.out.println("Received [" + response.getProtocolMessage().getCommand() + "]");
                         System.out.flush();
                         //TODO CHECK HOW MANY SERVERS NEED TO CALL WRITE RETURN
-                        if (general)
-                            _regularRegisterNN.readReturn(response.getProtocolMessage());
-                        else
+                        if (general && pm.getValue().getCommand().equals("READGENERAL")) {
+                            _responses.put(pm.getKey(), response);
+                            _regularRegisterNN.readReturn(response.getProtocolMessage(), new ArrayList<>(_responses.values()));
+                        }
+                        else if (!general && pm.getValue().getCommand().equals("READ")) {
+                            _responses.put(pm.getKey(), response);
                             _atomicRegister1N.writeBack(response.getProtocolMessage());
-                        responses.put(pm.getKey(), response);
-                        //printStatusCode(response.getProtocolMessage().getStatusCode());
+                        }
                     }
                     else {
                         if (response == null)

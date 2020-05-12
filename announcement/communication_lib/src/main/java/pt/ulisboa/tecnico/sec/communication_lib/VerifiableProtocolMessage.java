@@ -16,6 +16,26 @@ public class VerifiableProtocolMessage implements Serializable{
 
     public void setProtocolMessage(ProtocolMessage pm) { _pm = pm; }
 
+    public boolean equalResponses(VerifiableProtocolMessage vpm) {
+
+        if (this.getProtocolMessage().getCommand().equals("POST") ||
+                this.getProtocolMessage().getCommand().equals("POSTGENERAL")) {
+            // TODO: Add announcement Uuid
+            /*return this.getProtocolMessage().getPostAnnouncement().getAnnouncementID().equals(
+                    vpm.getProtocolMessage().getPostAnnouncement().getAnnouncementID());*/
+            return true;
+        }
+        else if (this.getProtocolMessage().getCommand().equals("READ") ||
+                    this.getProtocolMessage().getCommand().equals("READGENERAL")) {
+            return this.getProtocolMessage().getReadNumberAnnouncements() ==
+                    vpm.getProtocolMessage().getReadNumberAnnouncements() &&
+                    this.getProtocolMessage().getToReadPublicKey().equals(
+                            vpm.getProtocolMessage().getToReadPublicKey()
+                    );
+        }
+        return false;
+    }
+
     @Override
     public boolean equals(Object o) {
 
@@ -31,6 +51,7 @@ public class VerifiableProtocolMessage implements Serializable{
 
         if (this.getProtocolMessage().getCommand().equals("POST") ||
                 this.getProtocolMessage().getCommand().equals("POSTGENERAL")) {
+            // TODO: Add announcement Uuid
             return this.getProtocolMessage().getPostAnnouncement().equals(
                     vpm.getProtocolMessage().getPostAnnouncement());
         }

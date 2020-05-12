@@ -23,8 +23,8 @@ import java.util.List;
 public class ClientTest extends Client {
 
     public ClientTest(String pubKeyPath, String keyStorePath,
-                  String keyStorePasswd, String entryPasswd, String alias, int nServers) {
-        super(pubKeyPath, keyStorePath, keyStorePasswd, entryPasswd, alias ,nServers);
+                  String keyStorePasswd, String entryPasswd, String alias, int nServers, int nFaults) {
+        super(pubKeyPath, keyStorePath, keyStorePasswd, entryPasswd, alias, nServers, nFaults);
     }
   
     // ---------------------------------------------------------------------

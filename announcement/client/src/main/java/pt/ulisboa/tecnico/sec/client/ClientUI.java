@@ -17,9 +17,9 @@ public class ClientUI {
 
     public ClientUI(String pubKeyPath, String keyStorePath,
                     String keyStorePasswd, String entryPasswd, String alias,
-                    int nServers, List<String> otherUsersPubKeyPaths) {
+                    int nServers, int nFaults, List<String> otherUsersPubKeyPaths) {
         _client = new Client(pubKeyPath, keyStorePath, keyStorePasswd, entryPasswd,
-                alias, nServers, otherUsersPubKeyPaths, this);
+                alias, nServers, nFaults, otherUsersPubKeyPaths, this);
         _scanner = new Scanner(System.in);
     }
 
