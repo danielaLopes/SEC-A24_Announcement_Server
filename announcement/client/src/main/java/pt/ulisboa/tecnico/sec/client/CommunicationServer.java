@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.sec.client;
 
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
@@ -53,6 +54,10 @@ public class CommunicationServer {
 
     protected void setToken(String newToken) {
         _token = newToken;
+    }
+
+    protected void updateObjInStream() throws IOException {
+        _ois = new ObjectInputStream(_clientSocket.getInputStream());
     }
 
     protected void setAlive(boolean alive) { _alive = alive; }
