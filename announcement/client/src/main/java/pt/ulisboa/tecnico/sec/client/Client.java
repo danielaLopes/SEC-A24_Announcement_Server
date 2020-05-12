@@ -96,6 +96,7 @@ public class Client {
         loadPublicKey(pubKeyPath);
         loadPrivateKey(keyStorePath, keyStorePasswd, entryPasswd, alias);
 
+        System.out.println("Starting new client" );
         _nServers = nServers;
         _nFaults = nFaults;
         _quorum = (nServers + nFaults) / 2;
@@ -103,15 +104,22 @@ public class Client {
         _serverCommunications = new HashMap<>();
         List<PublicKey> serversPubKeys = loadServersGroupPublicKeys();
 
+        System.out.println("after loading server keys" );
+
         _communication = new Communication();
 
 
         //startServerCommunication(0);
         startServersGroupCommunication(serversPubKeys);
-
+        System.out.println("Started servers group communication" );
         _atomicRegister1N = new AtomicRegister1N(this);
         _regularRegisterNN  = new RegularRegisterNN(this);
     }
+
+
+    public Map<PublicKey, CommunicationServer> getServerCommunications() { return _serverCommunications; }
+
+    public ConcurrentMap<PublicKey, VerifiableProtocolMessage> getServerResponses() { return _responses; }
 
     public void resetResponses() {
         _responses.clear();
@@ -545,7 +553,7 @@ public class Client {
                         System.out.println("Received register messages" + response.getProtocolMessage().getAtomicRegisterMessages());
                         System.out.println("Received [" + response.getProtocolMessage().getCommand() + "]");
                         System.out.flush();
-                        //TODO CHECK HOW MANY SERVERS NEED TO CALL WRITE RETURN
+
                         if (general && pm.getValue().getCommand().equals("READGENERAL")) {
                             _responses.put(pm.getKey(), response);
                             _regularRegisterNN.readReturn(response.getProtocolMessage(), new ArrayList<>(_responses.values()));
@@ -561,7 +569,7 @@ public class Client {
                         else
                             responses.put(pm.getKey(), response);
                         if (responses.size() == _nServers) {
-                            System.out.println("DELIVERING READ WITHOUT CONSENSUS");
+                            //System.out.println("DELIVERING READ WITHOUT CONSENSUS");
                             if (general)
                                 deliverReadGeneral(StatusCode.NO_CONSENSUS, new ArrayList<Announcement>());
                             else
@@ -875,8 +883,6 @@ public class Client {
         }
         return rsc;
     }
-
-    public Map<PublicKey, CommunicationServer> getServerCommunications() { return _serverCommunications; }
 
     public void refreshToken(CommunicationServer sc) {
         ProtocolMessage p = new ProtocolMessage("TOKEN", _pubKey);

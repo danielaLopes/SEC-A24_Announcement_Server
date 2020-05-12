@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ReadTest extends BaseTest {
 
-    static ClientTest _clientTest;
+    /*static ClientTest _clientTest;
 
     ReadTest() {
         _clientTest = new ClientTest(PUBLICKEY_PATH1, KEYSTORE_PATH1, CLIENT_KEYSTORE_PASSWD,
@@ -103,6 +103,6 @@ public class ReadTest extends BaseTest {
     void resetClient() {
         _clientTest = new ClientTest(PUBLICKEY_PATH1, KEYSTORE_PATH1, CLIENT_KEYSTORE_PASSWD,
                 CLIENT_ENTRY_PASSWD, ALIAS, SERVER_PUBLIC_KEY_PATH);
-    }
+    }*/
 
 }
