@@ -62,7 +62,7 @@ public class Client {
     // responses received for current request
     private ConcurrentMap<PublicKey, VerifiableProtocolMessage> _responses = new ConcurrentHashMap<>();
 
-    protected static final int TIMEOUT = 5000;
+    protected static final int TIMEOUT = 10000;
     protected static final int MAX_REQUESTS = 1;
     protected static final int MAX_REFRESH = 3;
 

@@ -57,7 +57,8 @@ public class ServerThread extends Thread {
                     public void run() {
                         //System.out.println("server sig: " + vsm.getServerMessage().getPublicKey());
                         if (_server.verifyServerSignature(vsm).equals(StatusCode.OK)) {
-                            if (verifyServerMessage(vsm).equals(StatusCode.OK)) {
+                            StatusCode sc = verifyServerMessage(vsm);
+                            if (sc.equals(StatusCode.OK)) {
                                 ServerMessage sm = vsm.getServerMessage();
                                 System.out.println("Received broadcast message: " + sm.getCommand() + "from" + _socket.getPort());
                                 switch (sm.getCommand()) {
@@ -87,7 +88,7 @@ public class ServerThread extends Thread {
                                 }
                             }
                             else {
-                                System.out.println("Server message is invalid");
+                                System.out.println("Server message is invalid: " + sc);
                             }
                         } else {
                             System.out.println("Could not verify signature");
@@ -130,7 +131,7 @@ public class ServerThread extends Thread {
     }
 
     public void handleEcho(VerifiableServerMessage vsm) {
-        // System.out.println("handleEcho");
+        System.out.println("handleEcho");
         ServerMessage sm = vsm.getServerMessage();
         VerifiableProtocolMessage vpm = sm.getClientMessage();
         PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
@@ -139,12 +140,13 @@ public class ServerThread extends Thread {
         ServerMessage s = sb.ready(vsm);
         if(s != null) {
             _server.sendToAllServers(s);
-            sb.localReady();
+            //sb.localReady();
         }
+        sb.localReady();
     }
 
     public void handleFinal(VerifiableServerMessage vsm) {
-        // System.out.println("FINALMENTE");
+        System.out.println("handleFinal");
         ServerMessage sm = vsm.getServerMessage();
         VerifiableProtocolMessage vpm = sm.getClientMessage();
         PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
@@ -176,8 +178,6 @@ public class ServerThread extends Thread {
             _socket = new Socket("localhost", _otherPort);
 
             System.out.println("Starting client socket in port: " + _otherPort);
-
-
             
             _oos = new ObjectOutputStream(_socket.getOutputStream());
             _ois = new ObjectInputStream(_socket.getInputStream());
@@ -191,6 +191,7 @@ public class ServerThread extends Thread {
 
     public StatusCode verifyServerMessage(VerifiableServerMessage vsm) {
         ServerMessage sm = vsm.getServerMessage();
+        System.out.println("--- verifying server message ---: " + sm.getCommand());
         if (sm.getCommand() == null || sm.getPublicKey() == null || sm.getClientMessage() == null) {
             return StatusCode.NULL_FIELD;
         }

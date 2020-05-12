@@ -13,7 +13,7 @@ public class MessageComparator {
      * @return message with quorum
      */
     public static VerifiableProtocolMessage compareClientMessages(List<VerifiableProtocolMessage> clientMessages, int required) {
-        System.out.println("Compare client messages " + clientMessages);
+        //System.out.println("Compare client messages " + clientMessages);
         List<VerifiableProtocolMessage> posts = clientMessages.stream()
                 .filter(message -> message.getProtocolMessage().getCommand().equals("POST"))
                 .collect(Collectors.toList());
