@@ -251,6 +251,7 @@ public class Server extends Thread {
         ClientMessageHandler cmh = user.getCMH();
         String newToken = user.getToken();
         RegisterMessage registerMessage = new RegisterMessage(highestVPM.getProtocolMessage().getAtomicRegisterMessages());
+        System.out.println("Register message to send to client: " + highestVPM.getProtocolMessage().getAtomicRegisterMessages());
         RegisterMessage arm = _users.get(clientPubKey).getAtomicRegister1N().acknowledge(registerMessage);
 
         byte[] b = ProtocolMessageConverter.objToByteArray(_users.get(clientPubKey).getAtomicRegister1N());

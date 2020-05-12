@@ -66,7 +66,7 @@ public class Client {
     // responses received for current request
     private ConcurrentMap<PublicKey, VerifiableProtocolMessage> _responses = new ConcurrentHashMap<>();
 
-    protected static final int TIMEOUT = 3000;
+    protected static final int TIMEOUT = 5000;
     protected static final int MAX_REQUESTS = 1;
     protected static final int MAX_REFRESH = 3;
 
@@ -674,10 +674,10 @@ public class Client {
 
         while (rvpm == null && requestsCounter < MAX_REQUESTS) {
             try {
-                //System.out.println("A enviar para " + serverCommunication.getPort());
+                System.out.println("A enviar para " + serverCommunication.getPort());
                 _communication.sendMessage(vpm, serverCommunication.getObjOutStream());
                 rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(serverCommunication.getObjInStream());
-                //System.out.println("Recebi de " + serverCommunication.getPort() + vpm.getProtocolMessage().getCommand());
+                System.out.println("Recebi de " + serverCommunication.getPort() + vpm.getProtocolMessage().getCommand());
 
                 if (rvpm == null) {
                     return null;
@@ -709,7 +709,7 @@ public class Client {
             }
             catch (IOException | ClassNotFoundException e) {
                 System.out.println(e);
-                System.exit(-1);
+                return null;
             }
             finally {
                 System.out.flush();

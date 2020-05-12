@@ -56,8 +56,8 @@ public class ServerThread extends Thread {
                 Thread thread = new Thread() {
                     public void run() {
                         //System.out.println("server sig: " + vsm.getServerMessage().getPublicKey());
-                        if (_server.verifyServerSignature(vsm) == StatusCode.OK) {
-                            if (verifyServerMessage(vsm) == StatusCode.OK) {
+                        if (_server.verifyServerSignature(vsm).equals(StatusCode.OK)) {
+                            if (verifyServerMessage(vsm).equals(StatusCode.OK)) {
                                 ServerMessage sm = vsm.getServerMessage();
                                 System.out.println("Received broadcast message: " + sm.getCommand() + "from" + _socket.getPort());
                                 switch (sm.getCommand()) {
@@ -137,9 +137,10 @@ public class ServerThread extends Thread {
         ServerBroadcast sb = _server._serverBroadcasts.get(clientPubKey);
         if (sb == null) return;
         ServerMessage s = sb.ready(vsm);
-        if(s != null)
+        if(s != null) {
             _server.sendToAllServers(s);
-        sb.localReady();
+            sb.localReady();
+        }
     }
 
     public void handleFinal(VerifiableServerMessage vsm) {
