@@ -480,10 +480,13 @@ public class Client {
             _clientUI.deliverRead(StatusCode.OK, announcements);
     }
 
-    public void deliverReadGeneral(List<Announcement> announcements) {
+    public void deliverReadGeneral(Map.Entry<StatusCode, List<Announcement>> quorumMessages) {
+        System.out.println("deliver read general");
+        System.out.println("status read general: " + quorumMessages.getKey());
         resetResponses();
-        if (_clientUI != null)
-            _clientUI.deliverReadGeneral(StatusCode.OK, announcements);
+        if (_clientUI != null) {
+            _clientUI.deliverReadGeneral(quorumMessages.getKey(), quorumMessages.getValue());
+        }
     }
 
     public void write(Map<PublicKey, ProtocolMessage> pms, boolean general) {
@@ -525,7 +528,7 @@ public class Client {
         write(pms, false);
     }
 
-    public Map<PublicKey, VerifiableProtocolMessage> readAnnouncements(Map<PublicKey, ProtocolMessage> pms, boolean general) {
+    public void readAnnouncements(Map<PublicKey, ProtocolMessage> pms, boolean general) {
         Map<PublicKey, VerifiableProtocolMessage> responses = new ConcurrentHashMap<>();
         for (Map.Entry<PublicKey, ProtocolMessage> pm : pms.entrySet()) {
             /*String opUuid = UUIDGenerator.generateUUID();

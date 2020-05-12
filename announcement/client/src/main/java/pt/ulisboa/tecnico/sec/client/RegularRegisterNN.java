@@ -64,14 +64,16 @@ public class RegularRegisterNN {
                 if (_readList.size() > _quorum) {
                     Map.Entry<StatusCode, List<Announcement>> quorumMessages =
                             MessageComparator.compareServerResponses(responses, responses.size() / 2);
+                    System.out.println("quorum messages sc" + quorumMessages.getKey());
+                    System.out.println("quorum messages ann" + quorumMessages.getValue());
                     if (quorumMessages != null) {
-                        if (quorumMessages.getValue().size() > 0) {
-                            AtomicValue highest = highest();
-                            _readList.clear();
-                            // TODO: why highest then ????
-                            // TODO: Verify client Signatures of the announcements!
-                            _client.deliverReadGeneral(highest.getValues());
-                        }
+                        System.out.println("quorum messages is not null ");
+                        AtomicValue highest = highest();
+                        _readList.clear();
+                        // TODO: why highest then ????
+                        // TODO: Verify client Signatures of the announcements!
+                        //_client.deliverReadGeneral(highest.getValues());
+                        _client.deliverReadGeneral(quorumMessages);
                     }
                 }
             }
