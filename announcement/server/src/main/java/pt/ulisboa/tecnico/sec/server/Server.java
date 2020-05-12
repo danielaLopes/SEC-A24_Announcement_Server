@@ -224,6 +224,27 @@ public class Server extends Thread {
 
     public void deliver(VerifiableProtocolMessage highestVPM, VerifiableProtocolMessage clientVPM) {
         System.out.println("DELIVER");
+
+        switch (highestVPM.getProtocolMessage().getCommand()) {
+            case "POST":
+                deliverPost(highestVPM, clientVPM);
+                break;
+            case "READ":
+                deliverRead(highestVPM, clientVPM);
+                break;
+            case "POSTGENERAL":
+                deliverPostGeneral(highestVPM, clientVPM);
+                break;
+            case "READGENERAL":
+                deliverReadGeneral(highestVPM, clientVPM);
+                break;
+            default:
+                break;
+        }
+    }
+
+    public void deliverPost(VerifiableProtocolMessage highestVPM, VerifiableProtocolMessage clientVPM) {
+        System.out.println("DELIVER POST");
         PublicKey clientPubKey = highestVPM.getProtocolMessage().getPublicKey();
         String token = clientVPM.getProtocolMessage().getToken();
         User user = _users.get(clientPubKey);
@@ -237,9 +258,76 @@ public class Server extends Thread {
 
         System.out.println("deliver token: " + token);
         System.out.println("deliver new token: " + newToken);
+        // TODO: what if it is another status code ???
         ProtocolMessage p = new ProtocolMessage("POST",  StatusCode.OK, _pubKey, newToken, token);
         p.setAtomicRegisterMessages(arm.getBytes());
         cmh.sendMessage(createVerifiableMessage(p));
+    }
+
+    public void deliverRead(VerifiableProtocolMessage highestVPM, VerifiableProtocolMessage clientVPM) {
+        System.out.println("DELIVER READ");
+
+        PublicKey clientPubKey = highestVPM.getProtocolMessage().getPublicKey();
+        String token = clientVPM.getProtocolMessage().getToken();
+        User user = _users.get(clientPubKey);
+        ClientMessageHandler cmh = user.getCMH();
+        String newToken = user.getToken();
+        int number = highestVPM.getProtocolMessage().getReadNumberAnnouncements();
+
+        RegisterMessage registerMessage = new RegisterMessage(highestVPM.getProtocolMessage().getAtomicRegisterMessages());
+        RegisterMessage arm = _users.get(clientPubKey).getAtomicRegister1N().value(registerMessage, number);
+
+        byte[] b = ProtocolMessageConverter.objToByteArray(_users.get(clientPubKey).getAtomicRegister1N());
+        _db.updateUserAtomicRegister1N(_users.get(clientPubKey).getdbTableName(), b);
+
+        ProtocolMessage p = new ProtocolMessage("READ", StatusCode.OK, _pubKey, newToken, token);
+        p.setAtomicRegisterMessages(arm.getBytes());
+        VerifiableProtocolMessage response = createVerifiableMessage(p);
+        // TODO: nothing to do with registerMessage ???
+        registerMessage = new RegisterMessage(response.getProtocolMessage().getAtomicRegisterMessages());
+        cmh.sendMessage(response);
+    }
+
+    public void deliverPostGeneral(VerifiableProtocolMessage highestVPM, VerifiableProtocolMessage clientVPM) {
+        System.out.println("DELIVER POST GENERAL");
+
+        PublicKey clientPubKey = highestVPM.getProtocolMessage().getPublicKey();
+        String token = clientVPM.getProtocolMessage().getToken();
+        User user = _users.get(clientPubKey);
+        ClientMessageHandler cmh = user.getCMH();
+        String newToken = user.getToken();
+
+        RegisterMessage arm = _regularRegisterNN.acknowledge(highestVPM.getProtocolMessage());
+
+        byte[] b = ProtocolMessageConverter.objToByteArray(_regularRegisterNN);
+        // TODO: uncomment this
+        //_db.updateRegularRegisterNNTable(b);
+
+        ProtocolMessage p = new ProtocolMessage("POSTGENERAL", StatusCode.OK, _pubKey, newToken, token);
+        p.setAtomicRegisterMessages(arm.getBytes());
+        cmh.sendMessage(createVerifiableMessage(p));
+
+    }
+
+    public void deliverReadGeneral(VerifiableProtocolMessage highestVPM, VerifiableProtocolMessage clientVPM) {
+        System.out.println("DELIVER READ GENERAL ");
+
+        PublicKey clientPubKey = highestVPM.getProtocolMessage().getPublicKey();
+        String token = clientVPM.getProtocolMessage().getToken();
+        User user = _users.get(clientPubKey);
+        ClientMessageHandler cmh = user.getCMH();
+        String newToken = user.getToken();
+
+        RegisterMessage arm = _regularRegisterNN.value(highestVPM.getProtocolMessage());
+
+        byte[] b = ProtocolMessageConverter.objToByteArray(_regularRegisterNN);
+        // TODO: uncomment this
+        //_db.updateRegularRegisterNNTable(b);
+
+        ProtocolMessage p = new ProtocolMessage("READGENERAL", StatusCode.OK, _pubKey, newToken, token);
+        p.setAtomicRegisterMessages(arm.getBytes());
+        cmh.sendMessage(createVerifiableMessage(p));
+
     }
 
     public void deliverFailed(VerifiableProtocolMessage clientVPM) {
@@ -732,7 +820,7 @@ public class Server extends Thread {
             return;
         }
 
-        RegisterMessage arm = _regularRegisterNN.acknowledge(vpm.getProtocolMessage());
+        /*RegisterMessage arm = _regularRegisterNN.acknowledge(vpm.getProtocolMessage());
 
         byte[] b = ProtocolMessageConverter.objToByteArray(_regularRegisterNN);
         // TODO: uncomment this
@@ -740,7 +828,11 @@ public class Server extends Thread {
 
         ProtocolMessage p = new ProtocolMessage("ACK", sc, _pubKey, newToken, token);
         p.setAtomicRegisterMessages(arm.getBytes());
-        cmh.sendMessage(createVerifiableMessage(p));
+        cmh.sendMessage(createVerifiableMessage(p));*/
+
+        ServerMessage sm = new ServerMessage(_pubKey, "SERVER_POSTGENERAL", vpm);
+        System.out.println("sm" + sm);
+        serverBroadcast(clientPubKey, sm, vpm);
     }
 
     public String getUserUUID(PublicKey publicKey) {
@@ -795,7 +887,7 @@ public class Server extends Thread {
             return;
         }
 
-        RegisterMessage registerMessage = new RegisterMessage(vpm.getProtocolMessage().getAtomicRegisterMessages());
+        /*RegisterMessage registerMessage = new RegisterMessage(vpm.getProtocolMessage().getAtomicRegisterMessages());
         RegisterMessage arm = _users.get(clientPubKey).getAtomicRegister1N().value(registerMessage, number);
 
         byte[] b = ProtocolMessageConverter.objToByteArray(_users.get(clientPubKey).getAtomicRegister1N());
@@ -807,12 +899,11 @@ public class Server extends Thread {
         registerMessage = new RegisterMessage(response.getProtocolMessage().getAtomicRegisterMessages());
         System.out.println("Sending " + registerMessage.getValues().size() + " announcements.");
         cmh.sendMessage(response);
-        return;
+        return;*/
 
-        // Broadcast, each thread sends to a server
-        /*for(ServerThread t: _serverThreads) {
-            t.readValue(clientPubKey);
-        }*/
+        ServerMessage sm = new ServerMessage(_pubKey, "SERVER_READ", vpm);
+        System.out.println("sm" + sm);
+        serverBroadcast(clientPubKey, sm, vpm);
     }
 
     /**
@@ -855,7 +946,7 @@ public class Server extends Thread {
             return;
         }
 
-        RegisterMessage arm = _regularRegisterNN.value(vpm.getProtocolMessage());
+        /*RegisterMessage arm = _regularRegisterNN.value(vpm.getProtocolMessage());
 
         byte[] b = ProtocolMessageConverter.objToByteArray(_regularRegisterNN);
         // TODO: uncomment this
@@ -863,7 +954,11 @@ public class Server extends Thread {
         
         ProtocolMessage p = new ProtocolMessage("VALUEGENERAL", sc, _pubKey, newToken, token);
         p.setAtomicRegisterMessages(arm.getBytes());
-        cmh.sendMessage(createVerifiableMessage(p));
+        cmh.sendMessage(createVerifiableMessage(p));*/
+
+        ServerMessage sm = new ServerMessage(_pubKey, "SERVER_READGENERAL", vpm);
+        System.out.println("sm" + sm);
+        serverBroadcast(clientPubKey, sm, vpm);
     }
 
     // // does not make changes to the system, so it does not need to taken into account in _operations
