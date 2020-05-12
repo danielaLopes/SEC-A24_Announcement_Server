@@ -2,6 +2,7 @@ package pt.ulisboa.tecnico.sec.server;
 
 import pt.ulisboa.tecnico.sec.communication_lib.Announcement;
 import pt.ulisboa.tecnico.sec.communication_lib.RegisterMessage;
+import pt.ulisboa.tecnico.sec.communication_lib.VerifiableAnnouncement;
 import pt.ulisboa.tecnico.sec.communication_lib.ProtocolMessage;
 import pt.ulisboa.tecnico.sec.crypto_lib.ProtocolMessageConverter;
 
@@ -61,9 +62,9 @@ public class RegularRegisterNN {
         return ts;
     }
 
-    public List<Announcement> getAnnouncements(int number) {
+    public List<VerifiableAnnouncement> getAnnouncements(int number) {
         int nAnnouncements = _registerValues.size();
-        List<Announcement> values = new ArrayList<Announcement>();
+        List<VerifiableAnnouncement> values = new ArrayList<VerifiableAnnouncement>();
         if ((0 < number) && (number <= nAnnouncements)) {
             List<RegisterValue> rv = new ArrayList<RegisterValue>(_registerValues.subList(nAnnouncements - number, nAnnouncements));
             for (RegisterValue r: rv)

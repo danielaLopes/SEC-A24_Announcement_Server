@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.security.PublicKey;
 import java.util.List;
 
-public class Announcement implements Serializable{
+public class Announcement extends SerializableObject{
     private String _announcement;
     private List<String> _references;
     private String _announcementID;
@@ -21,6 +21,15 @@ public class Announcement implements Serializable{
         _references = references;
         _announcementID = announcementID;
         _clientUUID = clientUUID;
+    }
+
+    public Announcement(byte[] bytes) {
+        Announcement va = (Announcement) super.byteArrayToObj(bytes);
+        _announcement = va.getAnnouncement();
+        _references = va.getReferences();
+        _announcementID = va.getAnnouncementID();
+        _clientUUID = va.getClientUUID();
+        _clientPublicKey = va.getClientPublicKey();
     }
 
     public void setClientUUID(String clientUUID) { _clientUUID = clientUUID; }
@@ -59,5 +68,14 @@ public class Announcement implements Serializable{
         return this._announcement.equals(a._announcement) &&
                 this._references.equals(a._references) &&
                 this._clientPublicKey.equals(a._clientPublicKey);
+    }
+
+    public byte[] getBytes() {
+        return super.objToByteArray(this);
+    }
+
+    @Override
+    public Object byteArrayToObj(byte[] b) {
+        return super.byteArrayToObj(b);
     }
 }

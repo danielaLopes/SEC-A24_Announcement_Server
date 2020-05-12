@@ -3,6 +3,7 @@ package pt.ulisboa.tecnico.sec.client;
 import pt.ulisboa.tecnico.sec.communication_lib.Announcement;
 import pt.ulisboa.tecnico.sec.communication_lib.RegisterMessage;
 import pt.ulisboa.tecnico.sec.communication_lib.StatusCode;
+import pt.ulisboa.tecnico.sec.communication_lib.VerifiableAnnouncement;
 import pt.ulisboa.tecnico.sec.communication_lib.ProtocolMessage;
 import pt.ulisboa.tecnico.sec.crypto_lib.ProtocolMessageConverter;
 
@@ -22,21 +23,21 @@ public class AtomicRegister1N {
     private HashMap<PublicKey, AtomicValue> _readList = new HashMap<>();
     private AtomicBoolean _reading;
     private AtomicInteger _wts;
-    private List<Announcement> _readval;
+    private List<VerifiableAnnouncement> _readval;
     private Client _client;
 
     // in order to lock both _readList and _readval
     private Object _lock = new Object();
 
     public AtomicRegister1N(Client client) {
-        _atomicValue = new AtomicValue(0, new ArrayList<Announcement>());
+        _atomicValue = new AtomicValue(0, new ArrayList<VerifiableAnnouncement>());
         _wts = new AtomicInteger(0);
         _acks = new AtomicInteger(0);
         _rid = new AtomicInteger(0);
         _reading = new AtomicBoolean(false);
         _client = client;
         resetReadList();
-        _readval = new ArrayList<Announcement>();
+        _readval = new ArrayList<VerifiableAnnouncement>();
     }
 
     public void resetReadList() {
@@ -98,7 +99,7 @@ public class AtomicRegister1N {
             for (Map.Entry<PublicKey, AtomicValue> r : readEntries) {
                 if (r.getValue().getTimeStamp() > ts) {
                     highestValue = r.getValue();
-                    _readval = new ArrayList<Announcement>(highestValue.getValues());
+                    _readval = new ArrayList<VerifiableAnnouncement>(highestValue.getValues());
                     ts = highestValue.getTimeStamp();
                 }
             }
@@ -159,7 +160,7 @@ public class AtomicRegister1N {
         return _wts.get();
     }
 
-    public List<Announcement> getReadVal() {
+    public List<VerifiableAnnouncement> getReadVal() {
         return _readval;
     }
 

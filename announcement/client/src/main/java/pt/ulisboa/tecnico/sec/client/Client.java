@@ -5,6 +5,7 @@ import pt.ulisboa.tecnico.sec.crypto_lib.KeyPairUtil;
 import pt.ulisboa.tecnico.sec.crypto_lib.KeyStorage;
 import pt.ulisboa.tecnico.sec.crypto_lib.ProtocolMessageConverter;
 import pt.ulisboa.tecnico.sec.crypto_lib.SignatureUtil;
+import pt.ulisboa.tecnico.sec.crypto_lib.UUIDGenerator;
 
 import java.net.Socket;
 import java.net.SocketException;
@@ -19,6 +20,8 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import javax.lang.model.element.AnnotationMirror;
 
 public class Client {
 
@@ -59,7 +62,7 @@ public class Client {
     // responses received for current request
     private ConcurrentMap<PublicKey, VerifiableProtocolMessage> _responses = new ConcurrentHashMap<>();
 
-    protected static final int TIMEOUT = 3000;
+    protected static final int TIMEOUT = 5000;
     protected static final int MAX_REQUESTS = 1;
     protected static final int MAX_REFRESH = 3;
 
@@ -229,7 +232,7 @@ public class Client {
      */
     public void printOtherUsersPubKeys() {
         for (int i = 0; i < _usersPubKeys.size(); i++) {
-            System.out.println("* " + i + ": " + _usersPubKeys.get(i));
+            System.out.println("* " + i + ": " + _usersPubKeys.get(i).toString().substring(0, 120) + "...");
         }
     }
 
@@ -365,6 +368,20 @@ public class Client {
         return null;
     }
 
+    public VerifiableAnnouncement createVerifiableAnnouncement(Announcement a) {
+        if (a == null) return null;
+
+        try {
+            byte[] bpm = ProtocolMessageConverter.objToByteArray(a);
+            byte[] signedpm = SignatureUtil.sign(bpm, _privateKey);
+            return new VerifiableAnnouncement(a, signedpm);
+        }
+        catch(NoSuchAlgorithmException | InvalidKeyException | SignatureException e) { 
+            System.out.println(e);
+        }
+        return null;
+    }
+
     /**
      * Verifies if the signed ProtocolMessage inside vpm is valid, i.e.
      * if we sign the ProtocolMessage inside vpm it should be equivalent
@@ -377,6 +394,24 @@ public class Client {
         try {
             byte[] bpm = ProtocolMessageConverter.objToByteArray(vpm.getProtocolMessage());
             return SignatureUtil.verifySignature(vpm.getSignedProtocolMessage(), serverPubKey, bpm);
+        }
+        catch (NoSuchAlgorithmException e) {
+            System.out.println("Error: Algorithm used to verify signature is not valid.\n" + e);
+        }
+        catch (InvalidKeyException e) {
+            System.out.println(StatusCode.INVALID_KEY + "\n" + e);
+        } 
+        catch (SignatureException e) {
+            System.out.println(StatusCode.INVALID_SIGNATURE + "\n" + e);
+        }
+        return false;
+    }
+
+    public boolean verifySignature(VerifiableAnnouncement vpm, PublicKey serverPubKey) {
+        if (vpm == null) return false;
+        try {
+            byte[] bpm = ProtocolMessageConverter.objToByteArray(vpm.getAnnouncement());
+            return SignatureUtil.verifySignature(vpm.getSignedAnnouncement(), serverPubKey, bpm);
         }
         catch (NoSuchAlgorithmException e) {
             System.out.println("Error: Algorithm used to verify signature is not valid.\n" + e);
@@ -457,18 +492,29 @@ public class Client {
             _clientUI.deliverPostGeneral(sc);  
     }
 
-    public void deliverRead(StatusCode sc, List<Announcement> announcements) {
+    public void deliverRead(StatusCode sc, List<VerifiableAnnouncement> vas) {
         resetResponses();
+        System.out.println(vas.size());
+        List<Announcement> announcements = new ArrayList<Announcement>();
+        for (VerifiableAnnouncement va : vas) {
+            if(verifySignature(va, va.getAnnouncement().getClientPublicKey()))
+                announcements.add(va.getAnnouncement());
+        }
         if (_clientUI != null)
             _clientUI.deliverRead(sc, announcements);
     }
 
-    public void deliverReadGeneral(StatusCode sc, List<Announcement> quorumAnnouncements) {
+    public void deliverReadGeneral(StatusCode sc, List<VerifiableAnnouncement> vas) {
         System.out.println("deliver read general");
+        List<Announcement> announcements = new ArrayList<Announcement>();
+        for (VerifiableAnnouncement va : vas) {
+            if(verifySignature(va, va.getAnnouncement().getClientPublicKey()))
+                announcements.add(va.getAnnouncement());
+        }
         //System.out.println("status read general: " + sc);
         resetResponses();
         if (_clientUI != null) {
-            _clientUI.deliverReadGeneral(sc, quorumAnnouncements);
+            _clientUI.deliverReadGeneral(sc, announcements);
         }
     }
 
@@ -574,9 +620,9 @@ public class Client {
                         if (responses.size() == _nServers) {
                             //System.out.println("DELIVERING READ WITHOUT CONSENSUS");
                             if (general)
-                                deliverReadGeneral(StatusCode.NO_CONSENSUS, new ArrayList<Announcement>());
+                                deliverReadGeneral(StatusCode.NO_CONSENSUS, new ArrayList<VerifiableAnnouncement>());
                             else
-                                deliverRead(StatusCode.NO_CONSENSUS, new ArrayList<Announcement>());
+                                deliverRead(StatusCode.NO_CONSENSUS, new ArrayList<VerifiableAnnouncement>());
                         }
                             
                     }
@@ -621,10 +667,10 @@ public class Client {
 
         while (rvpm == null && requestsCounter < MAX_REQUESTS) {
             try {
-                //System.out.println("A enviar para " + serverCommunication.getPort());
+                System.out.println("A enviar para " + serverCommunication.getPort());
                 _communication.sendMessage(vpm, serverCommunication.getObjOutStream());
                 rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(serverCommunication.getObjInStream());
-                //System.out.println("Recebi de " + serverCommunication.getPort() + vpm.getProtocolMessage().getCommand());
+                System.out.println("Recebi de " + serverCommunication.getPort() + vpm.getProtocolMessage().getCommand());
 
                 if (rvpm == null) {
                     return null;
@@ -656,7 +702,7 @@ public class Client {
             }
             catch (IOException | ClassNotFoundException e) {
                 System.out.println(e);
-                System.exit(-1);
+                return null;
             }
             finally {
                 System.out.flush();
@@ -735,12 +781,18 @@ public class Client {
         // TODO: fix this -> loop!
         //while (refreshCounter < MAX_REFRESH) {
             Announcement a = new Announcement(message, references);
+            String announcementID = UUIDGenerator.generateUUID();
+            a.setAnnouncementID(announcementID);
             a.setPublicKey(_pubKey);
 
             _atomicRegister1N.write();
             int rid = _atomicRegister1N.getRid();
             int wts = _atomicRegister1N.getWts();
-            List<Announcement> values = new ArrayList<Announcement>(Arrays.asList(a));
+
+            
+            VerifiableAnnouncement va = createVerifiableAnnouncement(a);
+
+            List<VerifiableAnnouncement> values = new ArrayList<VerifiableAnnouncement>(Arrays.asList(va));
 
             RegisterMessage arm = new RegisterMessage(rid, wts, values);
  
@@ -752,18 +804,6 @@ public class Client {
             }
 
             write(pms, false);
-
-            /*for(Map.Entry<PublicKey, VerifiableProtocolMessage> vpm : vpms.entrySet()) {
-
-                rsc = verifyReceivedMessage(vpm.getValue()); // returns StatusCode.NO_RESPONSE if vpm is null
-                rscs.add(rsc);
-                if (rsc.equals(StatusCode.INVALID_TOKEN)) {
-                    refreshToken(_serverCommunications.get(vpm.getKey()));
-                    refreshCounter++;
-                } else {
-                    refreshCounter = MAX_REFRESH;
-                }
-            }*/
 
         return rscs;
     }
@@ -788,11 +828,15 @@ public class Client {
         List<StatusCode> rscs = new ArrayList<>();
 
         Announcement a = new Announcement(message, references);
+        String announcementID = UUIDGenerator.generateUUID();
+        a.setAnnouncementID(announcementID);
         a.setPublicKey(_pubKey);
 
         _regularRegisterNN.write();
         int wts = _regularRegisterNN.getWts();
-        List<Announcement> values = new ArrayList<Announcement>(Arrays.asList(a));
+
+        VerifiableAnnouncement va = createVerifiableAnnouncement(a);
+        List<VerifiableAnnouncement> values = new ArrayList<VerifiableAnnouncement>(Arrays.asList(va));
 
         RegisterMessage arm = new RegisterMessage(wts, values);
 

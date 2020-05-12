@@ -75,10 +75,11 @@ public class ServerBroadcast {
             sbd._echo = sm.getClientMessage();
             _data.put(sm.getPublicKey(), sbd);
         }
-        // we already received a broadcast from this server, so we don't consider this message
+        else if (sbd._echo == null) {
+            sbd._echo = sm.getClientMessage();
+        }
         else {
-            // TODO: repeated broadcast
-            // System.out.println("REPEATED BROADCAST");
+            // we already received a broadcast from this server, so we don't consider this message
             return null;
         }
 
@@ -86,19 +87,60 @@ public class ServerBroadcast {
     }
 
     public void localReady() {
-        // System.out.println("localReady");
-
-        List<VerifiableProtocolMessage> echos = new ArrayList<>();
-        for(Map.Entry<PublicKey, ServerBroadcastData> entry : _data.entrySet()) {
-            echos.add(entry.getValue()._echo);
+        synchronized(_sentReady) {
+            if (_sentReady.get() == false) {
+                List<VerifiableProtocolMessage> echos = new ArrayList<>();
+                for(Map.Entry<PublicKey, ServerBroadcastData> entry : _data.entrySet()) {
+                    if (entry.getValue()._echo != null) {
+                        echos.add(entry.getValue()._echo);
+                    }
+                }
+                int nReadys = echos.size();
+                if (nReadys > _quorumF) {
+                    // System.out.println("Amplification step");
+                    _sentReady.getAndSet(true);
+                    VerifiableProtocolMessage vpmToDeliver = MessageComparator.compareClientMessages(echos, _quorum);
+                    if (vpmToDeliver == null) System.out.println("VPMTODELIVER IS NULLLLLLLLL");
+                    ServerMessage s = new ServerMessage(_server.getPublicKey(), "FINAL", vpmToDeliver, _bcb);
+                    List<VerifiableServerMessage> sigmas = new ArrayList<>();
+                    for(Map.Entry<PublicKey, ServerBroadcastData> entry : _data.entrySet()) {
+                        sigmas.add(entry.getValue()._sigma);
+                    }
+                    s.setSigma(ProtocolMessageConverter.objToByteArray(sigmas));
+                    _server.sendToAllServers(s); 
+                }
+            }
         }
+        //End Amplification step
+
         synchronized(_delivered) {
-            System.out.println(echos.size());
-            if(echos.size() > _quorum && _delivered.get() == false) {
-                VerifiableProtocolMessage vpmToDeliver = MessageComparator.compareClientMessages(echos, _quorum);
-                if (vpmToDeliver != null) {
-                    _server.deliver(vpmToDeliver, _clientMessage);
-                    _delivered.set(true);
+            if (_delivered.get() == false) {
+                List<VerifiableServerMessage> sigmas = new ArrayList<>();
+                for(Map.Entry<PublicKey, ServerBroadcastData> entry : _data.entrySet()) {
+                    sigmas.add(entry.getValue()._sigma);
+                }
+                int nSigVerified = sigmas.size();
+
+                System.out.println("sig funky " +  nSigVerified);
+                System.out.println("quorum " + _quorum2F);
+                if (nSigVerified > _quorum2F) {
+                    List<VerifiableProtocolMessage> echos = new ArrayList<>();
+                    for(Map.Entry<PublicKey, ServerBroadcastData> entry : _data.entrySet()) {
+                        if (entry.getValue()._echo != null) {
+                            echos.add(entry.getValue()._echo);
+                        }
+                    }
+                    System.out.println("ECHOS BEFORE COMPARATOR: " + echos.size());
+                    VerifiableProtocolMessage vpmToDeliver = MessageComparator.compareClientMessages(echos, _quorum);
+                    if (vpmToDeliver == null) {
+                        System.out.println("LOCAL DELIVER  FAILED");
+                        _server.deliverFailed(_clientMessage);
+                    }
+                    else {
+                        System.out.println("LOCAL DELIVER");
+                        _server.deliver(vpmToDeliver, _clientMessage);
+                        _delivered.getAndSet(true);
+                    }
                 }
             }
         }
@@ -119,14 +161,24 @@ public class ServerBroadcast {
 
         // adds echo
         ServerBroadcastData sbd = _data.get(sm.getPublicKey());
-        if (sbd != null) {
-            sbd._echo = sm.getClientMessage();
+        if (sbd == null) {
+            sbd = new ServerBroadcastData();
             sbd._sigma = vsm;
+            _data.put(sm.getPublicKey(), sbd);
+        }
+        else if (sbd._sigma == null) {
+            sbd._sigma = vsm;
+        }
+        else {
+            // we already received a broadcast from this server, so we don't consider this message
+            return null;
         }
         
         List<VerifiableProtocolMessage> echos = new ArrayList<>();
         for(Map.Entry<PublicKey, ServerBroadcastData> entry : _data.entrySet()) {
-            echos.add(entry.getValue()._echo);
+            if (entry.getValue()._echo != null) {
+                echos.add(entry.getValue()._echo);
+            }
         }
         
         if(echos.size() > _quorum) {
@@ -188,9 +240,23 @@ public class ServerBroadcast {
                 System.out.println("sig funky " +  nSigVerified);
                 System.out.println("quorum " + _quorum2F);
                 if (nSigVerified > _quorum2F) {
-                    _delivered.getAndSet(true);
-                    VerifiableProtocolMessage vpmToDeliver = sm.getClientMessage();
-                    _server.deliver(vpmToDeliver, _clientMessage);
+                    List<VerifiableProtocolMessage> echos = new ArrayList<>();
+                    for(Map.Entry<PublicKey, ServerBroadcastData> entry : _data.entrySet()) {
+                        if (entry.getValue()._echo != null) {
+                            echos.add(entry.getValue()._echo);
+                        }
+                    }
+                    System.out.println("ECHOS BEFORE COMPARATOR: " + echos.size());
+                    VerifiableProtocolMessage vpmToDeliver = MessageComparator.compareClientMessages(echos, _quorum);
+                    if (vpmToDeliver == null) {
+                        System.out.println("NON LOCAL DELIVER  FAILED");
+                        _server.deliverFailed(_clientMessage);
+                    }
+                    else {
+                        System.out.println("NON LOCAL DELIVER");
+                        _server.deliver(vpmToDeliver, _clientMessage);
+                        _delivered.getAndSet(true);
+                    }
                 }
             }
         }

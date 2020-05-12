@@ -5,14 +5,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Database {
-    private Connection _con;
+    private static Connection _con;
+    private static String _databaseName;
 
     public Database(String db) {  
         try{  
             Class.forName("com.mysql.cj.jdbc.Driver");
             _con=DriverManager.getConnection("jdbc:mysql://localhost:3306/announcement?verifyServerCertificate=false&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true","sec","1234");
-
-            resetDatabase(db);
+            _databaseName = db;
+            resetDatabase();
             createRegularRegisterNNTable();
             createUsersTable();
         }
@@ -23,7 +24,7 @@ public class Database {
 
     public void createRegularRegisterNNTable() {
         try {
-            String generalBoardTable = "CREATE TABLE IF NOT EXISTS RegularRegisterNN (Announcements VARBINARY(60000) NOT NULL) CHARACTER SET utf8";
+            String generalBoardTable = "CREATE TABLE IF NOT EXISTS RegularRegisterNN (ID MEDIUMINT NOT NULL AUTO_INCREMENT, Announcements VARBINARY(60000) NOT NULL, PRIMARY KEY(ID)) CHARACTER SET utf8";
             PreparedStatement statement = _con.prepareStatement(generalBoardTable);
             statement.executeUpdate();
         }
@@ -31,7 +32,7 @@ public class Database {
             System.out.println(e);
         }
     }
-    
+
     public void createUsersTable() {
         try {
             String usersTable = "CREATE TABLE IF NOT EXISTS Users (PublicKey VARBINARY(2000) NOT NULL," +
@@ -53,6 +54,17 @@ public class Database {
         try {
             String userTable = "CREATE TABLE IF NOT EXISTS " + uuid + " (Announcement VARCHAR(256) NOT NULL, Reference VARBINARY(256), AnnouncementID VARCHAR(255) NOT NULL, Accountability VARBINARY(2500) NOT NULL, Seq INT AUTO_INCREMENT, PRIMARY KEY(Seq)) CHARACTER SET utf8";
             PreparedStatement statement = _con.prepareStatement(userTable);
+            statement.executeUpdate();
+        }
+        catch(Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    public static void dropDatabase() {
+        try {
+            String dropDatabase = "DROP DATABASE IF EXISTS " + _databaseName;
+            PreparedStatement statement = _con.prepareStatement(dropDatabase);
             statement.executeUpdate();
         }
         catch(Exception e) {
@@ -82,11 +94,11 @@ public class Database {
         }
     }
 
-    public void resetDatabase(String db) {
+    public void resetDatabase() {
         try {
-            String dropDatabase = "DROP DATABASE IF EXISTS " + db;
-            String createDatabase = "CREATE DATABASE IF NOT EXISTS " + db;
-            String useDatabase = "USE " + db;
+            String dropDatabase = "DROP DATABASE IF EXISTS " + _databaseName;
+            String createDatabase = "CREATE DATABASE IF NOT EXISTS " + _databaseName;
+            String useDatabase = "USE " + _databaseName;
 
             PreparedStatement statement = _con.prepareStatement(dropDatabase);
             statement.executeUpdate();
@@ -159,6 +171,20 @@ public class Database {
             PreparedStatement statement = _con.prepareStatement(users);
             statement.setBytes(1, atomicRegister1N);
             statement.setString(2, clientUUID);
+            statement.executeUpdate();  
+            return 1;
+        }
+        catch(Exception e) {
+            System.out.println(e);
+            return 0;
+        }
+    }
+
+    public int updateRegularRegisterNNTable(byte[] announcements) {
+        try {
+            String table = "UPDATE RegularRegisterNN SET Announcements = ? WHERE ID = 1";
+            PreparedStatement statement = _con.prepareStatement(table);
+            statement.setBytes(1, announcements);
             statement.executeUpdate();  
             return 1;
         }

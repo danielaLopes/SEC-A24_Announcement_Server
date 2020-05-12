@@ -21,7 +21,7 @@ public class RegularRegisterNN {
     private Client _client;
 
     public RegularRegisterNN(Client client) {
-        _atomicValue = new AtomicValue(0, new ArrayList<Announcement>());
+        _atomicValue = new AtomicValue(0, new ArrayList<VerifiableAnnouncement>());
         _acks = new AtomicInteger(0);
         _rid = 0;
         _wts = 0;
@@ -61,8 +61,9 @@ public class RegularRegisterNN {
                 System.out.flush();
 
                 // TODO: readlist needs to have a quorum
+                //TODO ATUALIZAR COM VERIFIABLE ANNOUNCEMENTS
                 if (_readList.size() > _quorum) {
-                    Map.Entry<StatusCode, List<Announcement>> quorumMessages =
+                    Map.Entry<StatusCode, List<VerifiableAnnouncement>> quorumMessages =
                             MessageComparator.compareServerResponses(responses, responses.size() / 2);
                     System.out.println("quorum messages sc" + quorumMessages.getKey());
                     System.out.println("quorum messages ann" + quorumMessages.getValue());
@@ -73,6 +74,7 @@ public class RegularRegisterNN {
                         // TODO: why highest then ????
                         // TODO: Verify client Signatures of the announcements!
                         //_client.deliverReadGeneral(highest.getValues());
+
                         _client.deliverReadGeneral(quorumMessages.getKey(), quorumMessages.getValue());
                     }
                 }
