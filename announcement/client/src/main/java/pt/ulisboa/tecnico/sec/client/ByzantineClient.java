@@ -1,10 +1,8 @@
 package pt.ulisboa.tecnico.sec.client;
 
-import pt.ulisboa.tecnico.sec.communication_lib.Announcement;
-import pt.ulisboa.tecnico.sec.communication_lib.ProtocolMessage;
-import pt.ulisboa.tecnico.sec.communication_lib.StatusCode;
-import pt.ulisboa.tecnico.sec.communication_lib.VerifiableProtocolMessage;
+import pt.ulisboa.tecnico.sec.communication_lib.*;
 
+import java.io.IOException;
 import java.security.PublicKey;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -127,7 +125,59 @@ public class ByzantineClient extends Client {
         System.out.println("-----------------------------------");
     }
 
-    public void colludeWithServer(int port) {
+    /**
+     * Client sends post messages only to a colluding server to increment
+     * that servers timestamp with correctly signed posts.
+     * @param port
+     */
+    public VerifiableProtocolMessage colludeWithServer(int port) {
+        System.out.println("Collude with server in port: " + port);
+        CommunicationServer colludingServer = null;
+        for (CommunicationServer comm : getServerCommunications().values()) {
+            System.out.println("Checking server with port: " + comm.getPort());
+            if (port == comm.getPort()) {
+                colludingServer = comm;
+                break;
+            }
+        }
 
+        System.out.println("colludingServer: " + colludingServer);
+
+        Announcement a = new Announcement(_messages[0], new ArrayList<>());
+        a.setPublicKey(_pubKey);
+
+        getAtomicRegister1N().write();
+        int rid = getAtomicRegister1N().getRid();
+        int wts = getAtomicRegister1N().getWts();
+        List<Announcement> values = new ArrayList<Announcement>(Arrays.asList(a));
+
+        RegisterMessage arm = new RegisterMessage(rid, wts, values);
+
+        ProtocolMessage p = new ProtocolMessage("POSTGENERAL", _pubKey, a, colludingServer.getToken());
+        p.setAtomicRegisterMessages(arm.getBytes());
+
+        VerifiableProtocolMessage vpm = createVerifiableMessage(p);
+
+        VerifiableProtocolMessage response = sendMessageToServer(vpm, colludingServer);
+        System.out.println("Colluding server response: " + response);
+
+        return response;
+    }
+
+    public VerifiableProtocolMessage sendMessageToServer(VerifiableProtocolMessage vpm, CommunicationServer serverCommunication) {
+
+        VerifiableProtocolMessage response = null;
+        try {
+            _communication.sendMessage(vpm, serverCommunication.getObjOutStream());
+            response = (VerifiableProtocolMessage) _communication.receiveMessage(serverCommunication.getObjInStream());
+        }
+        catch (IOException e) {
+            System.out.println("Could not send message to server");
+        }
+        catch (ClassNotFoundException e) {
+            System.out.println("Class not found!");
+        }
+
+        return response;
     }
 }

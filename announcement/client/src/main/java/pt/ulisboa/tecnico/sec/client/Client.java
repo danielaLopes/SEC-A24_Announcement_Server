@@ -116,6 +116,9 @@ public class Client {
         _regularRegisterNN  = new RegularRegisterNN(this);
     }
 
+    public AtomicRegister1N getAtomicRegister1N() { return _atomicRegister1N; }
+
+    public RegularRegisterNN get_regularRegisterNN() { return _regularRegisterNN; }
 
     public Map<PublicKey, CommunicationServer> getServerCommunications() { return _serverCommunications; }
 

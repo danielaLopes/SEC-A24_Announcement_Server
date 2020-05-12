@@ -12,9 +12,16 @@ public class ByzantineClientTest extends BaseTest {
             CLIENT_KEYSTORE_PASSWD, CLIENT_ENTRY_PASSWD, ALIAS, 3, 0);
 
     @Test
-    void success() {
+    void sendDifferentMessages() {
         StatusCode sc = _byzantineClient.sendDifferentMessages();
         System.out.println("Quorum status code: " + sc);
         assertEquals(StatusCode.NO_CONSENSUS, sc);
+    }
+
+    @Test
+    void colludeWithServer() {
+        StatusCode sc = _byzantineClient.colludeWithServer(8003).getProtocolMessage().getStatusCode();
+        System.out.println("Colluding server status code: " + sc);
+        assertEquals(StatusCode.OK, sc);
     }
 }
