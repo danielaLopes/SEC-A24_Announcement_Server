@@ -65,7 +65,7 @@ public class Client {
     // responses received for current request
     private ConcurrentMap<PublicKey, VerifiableProtocolMessage> _responses = new ConcurrentHashMap<>();
 
-    protected static final int TIMEOUT = 3000;
+    protected static final int TIMEOUT = 5000;
     protected static final int MAX_REQUESTS = 1;
     protected static final int MAX_REFRESH = 3;
 
@@ -124,7 +124,7 @@ public class Client {
 
     public AtomicRegister1N getAtomicRegister1N() { return _atomicRegister1N; }
 
-    public RegularRegisterNN get_regularRegisterNN() { return _regularRegisterNN; }
+    public RegularRegisterNN getRegularRegisterNN() { return _regularRegisterNN; }
 
     public Map<PublicKey, CommunicationServer> getServerCommunications() { return _serverCommunications; }
 
@@ -670,8 +670,7 @@ public class Client {
         }
         catch(SocketTimeoutException e) {
             System.out.println("(INFO) Could not receive a response from server port: " + serverCommunication.getPort());
-            if (serverCommunication._refreshToken == false)
-                refreshToken(serverCommunication);
+            if (serverCommunication._refreshToken == false) refreshToken(serverCommunication);
             return null;
         }
         catch (SocketException e) {
@@ -680,7 +679,9 @@ public class Client {
             return null;
         }
         catch (IOException | ClassNotFoundException | ClassCastException e) {
-            reset(serverCommunication);
+            // reset(serverCommunication);
+            closeCommunication(serverCommunication);
+            serverCommunication.setAlive(false);
             System.out.println(e);
         }
         finally {

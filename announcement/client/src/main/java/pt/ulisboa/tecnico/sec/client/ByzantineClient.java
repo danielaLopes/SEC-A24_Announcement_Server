@@ -1,6 +1,10 @@
 package pt.ulisboa.tecnico.sec.client;
 
+import pt.ulisboa.tecnico.sec.client.Client;
+import pt.ulisboa.tecnico.sec.client.ClientUI;
+import pt.ulisboa.tecnico.sec.client.CommunicationServer;
 import pt.ulisboa.tecnico.sec.communication_lib.*;
+import pt.ulisboa.tecnico.sec.crypto_lib.UUIDGenerator;
 
 import java.io.IOException;
 import java.security.PublicKey;
@@ -27,9 +31,9 @@ public class ByzantineClient extends Client {
                 nServers, nFaults);
     }
 
-    public StatusCode sendDifferentMessages() {
-        System.out.println("Send different messages");
-        Map<PublicKey, ProtocolMessage> pms = new HashMap<>();
+    public StatusCode sendDifferentMessages(String code) {
+        //System.out.println("Send different messages");
+        ConcurrentMap<PublicKey, ProtocolMessage> pms = new ConcurrentHashMap<>();
         for (Map.Entry<PublicKey, CommunicationServer> entry : getServerCommunications().entrySet()) {
 
             // decide a random operation for each server
@@ -38,57 +42,113 @@ public class ByzantineClient extends Client {
 
             ProtocolMessage pm;
 
-            System.out.println("Before creating messages");
-
             if (randCmd.equals("POST")) {
-                pm = createRandomPost("POST", entry.getValue());
+                pm = createRandomPost("POST", entry.getValue(), code);
             }
             else if (randCmd.equals("READ")) {
-                pm = createRandomRead("READ", entry.getValue());
+                pm = createRandomRead("READ", entry.getValue(), code);
             }
             else if (randCmd.equals("POSTGENERAL")) {
-                pm = createRandomPost("POSTGENERAL", entry.getValue());
+                pm = createRandomPost("POSTGENERAL", entry.getValue(), code);
             }
             else {
-                pm = createRandomRead("READGENERAL", entry.getValue());
+                pm = createRandomRead("READGENERAL", entry.getValue(), code);
             }
-            //p.setAtomicRegisterMessages(arm.getBytes());
+
             pms.put(entry.getKey(), pm);
         }
         return broadcastToServers(pms);
     }
 
-    public ProtocolMessage createRandomPost(String cmd, CommunicationServer serverCommunication) {
+    public ProtocolMessage createRandomPost(String cmd, CommunicationServer serverCommunication, String code) {
 
         int randMsgIndex = new Random().nextInt(_messages.length);
         String randMsg = _messages[randMsgIndex];
 
         Announcement a = new Announcement(randMsg, new ArrayList<>());
+        String announcementID = UUIDGenerator.generateUUID();
+        a.setAnnouncementID(announcementID);
+        a.setPublicKey(_pubKey);
 
-        return new ProtocolMessage("POST", _pubKey, a, serverCommunication.getToken());
+        ProtocolMessage pm;
+
+        if (cmd.equals("POST"))
+            pm = new ProtocolMessage("POST", _pubKey, a, serverCommunication.getToken());
+        else
+            pm = new ProtocolMessage("POSTGENERAL", _pubKey, a, serverCommunication.getToken());
+
+        if (code.equals("OK")) {
+            int rid;
+            int wts;
+
+            if (cmd.equals("POST")) {
+                getAtomicRegister1N().write();
+                rid = getAtomicRegister1N().getRid();
+                wts = getAtomicRegister1N().getWts();
+            }
+            else {
+                getRegularRegisterNN().write();
+                rid = getRegularRegisterNN().getRid();
+                wts = getRegularRegisterNN().getWts();
+            }
+
+            VerifiableAnnouncement va = createVerifiableAnnouncement(a);
+
+            List<VerifiableAnnouncement> values = new ArrayList<>(Arrays.asList(va));
+
+            RegisterMessage arm = new RegisterMessage(rid, wts, values);
+            pm.setAtomicRegisterMessages(arm.getBytes());
+        }
+
+        return pm;
     }
 
-    public ProtocolMessage createRandomRead(String cmd, CommunicationServer serverCommunication) {
+    public ProtocolMessage createRandomRead(String cmd, CommunicationServer serverCommunication, String code) {
 
         int randNumber = new Random().nextInt(10);
 
+        ProtocolMessage pm;
+
         if (cmd.equals("READ"))
-            return new ProtocolMessage("READ", _pubKey, serverCommunication.getToken(), randNumber, _pubKey);
+            pm = new ProtocolMessage("READ", _pubKey, serverCommunication.getToken(), randNumber, _pubKey);
         else
-            return new ProtocolMessage("READGENERAL", _pubKey, serverCommunication.getToken(), randNumber);
+            pm = new ProtocolMessage("READGENERAL", _pubKey, serverCommunication.getToken(), randNumber);
+
+        RegisterMessage arm;
+        if (code.equals("OK")) {
+            if (cmd.equals("POST")) {
+                arm = getAtomicRegister1N().read();
+            } else {
+                arm = getRegularRegisterNN().read();
+            }
+            pm.setAtomicRegisterMessages(arm.getBytes());
+        }
+        return pm;
     }
 
-    public StatusCode broadcastToServers(Map<PublicKey, ProtocolMessage> pms) {
+    public StatusCode broadcastToServers(ConcurrentMap<PublicKey, ProtocolMessage> pms) {
 
         for (Map.Entry<PublicKey, ProtocolMessage> pm : pms.entrySet()) {
             Thread thread = new Thread() {
                 public void run() {
+
+                    if (pm.getValue().getCommand().equals("POST") || pm.getValue().getCommand().equals("POSTGENERAL"))
+                        System.out.println("Sent message: " + pm.getValue().getCommand() + " " +
+                                pm.getValue().getPostAnnouncement().getAnnouncement());
+                    else System.out.println("Sent message: " + pm.getValue().getCommand());
+                    System.out.flush();
+
                     VerifiableProtocolMessage response = requestServer(pm.getValue(), getServerCommunications().get(pm.getKey()));
-                    getServerResponses().put(pm.getKey(), response);
 
-                    System.out.println("Added new message, we now have: " + getServerResponses().size());
-
-                    printResponse(response.getProtocolMessage());
+                    if (response == null) System.out.println("Did not receive a response");
+                    else {
+                        getServerResponses().put(pm.getKey(), response);
+    
+                        System.out.println("Added new message, we now have: " + getServerResponses().size());
+    
+                        printResponse(response.getProtocolMessage());
+                        System.out.flush();
+                    }
                 }
 
             };
