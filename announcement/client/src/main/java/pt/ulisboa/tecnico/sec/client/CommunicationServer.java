@@ -4,10 +4,12 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.security.PublicKey;
 
 public class CommunicationServer {
 
     private int _port;
+    private PublicKey _serverPubKey;
     private ObjectOutputStream _oos;
     private ObjectInputStream _ois;
     private Socket _clientSocket;
@@ -16,24 +18,14 @@ public class CommunicationServer {
     protected boolean _refreshToken = false;
 
     public CommunicationServer(int port, ObjectOutputStream oos, ObjectInputStream ois,
-                               Socket clientSocket) {
+                               Socket clientSocket,PublicKey serverPubKey) {
 
         _port = port;
         _oos = oos;
         _ois = ois;
         _clientSocket = clientSocket;
         _alive = true;
-    }
-
-    public CommunicationServer(int port, ObjectOutputStream oos, ObjectInputStream ois,
-                               Socket clientSocket, String token) {
-
-        _port = port;
-        _oos = oos;
-        _ois = ois;
-        _clientSocket = clientSocket;
-        _token = token;
-        _alive = true;
+        _serverPubKey = serverPubKey;
     }
 
     protected int getPort() { return _port; }
@@ -64,4 +56,6 @@ public class CommunicationServer {
     protected void setAlive(boolean alive) { _alive = alive; }
 
     protected  boolean getAlive() { return _alive; }
+
+    protected PublicKey getPubKey() { return _serverPubKey; }
 }

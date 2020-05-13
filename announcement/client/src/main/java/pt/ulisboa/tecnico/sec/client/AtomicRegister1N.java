@@ -117,24 +117,18 @@ public class AtomicRegister1N {
     }
 
     public void write() {
-        //System.out.println("write");
         _rid.incrementAndGet();
         _wts.incrementAndGet();
         _acks.set(0);
     }
 
     public void writeReturn(int r) {
-        //System.out.println("writeReturn");
         if (r == _rid.get()) {
             _acks.incrementAndGet();
             synchronized(_lock) {
-                //System.out.println(_acks.get());
                 if (_acks.get() > _client._nServers / 2) {
                     _acks.set(0);
                     if(_reading.compareAndSet(true, false)) {
-                        //_reading = false;
-                        /*System.out.println("_readVal size before calling deliverRead() " + _readval.size());
-                        System.out.flush();*/
                         _client.deliverRead(StatusCode.OK, _readval);
                     }
                     else

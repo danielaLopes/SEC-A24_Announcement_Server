@@ -60,6 +60,8 @@ public class Client {
     
     protected PublicKey _readingUserPubKey;
 
+    protected List<PublicKey> _serversPubKeys;
+
     // responses received for current request
     private ConcurrentMap<PublicKey, VerifiableProtocolMessage> _responses = new ConcurrentHashMap<>();
 
@@ -76,14 +78,14 @@ public class Client {
         _quorum = (nServers + nFaults) / 2;
 
         _serverCommunications = new ConcurrentHashMap<>();
-        List<PublicKey> serversPubKeys = loadServersGroupPublicKeys();
+        _serversPubKeys = loadServersGroupPublicKeys();
 
         _usersPubKeys = new ArrayList<>();
         loadUsersPubKeys(otherUsersPubKeyPaths);
 
         _communication = new Communication();
 
-        startServersGroupCommunication(serversPubKeys);
+        startServersGroupCommunication();
 
         _atomicRegister1N = new AtomicRegister1N(this);
         _regularRegisterNN  = new RegularRegisterNN(this);
@@ -101,11 +103,11 @@ public class Client {
         _quorum = (nServers + nFaults) / 2;
 
         _serverCommunications = new ConcurrentHashMap<>();
-        List<PublicKey> serversPubKeys = loadServersGroupPublicKeys();
+        _serversPubKeys = loadServersGroupPublicKeys();
 
         _communication = new Communication();
 
-        startServersGroupCommunication(serversPubKeys);
+        startServersGroupCommunication();
 
         _atomicRegister1N = new AtomicRegister1N(this);
         _regularRegisterNN  = new RegularRegisterNN(this);
@@ -251,27 +253,27 @@ public class Client {
         return _usersPubKeys.get(userIndex);
     }
 
-    public CommunicationServer createServerCommunication(int port) throws IOException {
+    public CommunicationServer createServerCommunication(int port, PublicKey serverPubKey) throws IOException {
 
         Socket socket = new Socket("localhost", port);
         socket.setSoTimeout(TIMEOUT);
 
         return new CommunicationServer(
                 port, new ObjectOutputStream(socket.getOutputStream()),
-                new ObjectInputStream(socket.getInputStream()), socket);
+                new ObjectInputStream(socket.getInputStream()), socket, serverPubKey);
     }
 
     /**
      * Starts the communication with the group of active servers for future operations.
      */
-    public void startServersGroupCommunication(List<PublicKey> serverPublicKeys) {
+    public void startServersGroupCommunication() {
         try {
             int serverIndex = 0;
-            for (PublicKey serverPubKey : serverPublicKeys) {
+            for (PublicKey serverPubKey : _serversPubKeys) {
                 int port = _startingServerPort + serverIndex++;
                 System.out.println("(INFO) Trying connection with server at port " + port);
 
-                _serverCommunications.put(serverPubKey, createServerCommunication(port));
+                _serverCommunications.put(serverPubKey, createServerCommunication(port, serverPubKey));
             }
             registerServersGroup();
         }
@@ -614,7 +616,8 @@ public class Client {
         try {
             // tries to reconnect with dead servers
             if (serverCommunication.getAlive() == false) {
-                CommunicationServer newServerCommunication = createServerCommunication(serverCommunication.getPort());
+                CommunicationServer newServerCommunication = createServerCommunication(serverCommunication.getPort(),
+                        serverCommunication.getPubKey());
                 serverCommunication = newServerCommunication;
                 register(serverCommunication);
                 pm.setToken(serverCommunication.getToken());
@@ -644,16 +647,10 @@ public class Client {
                 return null;
             }
 
-            PublicKey serverPubKey = getServerPublicKeyFromVPM(rvpm);
-
-            if (verifySignature(rvpm, serverPubKey)) {
-                //System.out.println("Server signature verified successfully");
-                //printStatusCode(rsc);
+            if (!verifySignature(rvpm, serverCommunication.getPubKey())) {
+                System.out.println("Could not verify server signature");
+                return null;
             }
-            else {
-                System.out.println("Could not register: could not verify server signature");
-            }
-
         }
         catch(SocketTimeoutException e) {
             System.out.println("(INFO) Could not receive a response from server port: " + serverCommunication.getPort());
