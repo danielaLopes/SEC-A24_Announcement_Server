@@ -23,7 +23,7 @@ public class ByzantineClientApplication {
 
     public final static int N_SERVERS = 4;
     public final static int N_FAULTS = 1;
-    public final static int SERVER_BYZANTINE_PORT = 8003;
+    public final static int SERVER_BYZANTINE_PORT = 8004;
 
     public static ByzantineClient _byzantineClient;
 

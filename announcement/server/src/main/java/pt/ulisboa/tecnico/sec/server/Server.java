@@ -81,6 +81,8 @@ public class Server extends Thread {
         return null;
     }
 
+    public PublicKey getServerPubKey() { return _pubKey; }
+
     public void resetDatabase() {
     }
 
@@ -265,8 +267,7 @@ public class Server extends Thread {
         ProtocolMessage p = new ProtocolMessage("READ", StatusCode.OK, _pubKey, newToken, token);
         p.setAtomicRegisterMessages(arm.getBytes());
         VerifiableProtocolMessage response = createVerifiableMessage(p);
-        // TODO: nothing to do with registerMessage ???
-        registerMessage = new RegisterMessage(response.getProtocolMessage().getAtomicRegisterMessages());
+
         cmh.sendMessage(response);
 
         System.out.println("------------------------END READ------------------------");
@@ -651,7 +652,6 @@ public class Server extends Thread {
      * Posts an announcement of up to 255 characters to the user's PostOperation Board.
      * Can refer to previous announcements.
      * @param vpm
-     * @return ProtocolMessage
      */
     public void post(VerifiableProtocolMessage vpm, ClientMessageHandler cmh) {
         StatusCode sc;
