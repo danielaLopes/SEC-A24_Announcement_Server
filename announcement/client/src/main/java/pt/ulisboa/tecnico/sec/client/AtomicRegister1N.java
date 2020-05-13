@@ -68,8 +68,8 @@ public class AtomicRegister1N {
                 System.out.flush();
 
                 _readList.put(pm.getPublicKey(), av);
-                if (_readList.size() > _client._nServers / 2) {
-                    AtomicValue highest = highest();
+                AtomicValue highest = highest();
+                if (_readList.size() > _client._nServers / 2 && highest != null) {
                     resetReadList();
                     _client.writeBack(new RegisterMessage(rid, highest.getTimeStamp(), highest.getValues()));
                 }
@@ -80,19 +80,40 @@ public class AtomicRegister1N {
     }
 
     public AtomicValue highest() {
-        int ts = -1;
-        AtomicValue highestValue = new AtomicValue(-1, new ArrayList<>());
-        synchronized (_lock) {
-            List<Map.Entry<PublicKey, AtomicValue>> readEntries = new ArrayList<>(_readList.entrySet());
-            for (Map.Entry<PublicKey, AtomicValue> r : readEntries) {
-                if (r.getValue().getTimeStamp() > ts) {
-                    highestValue = r.getValue();
-                    _readval = new ArrayList<VerifiableAnnouncement>(highestValue.getValues());
-                    ts = highestValue.getTimeStamp();
-                }
+        Map<AtomicValue, Integer> atomicValues = new HashMap<>();
+
+        for (Map.Entry<PublicKey, AtomicValue> r : _readList.entrySet()) {
+            AtomicValue av = findAtomicValue(atomicValues, r.getValue());
+            if (av == null) {
+                atomicValues.put(r.getValue(), 1);
+            }
+            else {
+                atomicValues.put(av, atomicValues.get(av) + 1);
             }
         }
-        return highestValue;
+
+        int maxOccurences = -1;
+        AtomicValue av = null;
+        for (Map.Entry<AtomicValue, Integer> e : atomicValues.entrySet()) {
+            if (e.getValue() > _client._nServers / 2 && e.getValue() > maxOccurences) {
+                maxOccurences = e.getValue();
+                av = e.getKey();
+            }
+        }
+
+        if (av == null) return null;
+        _readval = av.getValues();
+        return av;
+
+    }
+
+    public AtomicValue findAtomicValue(Map<AtomicValue, Integer> atomicValues, AtomicValue av) {
+        for (Map.Entry<AtomicValue, Integer> otherAv : atomicValues.entrySet()) {
+            if (av.equals(otherAv.getKey())) {
+                return otherAv.getKey();
+            }
+        }
+        return null;
     }
 
     public void write() {

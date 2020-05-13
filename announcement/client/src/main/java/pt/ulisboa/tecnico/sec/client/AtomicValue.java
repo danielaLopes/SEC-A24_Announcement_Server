@@ -18,4 +18,20 @@ public class AtomicValue {
 
     public void setTimeStamp(int timeStamp) { _timeStamp = timeStamp; }
     public void setValues(List<VerifiableAnnouncement> values) { _values = values; }
+
+    @Override
+    public boolean equals(Object o) {
+
+        if (o == this) {
+            return true;
+        }
+
+        if (!(o instanceof AtomicValue)) {
+            return false;
+        }
+
+        AtomicValue av = (AtomicValue) o;
+
+        return this.getTimeStamp() == av.getTimeStamp();
+    }
 }
