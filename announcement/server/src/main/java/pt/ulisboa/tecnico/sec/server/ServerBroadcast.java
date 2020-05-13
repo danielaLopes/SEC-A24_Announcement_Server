@@ -109,7 +109,7 @@ public class ServerBroadcast {
         //System.out.println("ECHOS AFTER  " + getEchos().size());
         
         List<VerifiableProtocolMessage> echos = getEchos();
-        // System.out.println("==========ECHOS SIZE: " + echos.size() + "quorum: " +  _quorum);
+        System.out.println("==========ECHOS SIZE: " + echos.size() + "quorum: " +  _quorum);
         System.out.flush();
         if(echos.size() > _quorum) {
             localFinalDelivery();
@@ -200,6 +200,8 @@ public class ServerBroadcast {
             // System.out.println("update sigma after " + getSigmas().size());
             System.out.flush();
         }
+        // System.out.println("==========SIGMAS SIZE: " + _sigmas.size() + " > _quorumF: " +  _quorum);
+
 
         //Amplification step
         if (_sentReady.get() == false) {

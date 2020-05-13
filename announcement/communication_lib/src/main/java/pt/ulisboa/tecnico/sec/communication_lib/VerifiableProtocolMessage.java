@@ -66,6 +66,10 @@ public class VerifiableProtocolMessage implements Serializable{
             return this.getProtocolMessage().getReadNumberAnnouncements() ==
                     vpm.getProtocolMessage().getReadNumberAnnouncements();
         }
+        else if (this.getProtocolMessage().getCommand().equals("WRITEBACK")) {
+            return new RegisterMessage(this.getProtocolMessage().getAtomicRegisterMessages()).equals(
+                    new RegisterMessage(vpm.getProtocolMessage().getAtomicRegisterMessages()));
+        }
 
         return false;
     }

@@ -14,6 +14,13 @@ public class MessageComparator {
      */
     public static VerifiableProtocolMessage compareClientMessages(List<VerifiableProtocolMessage> clientMessages, int required) {
         //System.out.println("Compare client messages " + clientMessages);
+        List<VerifiableProtocolMessage> writebacks = clientMessages.stream()
+                .filter(message -> message.getProtocolMessage().getCommand().equals("WRITEBACK"))
+                .collect(Collectors.toList());
+        if (writebacks.size() > required) {
+            return compareMessages(writebacks, required);
+}
+
         List<VerifiableProtocolMessage> posts = clientMessages.stream()
                 .filter(message -> message.getProtocolMessage().getCommand().equals("POST"))
                 .collect(Collectors.toList());

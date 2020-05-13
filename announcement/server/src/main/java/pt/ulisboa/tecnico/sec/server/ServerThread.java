@@ -75,6 +75,9 @@ public class ServerThread extends Thread {
                                     case "SERVER_READGENERAL":
                                         handleServerBroadcast(sm);
                                         break;
+                                    case "SERVER_WRITEBACK":
+                                        handleServerBroadcast(sm);
+                                        break;
                                     // other servers answer our broadcast
                                     case "ECHO":
                                         handleEcho(vsm);

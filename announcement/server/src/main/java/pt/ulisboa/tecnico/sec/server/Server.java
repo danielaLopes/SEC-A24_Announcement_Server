@@ -221,6 +221,8 @@ public class Server extends Thread {
             case "READGENERAL":
                 deliverReadGeneral(highestVPM, clientVPM);
                 break;
+            case "WRITEBACK":
+                deliverWriteBack(highestVPM, clientVPM);
             default:
                 break;
         }
@@ -229,6 +231,24 @@ public class Server extends Thread {
         for (ServerThread t: _serverThreads)
             t._serverMessageQueue.remove(clientVPM.getProtocolMessage().getPublicKey());
         
+    }
+
+    
+    public void deliverWriteBack(VerifiableProtocolMessage highestVPM, VerifiableProtocolMessage clientVPM) {
+        PublicKey clientPubKey = highestVPM.getProtocolMessage().getPublicKey();
+        String token = clientVPM.getProtocolMessage().getToken();
+        User user = _users.get(clientPubKey);
+        ClientMessageHandler cmh = user.getCMH();
+        String newToken = user.getToken();
+        RegisterMessage registerMessage = new RegisterMessage(highestVPM.getProtocolMessage().getAtomicRegisterMessages());
+        RegisterMessage arm = _users.get(clientPubKey).getAtomicRegister1N().acknowledge(registerMessage);
+
+        byte[] b = ProtocolMessageConverter.objToByteArray(_users.get(clientPubKey).getAtomicRegister1N());
+        _db.updateUserAtomicRegister1N(_users.get(clientPubKey).getdbTableName(), b);
+
+        ProtocolMessage p = new ProtocolMessage("ACK", StatusCode.OK, _pubKey, newToken, token);
+        p.setAtomicRegisterMessages(arm.getBytes());
+        cmh.sendMessage(createVerifiableMessage(p));
     }
 
     public void deliverPost(VerifiableProtocolMessage highestVPM, VerifiableProtocolMessage clientVPM) {
@@ -247,7 +267,7 @@ public class Server extends Thread {
         p.setAtomicRegisterMessages(arm.getBytes());
         cmh.sendMessage(createVerifiableMessage(p));
 
-        System.out.println("------------------------END POST------------------------");
+        System.out.println("------------------------END WRITEBACK------------------------");
     }
 
     public void deliverRead(VerifiableProtocolMessage highestVPM, VerifiableProtocolMessage clientVPM) {
@@ -728,17 +748,9 @@ public class Server extends Thread {
                     "POST", sc, _pubKey, newToken, token)));
             return;
         }
-        RegisterMessage registerMessage = new RegisterMessage(vpm.getProtocolMessage().getAtomicRegisterMessages());
-        RegisterMessage arm = _users.get(clientPubKey).getAtomicRegister1N().acknowledge(registerMessage);
 
-        byte[] b = ProtocolMessageConverter.objToByteArray(_users.get(clientPubKey).getAtomicRegister1N());
-        _db.updateUserAtomicRegister1N(_users.get(clientPubKey).getdbTableName(), b);
-
-        ProtocolMessage p = new ProtocolMessage("ACK", sc, _pubKey, newToken, token);
-        p.setAtomicRegisterMessages(arm.getBytes());
-        cmh.sendMessage(createVerifiableMessage(p));
-
-        System.out.println("------------------------END WRITEBACK------------------------");
+        ServerMessage sm = new ServerMessage(_pubKey, "SERVER_WRITEBACK", vpm);
+        serverBroadcast(clientPubKey, sm, vpm);
 
         return;
 

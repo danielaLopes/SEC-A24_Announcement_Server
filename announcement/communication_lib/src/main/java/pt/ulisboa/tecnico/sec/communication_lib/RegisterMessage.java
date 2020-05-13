@@ -52,24 +52,20 @@ public class RegisterMessage extends SerializableObject {
         return super.byteArrayToObj(b);
     }
 
-    /*@Override
+    @Override
     public boolean equals(Object o) {
 
         if (o == this) {
             return true;
         }
 
-        if (!(o instanceof VerifiableProtocolMessage)) {
+        if (!(o instanceof RegisterMessage)) {
             return false;
         }
 
         RegisterMessage rm = (RegisterMessage) o;
 
-        // There are several possibilities of server responses being the same
-        //
-        if (this.getValues().size() == rm.getValues().size()) {
-            Collections.frequency(list, list.get(0))
-        }
-        return false;
-    }*/
+        return this.getRid() == rm.getRid() && this.getWts() == rm.getWts()
+            && this.getValues().equals(rm.getValues());
+    }
 }
