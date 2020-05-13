@@ -67,7 +67,7 @@ public class Client {
     // responses received for current request
     private ConcurrentMap<PublicKey, VerifiableProtocolMessage> _responses = new ConcurrentHashMap<>();
 
-    protected static final int TIMEOUT = 3000;
+    protected static final int TIMEOUT = 5000;
     protected static final int MAX_REQUESTS = 1;
     protected static final int MAX_REFRESH = 3;
 
@@ -126,7 +126,7 @@ public class Client {
 
     public AtomicRegister1N getAtomicRegister1N() { return _atomicRegister1N; }
 
-    public RegularRegisterNN get_regularRegisterNN() { return _regularRegisterNN; }
+    public RegularRegisterNN getRegularRegisterNN() { return _regularRegisterNN; }
 
     public Map<PublicKey, CommunicationServer> getServerCommunications() { return _serverCommunications; }
 

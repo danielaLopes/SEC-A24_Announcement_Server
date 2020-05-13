@@ -29,10 +29,14 @@ public class ClientMessageHandler extends Thread {
         while(!command.equals("LOGOUT") && _running) {
             try {
                 VerifiableProtocolMessage vpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
+
+                if (vpm == null || vpm.getProtocolMessage() == null) continue;
+
                 System.out.println("<== Received [" + vpm.getProtocolMessage().getCommand() + "] from client port: " + _socket.getLocalPort());
-                command = vpm.getProtocolMessage().getCommand();
 
                 if (_server._serverBroadcasts.containsKey(vpm.getProtocolMessage().getPublicKey())) continue;
+
+                command = vpm.getProtocolMessage().getCommand();
 
                 switch (command) {
                     // Register a Client

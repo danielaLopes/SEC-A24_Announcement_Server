@@ -474,7 +474,8 @@ public class Server extends Thread {
         StatusCode sc;
 
         if (verifyNullToken(token).equals(StatusCode.NULL_FIELD) || vpm == null || message == null || references == null
-                || clientPubKey == null || vpm.getProtocolMessage() == null || vpm.getSignedProtocolMessage() == null) {
+                || clientPubKey == null || vpm.getProtocolMessage() == null || vpm.getSignedProtocolMessage() == null
+                || vpm.getProtocolMessage().getAtomicRegisterMessages() == null) {
             return StatusCode.NULL_FIELD;
         }
 
@@ -514,7 +515,8 @@ public class Server extends Thread {
         StatusCode sc;
 
         if (verifyNullToken(token).equals(StatusCode.NULL_FIELD) || vpm == null
-                || clientPubKey == null || vpm.getProtocolMessage() == null || vpm.getSignedProtocolMessage() == null) {
+                || clientPubKey == null || vpm.getProtocolMessage() == null || vpm.getSignedProtocolMessage() == null
+                || vpm.getProtocolMessage().getAtomicRegisterMessages() == null) {
             return StatusCode.NULL_FIELD;
         }
 
@@ -540,7 +542,8 @@ public class Server extends Thread {
         StatusCode sc;
 
         if (verifyNullToken(token).equals(StatusCode.NULL_FIELD) || vpm == null || clientPubKey == null
-                || vpm.getProtocolMessage() == null || vpm.getSignedProtocolMessage() == null) {
+                || vpm.getProtocolMessage() == null || vpm.getSignedProtocolMessage() == null
+                || vpm.getProtocolMessage().getAtomicRegisterMessages() == null) {
             return StatusCode.NULL_FIELD;
         }
 
