@@ -37,6 +37,7 @@ public class ServerThread extends Thread {
     public void sendServerMessage(ServerMessage sm) {
         // TODO: sometimes sm is null
         System.out.println("Sending broadcast message: " + sm.getCommand());
+        System.out.flush();
         VerifiableServerMessage vsm = _server.createVerifiableServerMessage(sm);
         try{
             _communication.sendMessage(vsm, _oos);
@@ -61,6 +62,7 @@ public class ServerThread extends Thread {
                             if (sc.equals(StatusCode.OK)) {
                                 ServerMessage sm = vsm.getServerMessage();
                                 System.out.println("Received broadcast message: " + sm.getCommand() + "from" + _socket.getPort());
+                                System.out.flush();
                                 switch (sm.getCommand()) {
                                     // broadcaster server initiates broadcast
                                     case "SERVER_POST":
@@ -96,7 +98,7 @@ public class ServerThread extends Thread {
                     }
                 };
                 thread.start();
-            } catch (IOException | ClassNotFoundException e) {
+            } catch (IOException | ClassNotFoundException | ClassCastException e) {
                 System.out.println("Server in port " + _otherPort + " is down");
                 acceptCommunications();
             }
@@ -104,7 +106,7 @@ public class ServerThread extends Thread {
     }
 
     public void handleServerBroadcast(ServerMessage sm) {
-        System.out.println("handleServerBroadcast");
+        // System.out.println("handleServerBroadcast");
 
         VerifiableProtocolMessage vpm = sm.getClientMessage();
         verifyClientMessage(vpm);
@@ -124,16 +126,17 @@ public class ServerThread extends Thread {
     }
 
     public void sendQueueMessages(PublicKey clientPubKey) {
-        // System.out.println("sendQueueMessages");
+        System.out.println("sendQueueMessages");
         ServerBroadcast sb = _server._serverBroadcasts.get(clientPubKey);
         if(_serverMessageQueue.containsKey(clientPubKey)) {
+            sb.localEcho();
             sendServerMessage(sb.echo(_serverMessageQueue.get(clientPubKey)));
             _serverMessageQueue.remove(clientPubKey);
         }
     }
 
     public void handleEcho(VerifiableServerMessage vsm) {
-        System.out.println("handleEcho");
+        // System.out.println("handleEcho");
         ServerMessage sm = vsm.getServerMessage();
         VerifiableProtocolMessage vpm = sm.getClientMessage();
         PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
@@ -147,7 +150,7 @@ public class ServerThread extends Thread {
     }
 
     public void handleFinal(VerifiableServerMessage vsm) {
-        System.out.println("handleFinal");
+        // System.out.println("handleFinal");
         ServerMessage sm = vsm.getServerMessage();
         VerifiableProtocolMessage vpm = sm.getClientMessage();
         PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();

@@ -241,6 +241,11 @@ public class Server extends Thread {
             default:
                 break;
         }
+
+        _serverBroadcasts.remove(clientVPM.getProtocolMessage().getPublicKey());
+        for (ServerThread t: _serverThreads)
+            t._serverMessageQueue.remove(clientVPM.getProtocolMessage().getPublicKey());
+        
     }
 
     public void deliverPost(VerifiableProtocolMessage highestVPM, VerifiableProtocolMessage clientVPM) {
