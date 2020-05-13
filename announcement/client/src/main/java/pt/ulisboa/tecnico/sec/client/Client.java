@@ -530,8 +530,11 @@ public class Client {
                         }
                     } else {
                         //System.out.println("Verify status code was not ok: " + sc);
-                        if (response == null)
-                            _responses.put(pm.getKey(), createVerifiableMessage(new ProtocolMessage(StatusCode.NO_CONSENSUS)));
+                        if (response == null) {
+                            ProtocolMessage pmNoConsensus = new ProtocolMessage(StatusCode.NO_CONSENSUS);
+                            pmNoConsensus.setAtomicRegisterMessages(new RegisterMessage(0, 0, new ArrayList<>()).getBytes());
+                            _responses.put(pm.getKey(), createVerifiableMessage(pmNoConsensus));
+                        }
                         else
                             _responses.put(pm.getKey(), response);
                         if (_responses.size() == _nServers) {
@@ -550,7 +553,6 @@ public class Client {
     }
 
     public StatusCode verifyStatusConsensus() {
-        System.out.println("verifyStatusConsensus");
         Map.Entry<StatusCode, List<VerifiableAnnouncement>> quorum =
                 MessageComparator.compareServerStatusCodes(new ArrayList<>(_responses.values()), _quorum);
 
@@ -594,8 +596,11 @@ public class Client {
                         }
                     }
                     else {
-                        if (response == null)
-                            responses.put(pm.getKey(), createVerifiableMessage(new ProtocolMessage(StatusCode.NO_CONSENSUS)));
+                        if (response == null){
+                            ProtocolMessage pmNoConsensus = new ProtocolMessage(StatusCode.NO_CONSENSUS);
+                            pmNoConsensus.setAtomicRegisterMessages(new RegisterMessage(0, 0, new ArrayList<>()).getBytes());
+                            responses.put(pm.getKey(), createVerifiableMessage(pmNoConsensus));
+                        }
                         else
                             responses.put(pm.getKey(), response);
                         if (responses.size() == _nServers && responses.get(pm.getKey()).getProtocolMessage().getStatusCode().equals(StatusCode.USER_NOT_REGISTERED)) {
