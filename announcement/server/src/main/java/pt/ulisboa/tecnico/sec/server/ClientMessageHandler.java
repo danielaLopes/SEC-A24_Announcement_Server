@@ -14,7 +14,7 @@ public class ClientMessageHandler extends Thread {
     private boolean _running = true;
 
     public ClientMessageHandler(Server server, Socket socket) throws IOException {
-        System.out.println("received new client connection");
+        System.out.println("(INFO) Received new client connection");
         _server = server;
         _socket = socket;
         _communication = new Communication();
@@ -28,14 +28,13 @@ public class ClientMessageHandler extends Thread {
 
         while(!command.equals("LOGOUT") && _running) {
             try {
-                System.out.println("WAITING FOR CLIENT MESSAGE");
                 VerifiableProtocolMessage vpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
 
                 if (vpm == null || vpm.getProtocolMessage() == null) continue;
 
-                if (_server._serverBroadcasts.containsKey(vpm.getProtocolMessage().getPublicKey())) continue;
+                System.out.println("<== Received [" + vpm.getProtocolMessage().getCommand() + "] from client port: " + _socket.getLocalPort());
 
-                System.out.println("Received [" + vpm.getProtocolMessage().getCommand() + "] from: " + _socket);
+                if (_server._serverBroadcasts.containsKey(vpm.getProtocolMessage().getPublicKey())) continue;
 
                 command = vpm.getProtocolMessage().getCommand();
 
@@ -49,7 +48,6 @@ public class ClientMessageHandler extends Thread {
                     case "POST":
                         System.out.println("------------------------POST------------------------");
                         _server.post(vpm, this);
-                        System.out.println("END POST, WAITING FOR DELIVER");
                         break;
                     //Writeback phase
                     case "WRITEBACK":
@@ -94,8 +92,8 @@ public class ClientMessageHandler extends Thread {
     }
 
     public void sendMessage(VerifiableProtocolMessage vpm) {
-        try {
-            System.out.println("MANDO MENSAGEM AO CLIENTE: " + vpm.getProtocolMessage().getCommand());
+        try {   
+            System.out.println("==> Sending [" + vpm.getProtocolMessage().getCommand() + "]to client port: " + _socket.getLocalPort());
             _communication.sendMessage(vpm, _oos);
         }
         catch (IOException e) {

@@ -74,20 +74,20 @@ public class ServerBroadcast {
         localReady();
     }
 
-    public ServerMessage echo(ServerMessage sm) {
-        // System.out.println("echo");
+    public synchronized ServerMessage echo(ServerMessage sm) {
+        //System.out.println("echo");
         _sentEcho.compareAndSet(false, true);
 
         return new ServerMessage(_server.getPublicKey(), "ECHO", _clientMessage, sm.getBcb());
     }
 
-    public void localReady() {
-        System.out.println("------------------------localReady");
+    public synchronized void localReady() {
+        //System.out.println("------------------------localReady");
         ServerMessage sm = new ServerMessage(_server.getPublicKey(), "ECHO", _clientMessage, _bcb);
         VerifiableServerMessage vsm = _server.createVerifiableServerMessage(sm);
-        System.out.println("ECHOS BEFORE " + getEchos().size());
+        //System.out.println("ECHOS BEFORE " + getEchos().size());
         _echos.put(sm.getPublicKey(), vsm.getServerMessage().getClientMessage());
-        System.out.println("ECHOS AFTER " + getEchos().size());
+        //System.out.println("ECHOS AFTER " + getEchos().size());
     }
 
 
@@ -95,8 +95,8 @@ public class ServerBroadcast {
      * Broadcaster server sends ready messages to other servers,
      * after checking if there is a quorum in the echos
      */
-    public ServerMessage ready(VerifiableServerMessage vsm) {
-        System.out.println("-----------ready");
+    public synchronized ServerMessage ready(VerifiableServerMessage vsm) {
+        //System.out.println("-----------ready");
         System.out.flush();
         ServerMessage sm = vsm.getServerMessage();
         
@@ -104,22 +104,12 @@ public class ServerBroadcast {
         if (!sm.getBcb().equals(_bcb)) {
             return null;
         }
-        // in this case, then a server got his echo message late and the
-        // ready message arrived first
-        
-        // if (!_echos.containsKey(sm.getPublicKey())) {
-            System.out.println("ECHOS BEFORE " + getEchos().size());
-            _echos.put(sm.getPublicKey(), vsm.getServerMessage().getClientMessage());
-            //_pendingReadys.put(vsm.getServerMessage().getPublicKey(), vsm);
-            System.out.println("ECHOS AFTER  " + getEchos().size());
-        // }
-        // else {
-        //     // we already received a broadcast from this server, so we don't consider this message
-        //     return null;
-        // }
+        //System.out.println("ECHOS BEFORE " + getEchos().size());
+        _echos.put(sm.getPublicKey(), vsm.getServerMessage().getClientMessage());
+        //System.out.println("ECHOS AFTER  " + getEchos().size());
         
         List<VerifiableProtocolMessage> echos = getEchos();
-        System.out.println("==========ECHOS SIZE: " + echos.size() + "quorum: " +  _quorum);
+        //System.out.println("==========ECHOS SIZE: " + echos.size() + "quorum: " +  _quorum);
         System.out.flush();
         if(echos.size() > _quorum) {
             localFinalDelivery();
@@ -132,16 +122,16 @@ public class ServerBroadcast {
         return null;
     }
 
-    public void localFinalDelivery() {
-        System.out.println("------------------------localfinaldelivery");
+    public synchronized void localFinalDelivery() {
+        //System.out.println("------------------------localfinaldelivery");
         System.out.flush();
         ServerMessage sm = new ServerMessage(_server.getPublicKey(), "FINAL", _clientMessage, _bcb);
         VerifiableServerMessage vsm = _server.createVerifiableServerMessage(sm);
     
-        System.out.println("Updating sigma from " + sm.getPublicKey().toString().substring(0, 120));
-        System.out.println("update sigma before " + getSigmas().size());
+        //System.out.println("Updating sigma from " + sm.getPublicKey().toString().substring(0, 120));
+        //System.out.println("update sigma before " + getSigmas().size());
         _sigmas.put(_server.getPublicKey(), vsm);
-        System.out.println("update sigma after " + getSigmas().size());
+        //System.out.println("update sigma after " + getSigmas().size());
 
         //Amplification step
         synchronized(_sentReady) {
@@ -152,7 +142,6 @@ public class ServerBroadcast {
                 int nReadys = 0;
                 // we have to check if we have a majority of valid sigmas with the message that the server sent us
                 for (VerifiableServerMessage sigma : sigmas) {
-                        //if (_server.verifyServerSignature(sigma).equals(StatusCode.OK))
                         StatusCode sc = _server.verifyServerSignature(sigma);
                         if (sc.equals(StatusCode.OK) && sigma.getServerMessage().getClientMessage().equals(_clientMessage))
                             nReadys++;
@@ -176,28 +165,24 @@ public class ServerBroadcast {
                     // sigma can be null in case of having received echo messages but not ready
                     // messages from the same server
                         StatusCode sc = _server.verifyServerSignature(sigma);
-
-                        /*if (sc.equals(StatusCode.OK) && sigma.getServerMessage().getClientMessage().equals(sm.getClientMessage()) &&
-                                receivedBcb.equals(otherBcb)) {*/
                         if (sc.equals(StatusCode.OK) && sigma.getServerMessage().getClientMessage().equals(_clientMessage)) {
                             nSigVerified++;
                         }
                 }
 
-                System.out.println("sig FUNKY " +  nSigVerified);
+                //System.out.println("sig FUNKY " +  nSigVerified);
                 System.out.flush();
-                //System.out.println("quorum " + _quorum2F);
                 if (nSigVerified > _quorum2F) {
                     List<VerifiableProtocolMessage> echos = getEchos();
 
-                    System.out.println("ECHOS BEFORE COMPARATOR: " + echos.size());
+                    //System.out.println("ECHOS BEFORE COMPARATOR: " + echos.size());
                     VerifiableProtocolMessage vpmToDeliver = MessageComparator.compareClientMessages(echos, echos.size()/2);
                     if (vpmToDeliver == null) {
-                        System.out.println("NON LOCAL DELIVER  FAILED");
+                        //ystem.out.println("NON LOCAL DELIVER  FAILED");
                         _server.deliverFailed(_clientMessage);
                     }
                     else {
-                        System.out.println("NON LOCAL DELIVER");
+                        //System.out.println("NON LOCAL DELIVER");
                         _server.deliver(vpmToDeliver, _clientMessage);
                         _delivered.getAndSet(true);
                     }
@@ -206,17 +191,17 @@ public class ServerBroadcast {
         }
     }
 
-    public void finalDelivery(VerifiableServerMessage vsm) {
-        System.out.println("final delivery");
+    public synchronized void finalDelivery(VerifiableServerMessage vsm) {
+        //System.out.println("final delivery");
         ServerMessage sm = vsm.getServerMessage();
         VerifiableProtocolMessage finalClientMsg = sm.getClientMessage();
         
         if(!_sigmas.containsKey(sm.getPublicKey())) {
-            System.out.println("Updating sigma from " + sm.getPublicKey().toString().substring(0, 120));
-            System.out.println("update sigma before " + getSigmas().size());
+            //System.out.println("Updating sigma from " + sm.getPublicKey().toString().substring(0, 120));
+            //System.out.println("update sigma before " + getSigmas().size());
             System.out.flush();
             _sigmas.put(sm.getPublicKey(), vsm);
-            System.out.println("update sigma after " + getSigmas().size());
+            //System.out.println("update sigma after " + getSigmas().size());
             System.out.flush();
         }
 
@@ -253,27 +238,24 @@ public class ServerBroadcast {
                     // sigma can be null in case of having received echo messages but not ready
                     // messages from the same server
                         StatusCode sc = _server.verifyServerSignature(sigma);
-
-                        /*if (sc.equals(StatusCode.OK) && sigma.getServerMessage().getClientMessage().equals(sm.getClientMessage()) &&
-                                receivedBcb.equals(otherBcb)) {*/
                         if (sc.equals(StatusCode.OK) && sigma.getServerMessage().getClientMessage().equals(finalClientMsg)) {
                             nSigVerified++;
                         }
                 }
 
-                System.out.println("sig FUNKY " +  nSigVerified);
+                //System.out.println("sig FUNKY " +  nSigVerified);
                 //System.out.println("quorum " + _quorum2F);
                 if (nSigVerified > _quorum2F) {
                     List<VerifiableProtocolMessage> echos = getEchos();
 
-                    System.out.println("ECHOS BEFORE COMPARATOR: " + echos.size());
+                    //System.out.println("ECHOS BEFORE COMPARATOR: " + echos.size());
                     VerifiableProtocolMessage vpmToDeliver = MessageComparator.compareClientMessages(echos, echos.size()/2);
                     if (vpmToDeliver == null) {
-                        System.out.println("NON LOCAL DELIVER  FAILED");
+                        //System.out.println("NON LOCAL DELIVER  FAILED");
                         _server.deliverFailed(_clientMessage);
                     }
                     else {
-                        System.out.println("NON LOCAL DELIVER");
+                        //System.out.println("NON LOCAL DELIVER");
                         _server.deliver(vpmToDeliver, _clientMessage);
                         _delivered.getAndSet(true);
                     }

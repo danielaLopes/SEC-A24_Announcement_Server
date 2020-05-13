@@ -32,7 +32,7 @@ public class ByzantineClient extends Client {
     }
 
     public StatusCode sendDifferentMessages(String code) {
-        System.out.println("Send different messages");
+        //System.out.println("Send different messages");
         ConcurrentMap<PublicKey, ProtocolMessage> pms = new ConcurrentHashMap<>();
         for (Map.Entry<PublicKey, CommunicationServer> entry : getServerCommunications().entrySet()) {
 
@@ -132,7 +132,10 @@ public class ByzantineClient extends Client {
             Thread thread = new Thread() {
                 public void run() {
 
-                    System.out.println("Sent message: " + pm.getValue().getCommand());
+                    if (pm.getValue().getCommand().equals("POST") || pm.getValue().getCommand().equals("POSTGENERAL"))
+                        System.out.println("Sent message: " + pm.getValue().getCommand() + " " +
+                                pm.getValue().getPostAnnouncement().getAnnouncement());
+                    else System.out.println("Sent message: " + pm.getValue().getCommand());
                     System.out.flush();
 
                     VerifiableProtocolMessage response = requestServer(pm.getValue(), getServerCommunications().get(pm.getKey()));

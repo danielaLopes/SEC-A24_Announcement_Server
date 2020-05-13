@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # SEC-A24_Announcement_Server
 
 ## Developing Environment

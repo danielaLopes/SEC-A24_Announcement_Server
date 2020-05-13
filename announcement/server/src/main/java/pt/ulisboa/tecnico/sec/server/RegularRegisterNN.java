@@ -24,7 +24,6 @@ public class RegularRegisterNN {
     }
 
     public RegisterMessage acknowledge(ProtocolMessage pm) {
-        //System.out.println("acknowledge");
         RegisterMessage arm = (RegisterMessage) ProtocolMessageConverter.byteArrayToObj(pm.getAtomicRegisterMessages());
         PublicKey clientPubKey = pm.getPublicKey();
         synchronized (_lock) {
@@ -41,7 +40,6 @@ public class RegularRegisterNN {
     }
 
     public synchronized RegisterMessage value(ProtocolMessage pm) {
-        //System.out.println("value");
         RegisterMessage arm = new RegisterMessage(pm.getAtomicRegisterMessages());
         int n = pm.getReadNumberAnnouncements();
         return new RegisterMessage(arm.getRid(), getLastTimeStamp(), getAnnouncements(n));
