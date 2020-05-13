@@ -222,7 +222,6 @@ public class ClientUI {
             return cmd;
         }
         catch(IndexOutOfBoundsException e) {
-            //System.out.println("vai po carvalho");
             return "";
         }
     }
