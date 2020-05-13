@@ -174,7 +174,7 @@ public class Server extends Thread {
             deliver(clientMessage, clientMessage);
         }
         else {
-            System.out.println("Broadcast to other servers!");
+            System.out.println("(INFO) Broadcast to other servers!");
             ServerBroadcast sb = new ServerBroadcast(this, clientMessage);
             String bcb = UUIDGenerator.generateUUID();
             sb.setBcb(bcb);
@@ -311,7 +311,7 @@ public class Server extends Thread {
         p.setAtomicRegisterMessages(arm.getBytes());
         cmh.sendMessage(createVerifiableMessage(p));
 
-        System.out.println("------------------------END POST------------------------");
+        System.out.println("------------------------END READGENERAL------------------------");
     }
 
     public void deliverFailed(VerifiableProtocolMessage clientVPM) {
@@ -726,6 +726,9 @@ public class Server extends Thread {
         ProtocolMessage p = new ProtocolMessage("ACK", sc, _pubKey, newToken, token);
         p.setAtomicRegisterMessages(arm.getBytes());
         cmh.sendMessage(createVerifiableMessage(p));
+
+        System.out.println("------------------------END WRITEBACK------------------------");
+
         return;
 
     }
@@ -922,7 +925,6 @@ public class Server extends Thread {
         response = createVerifiableMessage(new ProtocolMessage(
                 "TOKEN", StatusCode.OK, _pubKey, newToken));
 
-        
         return response;
     }
 

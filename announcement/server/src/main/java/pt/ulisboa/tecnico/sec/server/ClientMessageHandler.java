@@ -52,7 +52,7 @@ public class ClientMessageHandler extends Thread {
                         break;
                     // Post to General Board
                     case "POSTGENERAL":
-                        // Thread.sleep(10000);
+                        System.out.println("------------------------POSTGENERAL------------------------");
                         _server.postGeneral(vpm, this);
                         break;
                     // Read from specific user
@@ -62,16 +62,18 @@ public class ClientMessageHandler extends Thread {
                         break;
                     // Read from General Board
                     case "READGENERAL":
-                        // Thread.sleep(10000);
+                        System.out.println("------------------------READGENERAL------------------------");
                         _server.readGeneral(vpm, this);
                         break;
                     // Refresh Client Token
                     case "TOKEN":
-                        // Thread.sleep(10000);
+                        System.out.println("------------------------TOKEN------------------------");
                         refreshToken(vpm);
                         break;
                     case "LOGOUT":
+                        System.out.println("------------------------LOGOUT------------------------");
                         closeCommunication();
+                        System.out.println("------------------------LOGOUT------------------------");
                         break;
                     default:
                         invalidCommand(vpm);
@@ -130,13 +132,9 @@ public class ClientMessageHandler extends Thread {
     }
 
     public void refreshToken(VerifiableProtocolMessage vpm) {
-        try {
-            VerifiableProtocolMessage svpm = _server.refreshToken(vpm);
-            _communication.sendMessage(svpm, _oos);
-        }
-        catch (IOException e) {
-            System.out.println(e);
-        }
+        VerifiableProtocolMessage svpm = _server.refreshToken(vpm);
+        sendMessage(svpm);
+        System.out.println("------------------------END TOKEN------------------------");
     }
 
 }

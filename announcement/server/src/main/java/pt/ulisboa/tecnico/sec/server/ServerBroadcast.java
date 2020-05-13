@@ -123,7 +123,6 @@ public class ServerBroadcast {
     }
 
     public synchronized void localFinalDelivery() {
-        //System.out.println("------------------------localfinaldelivery");
         System.out.flush();
         ServerMessage sm = new ServerMessage(_server.getPublicKey(), "FINAL", _clientMessage, _bcb);
         VerifiableServerMessage vsm = _server.createVerifiableServerMessage(sm);
