@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>client-server-testing</artifactId>
+    <artifactId>client_server_testing</artifactId>
 
     <dependencies>
         <dependency>
