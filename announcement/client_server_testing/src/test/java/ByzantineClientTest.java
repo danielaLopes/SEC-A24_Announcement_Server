@@ -2,8 +2,6 @@ import org.junit.jupiter.api.Test;
 import pt.ulisboa.tecnico.sec.client.ByzantineClient;
 import pt.ulisboa.tecnico.sec.communication_lib.StatusCode;
 
-import java.util.ArrayList;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ByzantineClientTest extends BaseTest {

@@ -32,12 +32,20 @@ public class ByzantineClientApplication {
         _byzantineClient = new ByzantineClient(PUBLICKEY_PATH2, KEYSTORE_PATH2,
                 CLIENT_KEYSTORE_PASSWD, CLIENT_ENTRY_PASSWD, ALIAS, N_SERVERS, N_FAULTS);
 
+        //sendDifferentMessagesWithNullFields();
+
         sendDifferentMessages();
+    }
+
+    static void sendDifferentMessagesWithNullFields() {
+        System.out.println("------------ Send Different Messages With Null Fields TEST ------------");
+        StatusCode sc = _byzantineClient.sendDifferentMessages("NULL");
+        System.out.println("Quorum status code: " + sc);
     }
 
     static void sendDifferentMessages() {
         System.out.println("------------ Send Different Messages TEST ------------");
-        StatusCode sc = _byzantineClient.sendDifferentMessages();
+        StatusCode sc = _byzantineClient.sendDifferentMessages("OK");
         System.out.println("Quorum status code: " + sc);
     }
 

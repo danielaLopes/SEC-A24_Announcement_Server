@@ -30,11 +30,14 @@ public class ClientMessageHandler extends Thread {
             try {
                 System.out.println("WAITING FOR CLIENT MESSAGE");
                 VerifiableProtocolMessage vpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
-                System.out.println("Received [" + vpm.getProtocolMessage().getCommand() + "] from: " + _socket);
-                //System.out.println("Received [" + vpm.getProtocolMessage().getPublicKey() + "] from: " + _socket);
-                command = vpm.getProtocolMessage().getCommand();
+
+                if (vpm == null || vpm.getProtocolMessage() == null) continue;
 
                 if (_server._serverBroadcasts.containsKey(vpm.getProtocolMessage().getPublicKey())) continue;
+
+                System.out.println("Received [" + vpm.getProtocolMessage().getCommand() + "] from: " + _socket);
+
+                command = vpm.getProtocolMessage().getCommand();
 
                 switch (command) {
                     // Register a Client
