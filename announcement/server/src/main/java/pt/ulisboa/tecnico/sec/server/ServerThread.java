@@ -57,8 +57,7 @@ public class ServerThread extends Thread {
                     public void run() {
                         if (_server.verifyServerSignature(vsm).equals(StatusCode.OK)) {
                             StatusCode sc = verifyServerMessage(vsm);
-                            StatusCode clientMsgSc = verifyClientMessage(vsm.getServerMessage().getClientMessage());
-                            if (sc.equals(StatusCode.OK) && clientMsgSc.equals(StatusCode.OK)) {
+                            if (sc.equals(StatusCode.OK)) {
                                 ServerMessage sm = vsm.getServerMessage();
                                 System.out.println("<-- Received broadcast from server: " + _otherPort + " == Message: " + sm.getCommand());
                                 System.out.flush();

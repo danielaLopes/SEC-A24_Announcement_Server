@@ -649,7 +649,7 @@ public class Client {
 
             if (!verifySignature(rvpm, serverCommunication.getPubKey())) {
                 System.out.println("Could not verify server signature");
-                return null;
+                //return null;
             }
         }
         catch(SocketTimeoutException e) {

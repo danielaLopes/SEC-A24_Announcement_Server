@@ -102,7 +102,6 @@ public class ServerBroadcast {
         _echos.put(sm.getPublicKey(), vsm.getServerMessage().getClientMessage());
         
         List<VerifiableProtocolMessage> echos = getEchos();
-        System.out.println("==========ECHOS SIZE: " + echos.size() + "quorum: " +  _quorum);
         System.out.flush();
         if(echos.size() > _quorum) {
             localFinalDelivery();
