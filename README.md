@@ -68,7 +68,7 @@ Inside project root directory (announcement/):
         cd server/
         mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="<port> <keyStorePassword> <entryPassword> <alias> <pubKeyPath> <keyStorePath>"
         ```
-    - Example 3 servers:
+    - Example 4 servers:
         ```
         cd server/
         mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="4 1 9001 password password alias src/main/resources/crypto/public1.key src/main/resources/crypto/server_keystore.jks"
