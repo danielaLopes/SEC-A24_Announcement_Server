@@ -482,6 +482,8 @@ public class Client {
     public void deliverRead(StatusCode sc, List<VerifiableAnnouncement> vas) {
         //System.out.println("dleiver reaea");
         resetResponses();
+        readDelivered = true;
+        readDeliveredSC = sc;
         List<Announcement> announcements = new ArrayList<Announcement>();
         for (VerifiableAnnouncement va : vas) {
             if(verifySignature(va, _readingUserPubKey))
@@ -500,6 +502,8 @@ public class Client {
         }
         //System.out.println("status read general: " + sc);
         resetResponses();
+        readGeneralDelivered = true;
+        readGeneralDeliveredSC = sc;
         if (_clientUI != null) {
             _clientUI.deliverReadGeneral(sc, announcements);
         }
