@@ -10,6 +10,7 @@ import java.security.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -85,12 +86,40 @@ public class Server extends Thread {
         //_db.resetDatabaseTest();
     }
 
-    public void printDataStructures() {
-        System.out.println("_users: " + _users + "END");
-        System.out.println("_announcementMapper: " + _announcementMapper + "END");
+    public void printDataStructures(boolean before) {
+        if(before)
+            System.out.println("###################  BEFORE  ###################");
+        else
+            System.out.println("###################  AFTER  ###################");
+
+        System.out.println("========================NUMBER OF USERS: " + _users.size() + "===================");
+        for(Map.Entry<PublicKey,User> users: _users.entrySet()) {
+            System.out.println("-------------USER: " + users.getValue().getPublicKey().toString().substring(0, 120) + "...------------");
+            System.out.println("TOKEN: " + users.getValue().getToken());
+            System.out.println("CLIENTUUID: " + users.getValue().getdbTableName());
+            System.out.println("TOKEN: " + users.getValue().getToken());
+            if(users.getValue().getAtomicRegister1N() != null)
+                System.out.println("NUMBER OF ANNOUNCEMETNS: " + users.getValue().getAtomicRegister1N().getValues().size());
+            else    
+                System.out.println("NUMBER OF ANNOUNCEMETNS: 0");
+        }
+        if (_regularRegisterNN != null) {
+            System.out.println("========================NUMBER OF GENERAL BOARD ANNOUNCEMENTS: " + _regularRegisterNN.getAnnouncements(-1).size() + "===================");
+            for(VerifiableAnnouncement va: _regularRegisterNN.getAnnouncements(-1)) {
+                System.out.println("ANNOUNCEMENT: " + va.getAnnouncement().getAnnouncement());
+            }
+        }
+        else
+            System.out.println("========================NUMBER OF GENERAL BOARD ANNOUNCEMENTS: 0 ===================");
+
+        if(before)
+            System.out.println("###################  END BEFORE  ###################");
+        else
+            System.out.println("###################  END AFTER  ###################");
     }
 
     public void retrieveDataStructures() {
+        printDataStructures(true);
         DBStructure dbs = _db.retrieveStructure();
 
         // Retrieve _users from database
@@ -110,20 +139,7 @@ public class Server extends Thread {
         if(rr != null)
             _regularRegisterNN = (RegularRegisterNN) ProtocolMessageConverter.byteArrayToObj(rr.getGeneralBoard());
         
-        // Retrieve _announcementMapper from database
-        // List<UserBoardStructure> ubs = dbs.getUserBoard();
-        // for (UserBoardStructure i : ubs) {
-        //     List<String> references = (List<String>) ProtocolMessageConverter.byteArrayToObj(i.getReferences());
-        //     Announcement a = new Announcement(i.getAnnouncement(), references, i.getAnnouncementID(),
-        //             i.getClientUUID());
-        //     PublicKey clientPubKey = getUserUUID(i.getClientUUID());
-        //     a.setPublicKey(clientPubKey);
-
-            //int index = _users.get(clientPubKey).postAnnouncementBoard(a);
-            // client's public key is used to indicate it's stored in that client's
-            // PostOperation Board
-            //_announcementMapper.put(i.getAnnouncementID(), new AnnouncementLocation(clientPubKey, index));
-        // }
+        printDataStructures(true);
     }
 
     public void loadPublicKey(String pubKeyPath) {
@@ -308,8 +324,7 @@ public class Server extends Thread {
         RegisterMessage arm = _regularRegisterNN.acknowledge(highestVPM.getProtocolMessage());
 
         byte[] b = ProtocolMessageConverter.objToByteArray(_regularRegisterNN);
-        // TODO: uncomment this
-        //_db.updateRegularRegisterNNTable(b);
+        _db.updateRegularRegisterNNTable(b);
 
         ProtocolMessage p = new ProtocolMessage("POSTGENERAL", StatusCode.OK, _pubKey, newToken, token);
         p.setAtomicRegisterMessages(arm.getBytes());
@@ -329,8 +344,7 @@ public class Server extends Thread {
         RegisterMessage arm = _regularRegisterNN.value(highestVPM.getProtocolMessage());
 
         byte[] b = ProtocolMessageConverter.objToByteArray(_regularRegisterNN);
-        // TODO: uncomment this
-        //_db.updateRegularRegisterNNTable(b);
+        _db.updateRegularRegisterNNTable(b);
 
         ProtocolMessage p = new ProtocolMessage("READGENERAL", StatusCode.OK, _pubKey, newToken, token);
         p.setAtomicRegisterMessages(arm.getBytes());
@@ -627,8 +641,6 @@ public class Server extends Thread {
             
             response = createVerifiableMessage(new ProtocolMessage(
                     "REGISTER", StatusCode.NULL_FIELD, _pubKey));
-            
-            // _db.insertOperation(opUuid, operation);
 
             return response;
         }
@@ -637,8 +649,6 @@ public class Server extends Thread {
         if (!sc.equals(StatusCode.OK)) {
             response = createVerifiableMessage(new ProtocolMessage(
                     "REGISTER", sc, _pubKey));
-
-            // _db.insertOperation(opUuid, operation);
 
             return response;
         }
@@ -653,15 +663,12 @@ public class Server extends Thread {
             _db.updateUserToken(user.getdbTableName(), user.getToken());
             String token = user.getToken();
             _users.put(clientPubKey, user);
-            _db.createUserTable(uuid);
 
             byte[] b1 = ProtocolMessageConverter.objToByteArray(clientPubKey);
             byte[] b2 = ProtocolMessageConverter.objToByteArray(ar);
             byte[] b3 = ProtocolMessageConverter.objToByteArray(cmh);
 
             _db.insertUser(b1, uuid, b2, b3);
-
-            //System.out.println("register token: " + token);
 
             response = createVerifiableMessage(new ProtocolMessage(
                 "REGISTER", StatusCode.OK, _pubKey, token));
@@ -718,10 +725,6 @@ public class Server extends Thread {
         if (!sc.equals(StatusCode.OK)) {
             cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
                     "POST", sc, _pubKey)));
-            // TODO: should this be anything ????
-            if (!sc.equals(StatusCode.NULL_FIELD)) {
-                // _db.insertOperation(opUuid, operation);
-            }
             return;
         }
 
@@ -753,7 +756,6 @@ public class Server extends Thread {
         user.setRandomToken();
         _db.updateUserToken(user.getdbTableName(), user.getToken());
         String newToken = user.getToken();
-        //System.out.println("newtoken: " + newToken);
         
         if (sc.equals(StatusCode.INVALID_TOKEN)) {
             cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
@@ -763,10 +765,6 @@ public class Server extends Thread {
         if (!sc.equals(StatusCode.OK)) {
             cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
                     "POST", sc, _pubKey, newToken, token)));
-            // TODO: should this be anything ????
-            if (!sc.equals(StatusCode.NULL_FIELD)) {
-                // _db.insertOperation(opUuid, operation);
-            }
             return;
         }
         RegisterMessage registerMessage = new RegisterMessage(vpm.getProtocolMessage().getAtomicRegisterMessages());
@@ -779,11 +777,6 @@ public class Server extends Thread {
         p.setAtomicRegisterMessages(arm.getBytes());
         cmh.sendMessage(createVerifiableMessage(p));
         return;
-
-        // Broadcast, each thread sends to a server
-        /*for(ServerThread t: _serverThreads) {
-            t.writeValue(clientPubKey, vpm.getProtocolMessage().getPostAnnouncement());
-        }*/
 
     }
 
@@ -832,18 +825,7 @@ public class Server extends Thread {
             return;
         }
 
-        /*RegisterMessage arm = _regularRegisterNN.acknowledge(vpm.getProtocolMessage());
-
-        byte[] b = ProtocolMessageConverter.objToByteArray(_regularRegisterNN);
-        // TODO: uncomment this
-        //_db.updateRegularRegisterNNTable(b);
-
-        ProtocolMessage p = new ProtocolMessage("ACK", sc, _pubKey, newToken, token);
-        p.setAtomicRegisterMessages(arm.getBytes());
-        cmh.sendMessage(createVerifiableMessage(p));*/
-
         ServerMessage sm = new ServerMessage(_pubKey, "SERVER_POSTGENERAL", vpm);
-        //System.out.println("sm" + sm);
         serverBroadcast(clientPubKey, sm, vpm);
     }
 
@@ -896,9 +878,6 @@ public class Server extends Thread {
         if (!sc.equals(StatusCode.OK)) {
             cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
                     "READ", sc, _pubKey, newToken, token)));
-            if (!sc.equals(StatusCode.NULL_FIELD)) {
-                // _db.insertOperation(opUuid, operation);
-            }
             return;
         }
 
@@ -938,10 +917,7 @@ public class Server extends Thread {
         }        
 
         if (!sc.equals(StatusCode.OK)) {
-            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage("READGENERAL", sc, _pubKey, newToken, token)));   
-            if (!sc.equals(StatusCode.NULL_FIELD)) { ;
-                // _db.insertOperation(opUuid, operation);
-            }
+            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage("READGENERAL", sc, _pubKey, newToken, token))); 
             return;
         }
 

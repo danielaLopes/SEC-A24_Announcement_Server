@@ -13,7 +13,7 @@ public class Database {
             Class.forName("com.mysql.cj.jdbc.Driver");
             _con=DriverManager.getConnection("jdbc:mysql://localhost:3306/announcement?verifyServerCertificate=false&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true","sec","1234");
             _databaseName = db;
-            resetDatabase();
+            useMyDatabase();
             createRegularRegisterNNTable();
             createUsersTable();
         }
@@ -24,9 +24,13 @@ public class Database {
 
     public void createRegularRegisterNNTable() {
         try {
-            String generalBoardTable = "CREATE TABLE IF NOT EXISTS RegularRegisterNN (ID MEDIUMINT NOT NULL AUTO_INCREMENT, Announcements VARBINARY(60000) NOT NULL, PRIMARY KEY(ID)) CHARACTER SET utf8";
+            String generalBoardTable = "CREATE TABLE IF NOT EXISTS RegularRegisterNN (ID MEDIUMINT NOT NULL AUTO_INCREMENT, Announcements VARBINARY(60000), PRIMARY KEY(ID)) CHARACTER SET utf8";
             PreparedStatement statement = _con.prepareStatement(generalBoardTable);
             statement.executeUpdate();
+
+            String string = "INSERT INTO RegularRegisterNN(Announcements) VALUES(null)";
+            statement = _con.prepareStatement(string);
+            statement.executeUpdate();  
         }
         catch(Exception e) {
             System.out.println(e);
@@ -42,18 +46,6 @@ public class Database {
                                 "Token VARCHAR(256)," + 
                                 "PRIMARY KEY(PublicKey, ClientUUID)) CHARACTER SET utf8";
             PreparedStatement statement = _con.prepareStatement(usersTable);
-            statement.executeUpdate();
-        }
-        catch(Exception e) {
-            System.out.println(e);
-        }
-    }
-
-
-    public void createUserTable(String uuid) {
-        try {
-            String userTable = "CREATE TABLE IF NOT EXISTS " + uuid + " (Announcement VARCHAR(256) NOT NULL, Reference VARBINARY(256), AnnouncementID VARCHAR(255) NOT NULL, Accountability VARBINARY(2500) NOT NULL, Seq INT AUTO_INCREMENT, PRIMARY KEY(Seq)) CHARACTER SET utf8";
-            PreparedStatement statement = _con.prepareStatement(userTable);
             statement.executeUpdate();
         }
         catch(Exception e) {
@@ -94,6 +86,22 @@ public class Database {
         }
     }
 
+    public void useMyDatabase() {
+        try {
+            String createDatabase = "CREATE DATABASE IF NOT EXISTS " + _databaseName;
+            String useDatabase = "USE " + _databaseName;
+
+            PreparedStatement statement = _con.prepareStatement(createDatabase);
+            statement.executeUpdate();
+
+            statement = _con.prepareStatement(useDatabase);
+            statement.executeUpdate();
+        }
+        catch(Exception e) {
+            System.out.println(e);
+        }
+    }
+
     public void resetDatabase() {
         try {
             String dropDatabase = "DROP DATABASE IF EXISTS " + _databaseName;
@@ -113,25 +121,6 @@ public class Database {
             System.out.println(e);
         }
     }
-
-    /*public void resetDatabaseTest() {
-        try {
-            String dropDatabase = "DROP DATABASE IF EXISTS announcement";
-            String createDatabase = "CREATE DATABASE IF NOT EXISTS announcement";
-            String useDatabase = "USE announcement";
-            PreparedStatement statement = _con.prepareStatement(dropDatabase);
-            statement.executeUpdate();
-            statement = _con.prepareStatement(createDatabase);
-            statement.executeUpdate();
-            statement = _con.prepareStatement(useDatabase);
-            statement.executeUpdate();
-        }
-        catch(Exception e) {
-            System.out.println(e);
-        }
-        createGeneralBoardTable();
-        createUsersTable();
-    }*/
 
     public int insertUser(byte[] publicKey, String clientUUID, byte[] atomicRegister1N, byte[] cmh) {
         try {
