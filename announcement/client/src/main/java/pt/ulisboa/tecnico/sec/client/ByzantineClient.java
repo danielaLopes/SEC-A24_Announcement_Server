@@ -139,12 +139,16 @@ public class ByzantineClient extends Client {
                     System.out.flush();
 
                     VerifiableProtocolMessage response = requestServer(pm.getValue(), getServerCommunications().get(pm.getKey()));
-                    getServerResponses().put(pm.getKey(), response);
 
-                    System.out.println("Added new message, we now have: " + getServerResponses().size());
-
-                    printResponse(response.getProtocolMessage());
-                    System.out.flush();
+                    if (response == null) System.out.println("Did not receive a response");
+                    else {
+                        getServerResponses().put(pm.getKey(), response);
+    
+                        System.out.println("Added new message, we now have: " + getServerResponses().size());
+    
+                        printResponse(response.getProtocolMessage());
+                        System.out.flush();
+                    }
                 }
 
             };

@@ -315,7 +315,7 @@ public class Server extends Thread {
     }
 
     public void deliverFailed(VerifiableProtocolMessage clientVPM) {
-        System.out.println("(INFO) Could not deliver message to client");
+        System.out.println("(INFO) Deliver failed: could not reach consensus");
     }
 
 

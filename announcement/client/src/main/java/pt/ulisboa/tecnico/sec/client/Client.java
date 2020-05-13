@@ -671,8 +671,8 @@ public class Client {
         catch(SocketTimeoutException e) {
             System.out.println("Could not receive a response for port " + serverCommunication.getPort()
                 + ". Refreshing token...");
-            if (serverCommunication._refreshToken == false)
-                refreshToken(serverCommunication);
+            closeCommunication(serverCommunication);
+            serverCommunication.setAlive(false);
             return null;
         }
         catch (SocketException e) {
@@ -681,7 +681,9 @@ public class Client {
             return null;
         }
         catch (IOException | ClassNotFoundException | ClassCastException e) {
-            reset(serverCommunication);
+            // reset(serverCommunication);
+            closeCommunication(serverCommunication);
+            serverCommunication.setAlive(false);
             System.out.println(e);
         }
         finally {
