@@ -140,7 +140,12 @@ public class ByzantineClient extends Client {
 
                     VerifiableProtocolMessage response = requestServer(pm.getValue(), getServerCommunications().get(pm.getKey()));
 
-                    if (response == null) System.out.println("Did not receive a response");
+                    if (response == null) {
+                        System.out.println("Did not receive a response");
+                        ProtocolMessage pmNoConsensus = new ProtocolMessage(StatusCode.NO_CONSENSUS);
+                        pmNoConsensus.setAtomicRegisterMessages(new RegisterMessage(0, 0, new ArrayList<>()).getBytes());
+                        getServerResponses().put(pm.getKey(), createVerifiableMessage(pmNoConsensus));
+                    }    
                     else {
                         getServerResponses().put(pm.getKey(), response);
     
