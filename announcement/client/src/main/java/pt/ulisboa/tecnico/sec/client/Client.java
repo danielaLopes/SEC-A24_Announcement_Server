@@ -61,19 +61,13 @@ public class Client {
 
     private AtomicRegister1N _atomicRegister1N;
     private RegularRegisterNN _regularRegisterNN;
-    /*protected List<ObjectOutputStream> _oos;
-    protected List<ObjectInputStream> _ois;
-    private List<Socket> _clientSockets;*/
-
-    // maps server's public key to corresponding token
-    //protected Map<PublicKey, String> _tokens;
-
-    //protected String _token;
+    
+    protected PublicKey _readingUserPubKey;
 
     // responses received for current request
     private ConcurrentMap<PublicKey, VerifiableProtocolMessage> _responses = new ConcurrentHashMap<>();
 
-    protected static final int TIMEOUT = 10000;
+    protected static final int TIMEOUT = 3000;
     protected static final int MAX_REQUESTS = 1;
     protected static final int MAX_REFRESH = 3;
 
@@ -317,7 +311,7 @@ public class Client {
      */
     public void closeCommunication(CommunicationServer serverCommunication) {
         try {
-            ProtocolMessage pm = new ProtocolMessage("LOGOUT");
+            ProtocolMessage pm = new ProtocolMessage("LOGOUT", _pubKey);
             VerifiableProtocolMessage vpm = createVerifiableMessage(pm);
             _communication.sendMessage(vpm, serverCommunication.getObjOutStream());
             _communication.close(serverCommunication.getClientSocket());
@@ -489,7 +483,7 @@ public class Client {
         resetResponses();
         List<Announcement> announcements = new ArrayList<Announcement>();
         for (VerifiableAnnouncement va : vas) {
-            if(verifySignature(va, va.getAnnouncement().getClientPublicKey()))
+            if(verifySignature(va, _readingUserPubKey))
                 announcements.add(va.getAnnouncement());
         }
         if (_clientUI != null)
@@ -647,7 +641,7 @@ public class Client {
         //StatusCode rsc = null;
         int requestsCounter = 0;
 
-        while (rvpm == null && requestsCounter < MAX_REQUESTS) {
+        // while (rvpm == null && requestsCounter < MAX_REQUESTS) {
             try {
                 synchronized(serverCommunication.getObjInStream()) {
                     System.out.println("A enviar para " + serverCommunication.getPort());
@@ -693,7 +687,7 @@ public class Client {
             finally {
                 System.out.flush();
             }
-        }
+        // }
 
         return rvpm;
     }
@@ -858,6 +852,7 @@ public class Client {
             System.out.println("Invalid user.");
             announcementsPerServer.add(new AbstractMap.SimpleEntry<>(StatusCode.NULL_FIELD, new ArrayList<>()));
         }
+        _readingUserPubKey = user;
 
         List<Announcement> announcements = null;
         StatusCode rsc = null;
@@ -938,3 +933,4 @@ public class Client {
     }
 
 }
+    

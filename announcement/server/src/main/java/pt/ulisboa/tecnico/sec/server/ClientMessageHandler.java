@@ -34,6 +34,8 @@ public class ClientMessageHandler extends Thread {
                 //System.out.println("Received [" + vpm.getProtocolMessage().getPublicKey() + "] from: " + _socket);
                 command = vpm.getProtocolMessage().getCommand();
 
+                if (_server._serverBroadcasts.containsKey(vpm.getProtocolMessage().getPublicKey())) continue;
+
                 switch (command) {
                     // Register a Client
                     case "REGISTER":
