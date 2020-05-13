@@ -510,6 +510,7 @@ public class Client {
         for (Map.Entry<PublicKey, ProtocolMessage> pm : pms.entrySet()) {
             Thread thread = new Thread(){
                 public void run() {
+                    System.out.println("write requestServer");
                     VerifiableProtocolMessage response = requestServer(pm.getValue(), _serverCommunications.get(pm.getKey()));
                     StatusCode sc = verifyReceivedMessage(response);
                     if (sc.equals(StatusCode.OK)) {
@@ -615,6 +616,7 @@ public class Client {
      * @return the server's response
      */
     public VerifiableProtocolMessage requestServer(ProtocolMessage pm, CommunicationServer serverCommunication) {
+        System.out.println("requestServer");
         if (pm == null) return null;
 
         try {
@@ -637,57 +639,48 @@ public class Client {
 
         VerifiableProtocolMessage vpm = createVerifiableMessage(pm);
         VerifiableProtocolMessage rvpm = null;
-        // TODO: see if status code is required
-        //StatusCode rsc = null;
-        int requestsCounter = 0;
-
-        // while (rvpm == null && requestsCounter < MAX_REQUESTS) {
-            try {
-                synchronized(serverCommunication.getObjInStream()) {
-                    System.out.println("A enviar para " + serverCommunication.getPort());
-                    _communication.sendMessage(vpm, serverCommunication.getObjOutStream());
-                    rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(serverCommunication.getObjInStream());
-                    System.out.println("Recebi de " + serverCommunication.getPort() + vpm.getProtocolMessage().getCommand());
-                }
-
-                if (rvpm == null) {
-                    return null;
-                }
-                //rsc = getStatusCodeFromVPM(rvpm);
-                PublicKey serverPubKey = getServerPublicKeyFromVPM(rvpm);
-
-                if (verifySignature(rvpm, serverPubKey)) {
-                    //System.out.println("Server signature verified successfully");
-                    //printStatusCode(rsc);
-                }
-                else {
-                    System.out.println("Could not register: could not verify server signature");
-                }
-
+        
+        try {
+            synchronized(serverCommunication.getObjInStream()) {
+                System.out.println("A enviar para " + serverCommunication.getPort());
+                _communication.sendMessage(vpm, serverCommunication.getObjOutStream());
+                rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(serverCommunication.getObjInStream());
+                System.out.println("Recebi de " + serverCommunication.getPort() + vpm.getProtocolMessage().getCommand());
             }
-            catch(SocketTimeoutException e) {
-                // System.out.println("Could not receive a response on request " + (++requestsCounter) + 
-                // " for port " + serverCommunication.getPort() + ". Trying again...");
-                System.out.println("Could not receive a response for port " + serverCommunication.getPort()
-                    + ". Refreshing token...");
-                refreshToken(serverCommunication);
+
+            if (rvpm == null) {
                 return null;
             }
-            catch (SocketException e) {
-                System.out.println("A server is dead!");
-                serverCommunication.setAlive(false);
-                return null;
+            //rsc = getStatusCodeFromVPM(rvpm);
+            PublicKey serverPubKey = getServerPublicKeyFromVPM(rvpm);
+
+            if (verifySignature(rvpm, serverPubKey)) {
+                //System.out.println("Server signature verified successfully");
+                //printStatusCode(rsc);
             }
-            catch (IOException | ClassNotFoundException | ClassCastException e) {
-                System.out.println("ola erro estupido");
-                reset(serverCommunication);
-                System.out.println(e);
-                //System.exit(-1);
+            else {
+                System.out.println("Could not register: could not verify server signature");
             }
-            finally {
-                System.out.flush();
-            }
-        // }
+
+        }
+        catch(SocketTimeoutException e) {
+            System.out.println("Could not receive a response for port " + serverCommunication.getPort()
+                + ". Refreshing token...");
+            refreshToken(serverCommunication);
+            return null;
+        }
+        catch (SocketException e) {
+            System.out.println("A server is dead!");
+            serverCommunication.setAlive(false);
+            return null;
+        }
+        catch (IOException | ClassNotFoundException | ClassCastException e) {
+            reset(serverCommunication);
+            System.out.println(e);
+        }
+        finally {
+            System.out.flush();
+        }
 
         return rvpm;
     }

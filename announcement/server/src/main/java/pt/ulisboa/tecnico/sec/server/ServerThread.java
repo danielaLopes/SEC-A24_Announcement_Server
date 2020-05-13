@@ -44,7 +44,6 @@ public class ServerThread extends Thread {
         }
         catch (IOException e) {
             System.out.println("Server in port " + _otherPort + " is down");
-            acceptCommunications();
         }
     }
 

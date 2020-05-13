@@ -74,14 +74,14 @@ public class ServerBroadcast {
         localReady();
     }
 
-    public ServerMessage echo(ServerMessage sm) {
+    public synchronized ServerMessage echo(ServerMessage sm) {
         // System.out.println("echo");
         _sentEcho.compareAndSet(false, true);
 
         return new ServerMessage(_server.getPublicKey(), "ECHO", _clientMessage, sm.getBcb());
     }
 
-    public void localReady() {
+    public synchronized void localReady() {
         System.out.println("------------------------localReady");
         ServerMessage sm = new ServerMessage(_server.getPublicKey(), "ECHO", _clientMessage, _bcb);
         VerifiableServerMessage vsm = _server.createVerifiableServerMessage(sm);
@@ -95,7 +95,7 @@ public class ServerBroadcast {
      * Broadcaster server sends ready messages to other servers,
      * after checking if there is a quorum in the echos
      */
-    public ServerMessage ready(VerifiableServerMessage vsm) {
+    public synchronized ServerMessage ready(VerifiableServerMessage vsm) {
         System.out.println("-----------ready");
         System.out.flush();
         ServerMessage sm = vsm.getServerMessage();
@@ -132,7 +132,7 @@ public class ServerBroadcast {
         return null;
     }
 
-    public void localFinalDelivery() {
+    public synchronized void localFinalDelivery() {
         System.out.println("------------------------localfinaldelivery");
         System.out.flush();
         ServerMessage sm = new ServerMessage(_server.getPublicKey(), "FINAL", _clientMessage, _bcb);
@@ -206,7 +206,7 @@ public class ServerBroadcast {
         }
     }
 
-    public void finalDelivery(VerifiableServerMessage vsm) {
+    public synchronized void finalDelivery(VerifiableServerMessage vsm) {
         System.out.println("final delivery");
         ServerMessage sm = vsm.getServerMessage();
         VerifiableProtocolMessage finalClientMsg = sm.getClientMessage();
