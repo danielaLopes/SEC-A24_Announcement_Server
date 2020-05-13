@@ -18,7 +18,7 @@ public class Database {
             createUsersTable();
         }
         catch(Exception e) {
-            System.out.println(e);
+            //System.out.println(e);
         }  
     }
 
@@ -29,7 +29,7 @@ public class Database {
             statement.executeUpdate();
         }
         catch(Exception e) {
-            System.out.println(e);
+            //System.out.println(e);
         }
     }
 
@@ -45,7 +45,7 @@ public class Database {
             statement.executeUpdate();
         }
         catch(Exception e) {
-            System.out.println(e);
+            //System.out.println(e);
         }
     }
 
@@ -57,7 +57,7 @@ public class Database {
             statement.executeUpdate();
         }
         catch(Exception e) {
-            System.out.println(e);
+            //System.out.println(e);
         }
     }
 
@@ -68,7 +68,7 @@ public class Database {
             statement.executeUpdate();
         }
         catch(Exception e) {
-            System.out.println(e);
+            //System.out.println(e);
         }
     }
 
@@ -79,7 +79,7 @@ public class Database {
             statement.executeUpdate();
         }
         catch(Exception e) {
-            System.out.println(e);
+            //System.out.println(e);
         }
     }
 
@@ -90,7 +90,7 @@ public class Database {
             statement.executeUpdate();
         }
         catch(Exception e) {
-            System.out.println(e);
+            //System.out.println(e);
         }
     }
 
@@ -110,28 +110,9 @@ public class Database {
             statement.executeUpdate();
         }
         catch(Exception e) {
-            System.out.println(e);
+            //System.out.println(e);
         }
     }
-
-    /*public void resetDatabaseTest() {
-        try {
-            String dropDatabase = "DROP DATABASE IF EXISTS announcement";
-            String createDatabase = "CREATE DATABASE IF NOT EXISTS announcement";
-            String useDatabase = "USE announcement";
-            PreparedStatement statement = _con.prepareStatement(dropDatabase);
-            statement.executeUpdate();
-            statement = _con.prepareStatement(createDatabase);
-            statement.executeUpdate();
-            statement = _con.prepareStatement(useDatabase);
-            statement.executeUpdate();
-        }
-        catch(Exception e) {
-            System.out.println(e);
-        }
-        createGeneralBoardTable();
-        createUsersTable();
-    }*/
 
     public int insertUser(byte[] publicKey, String clientUUID, byte[] atomicRegister1N, byte[] cmh) {
         try {
@@ -145,7 +126,8 @@ public class Database {
             return 1;
         }
         catch(Exception e) {
-            System.out.println(e);
+            //System.out.println(e);
+            System.out.println("ola");
             return 0;
         }
     }
@@ -160,7 +142,7 @@ public class Database {
             return 1;
         }
         catch(Exception e) {
-            System.out.println(e);
+            //System.out.println(e);
             return 0;
         }
     }
@@ -175,7 +157,7 @@ public class Database {
             return 1;
         }
         catch(Exception e) {
-            System.out.println(e);
+            //System.out.println(e);
             return 0;
         }
     }
@@ -189,7 +171,7 @@ public class Database {
             return 1;
         }
         catch(Exception e) {
-            System.out.println(e);
+            //System.out.println(e);
             return 0;
         }
     }
@@ -205,7 +187,7 @@ public class Database {
             }
         }
         catch (SQLException e) {
-            System.out.println(e);
+            //System.out.println(e);
         }
         return l;
     }
@@ -215,7 +197,7 @@ public class Database {
             _con.close();
         }
         catch(Exception e) {
-            System.out.println(e);
+            //System.out.println(e);
             System.out.println("Could not close connection.");
         }  
     }
@@ -241,7 +223,7 @@ public class Database {
             }
         }
         catch (SQLException e) {
-            System.out.println(e);
+            //System.out.println(e);
         }
 
         return new DBStructure(users, rrs);

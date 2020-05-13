@@ -36,7 +36,7 @@ public class ServerThread extends Thread {
 
     public void sendServerMessage(ServerMessage sm) {
         // TODO: sometimes sm is null
-        System.out.println("Sending broadcast message: " + sm.getCommand());
+        System.out.println("--> Sending broadcast to server: " + _otherPort + " == Message: " + sm.getCommand());
         System.out.flush();
         VerifiableServerMessage vsm = _server.createVerifiableServerMessage(sm);
         try{
@@ -55,12 +55,11 @@ public class ServerThread extends Thread {
 
                 Thread thread = new Thread() {
                     public void run() {
-                        //System.out.println("server sig: " + vsm.getServerMessage().getPublicKey());
                         if (_server.verifyServerSignature(vsm).equals(StatusCode.OK)) {
                             StatusCode sc = verifyServerMessage(vsm);
                             if (sc.equals(StatusCode.OK)) {
                                 ServerMessage sm = vsm.getServerMessage();
-                                System.out.println("Received broadcast message: " + sm.getCommand() + "from" + _socket.getPort());
+                                System.out.println("<-- Received broadcast from server: " + _otherPort + " == Message: " + sm.getCommand());
                                 System.out.flush();
                                 switch (sm.getCommand()) {
                                     // broadcaster server initiates broadcast
@@ -105,7 +104,6 @@ public class ServerThread extends Thread {
     }
 
     public void handleServerBroadcast(ServerMessage sm) {
-        // System.out.println("handleServerBroadcast");
 
         VerifiableProtocolMessage vpm = sm.getClientMessage();
         verifyClientMessage(vpm);
@@ -125,7 +123,6 @@ public class ServerThread extends Thread {
     }
 
     public void sendQueueMessages(PublicKey clientPubKey) {
-        System.out.println("sendQueueMessages");
         ServerBroadcast sb = _server._serverBroadcasts.get(clientPubKey);
         if(_serverMessageQueue.containsKey(clientPubKey)) {
             sb.localEcho();
@@ -135,7 +132,6 @@ public class ServerThread extends Thread {
     }
 
     public void handleEcho(VerifiableServerMessage vsm) {
-        // System.out.println("handleEcho");
         ServerMessage sm = vsm.getServerMessage();
         VerifiableProtocolMessage vpm = sm.getClientMessage();
         PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
@@ -149,7 +145,6 @@ public class ServerThread extends Thread {
     }
 
     public void handleFinal(VerifiableServerMessage vsm) {
-        // System.out.println("handleFinal");
         ServerMessage sm = vsm.getServerMessage();
         VerifiableProtocolMessage vpm = sm.getClientMessage();
         PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
@@ -162,7 +157,7 @@ public class ServerThread extends Thread {
         try {
             _socket = _communication.accept(_serverSocket);
             
-            System.out.println("Server has accepted communications in port:" + _selfPort);
+            System.out.println("Server has started communication with server in port: " + _otherPort);
             
             _oos = new ObjectOutputStream(_socket.getOutputStream());
             _ois = new ObjectInputStream(_socket.getInputStream());
@@ -180,21 +175,20 @@ public class ServerThread extends Thread {
         try {
             _socket = new Socket("localhost", _otherPort);
 
-            System.out.println("Starting client socket in port: " + _otherPort);
+            System.out.println("(INFO) Starting client socket to other servers in port: " + _otherPort);
             
             _oos = new ObjectOutputStream(_socket.getOutputStream());
             _ois = new ObjectInputStream(_socket.getInputStream());
             receiveMessage();
         }
         catch(IOException e) {
-            System.out.println("Error starting client socket to communicate with server port " + _otherPort);
+            //System.out.println("Error starting client socket to communicate with server port " + _otherPort);
             acceptCommunications();
         }
     }
 
     public StatusCode verifyServerMessage(VerifiableServerMessage vsm) {
         ServerMessage sm = vsm.getServerMessage();
-        System.out.println("--- verifying server message ---: " + sm.getCommand());
         if (sm.getCommand() == null || sm.getPublicKey() == null || sm.getClientMessage() == null) {
             return StatusCode.NULL_FIELD;
         }

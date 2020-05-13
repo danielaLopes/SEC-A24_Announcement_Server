@@ -17,7 +17,6 @@ public class AtomicRegister1N {
     public List<VerifiableAnnouncement> getValues() { return _values; }
 
     public RegisterMessage acknowledge(RegisterMessage arm) {
-        //System.out.println("acknowledge");
         synchronized (_lock) {
             if (arm.getWts() > _ts.get()) {
                 _ts.set(arm.getWts());
@@ -28,18 +27,15 @@ public class AtomicRegister1N {
     }
 
     public synchronized RegisterMessage value(RegisterMessage arm, int n) {
-        //System.out.println("value");
         return new RegisterMessage(arm.getRid(), _ts.get(), getUserAnnouncements(n));
     }
 
     public List<VerifiableAnnouncement> getUserAnnouncements(int number) {
         int nAnnouncements = _values.size();
         if ((0 < number) && (number <= nAnnouncements)) {
-            System.out.println("returning " + number + " announcements");
             return new ArrayList<VerifiableAnnouncement>(_values.subList(nAnnouncements - number, nAnnouncements));
         }
         else {
-            System.out.println("returning all " + _values.size() + " announcements");
             return _values;
         }
     }
