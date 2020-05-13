@@ -2,7 +2,6 @@ package pt.ulisboa.tecnico.sec.client;
 
 import java.security.PublicKey;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,49 +31,29 @@ public class RegularRegisterNN {
     }
 
     public RegisterMessage read() {
-        //System.out.println("read");
+
         _rid += 1;
         _readList.clear();
         return new RegisterMessage(_rid);
     }
 
     public void readReturn(ProtocolMessage pm, List<VerifiableProtocolMessage> responses) {
-        //System.out.println("readreturn");
+
         RegisterMessage registerMessage = new RegisterMessage(pm.getAtomicRegisterMessages());
         if(_rid == registerMessage.getRid()) {
             AtomicValue av = new AtomicValue(registerMessage.getWts(), registerMessage.getValues());
 
             synchronized(_readList) {
-                // print _readList before
-                //System.out.println("Print _readList before");
-                for (AtomicValue val : _readList.values()) {
-                    //System.out.println("val before " + val);
-                }
-                //System.out.flush();
 
                 _readList.put(pm.getPublicKey(), av);
 
-                // print _readList after
-                //System.out.println("Print _readList after");
-                for (AtomicValue val : _readList.values()) {
-                    //System.out.println("val after " + val);
-                }
-                //System.out.flush();
-
-                // TODO: readlist needs to have a quorum
-                //TODO ATUALIZAR COM VERIFIABLE ANNOUNCEMENTS
                 if (_readList.size() > _quorum) {
                     Map.Entry<StatusCode, List<VerifiableAnnouncement>> quorumMessages =
                             MessageComparator.compareServerResponses(responses, responses.size() / 2);
-                    //System.out.println("quorum messages sc" + quorumMessages.getKey());
-                    //System.out.println("quorum messages ann" + quorumMessages.getValue());
+
                     if (quorumMessages != null) {
-                        //System.out.println("quorum messages is not null ");
                         AtomicValue highest = highest();
                         _readList.clear();
-                        // TODO: why highest then ????
-                        // TODO: Verify client Signatures of the announcements!
-                        //_client.deliverReadGeneral(highest.getValues());
 
                         _client.deliverReadGeneral(quorumMessages.getKey(), quorumMessages.getValue());
                     }
@@ -96,7 +75,7 @@ public class RegularRegisterNN {
     }
 
     public void write() {
-        //System.out.println("write");
+
         _wts += 1;
         _acks.set(0);
     }

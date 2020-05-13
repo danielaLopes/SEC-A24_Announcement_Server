@@ -10,10 +10,6 @@ public class RegisterValue {
     private VerifiableAnnouncement _value;
     private PublicKey _clientPublicKey;
 
-    public RegisterValue() {
-        _timeStamp = 0;
-    }
-
     public RegisterValue(int timeStamp, VerifiableAnnouncement value, PublicKey clientyPublicKey) {
         _timeStamp = timeStamp;
         _value = value;
@@ -23,7 +19,4 @@ public class RegisterValue {
     public int getTimeStamp() { return _timeStamp; }
     public VerifiableAnnouncement getValues() { return _value; }
     public PublicKey getPublicKey() { return _clientPublicKey; }
-
-    public void setTimeStamp(int timeStamp) { _timeStamp = timeStamp; }
-    public void setValues(VerifiableAnnouncement value) { _value = value; }
 }

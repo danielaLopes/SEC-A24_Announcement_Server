@@ -50,8 +50,6 @@ public class Client {
 
     // maps server public keys to the corresponding serverIndex to access for _oos,_ois or _clientSockets
     private ConcurrentHashMap<PublicKey, CommunicationServer> _serverCommunications;
-    // TODO: change this
-    private PublicKey _serverPubKey;
 
     private ClientUI _clientUI;
 
@@ -66,8 +64,6 @@ public class Client {
     private ConcurrentMap<PublicKey, VerifiableProtocolMessage> _responses = new ConcurrentHashMap<>();
 
     protected static final int TIMEOUT = 5000;
-    protected static final int MAX_REQUESTS = 1;
-    protected static final int MAX_REFRESH = 3;
 
     public Client(String pubKeyPath, String keyStorePath,
                   String keyStorePasswd, String entryPasswd, String alias,
@@ -93,8 +89,6 @@ public class Client {
         _regularRegisterNN  = new RegularRegisterNN(this);
         
         _clientUI = clientUI;
-        //_clientUI.start();
-
     }
 
     public Client(String pubKeyPath, String keyStorePath,
@@ -102,7 +96,6 @@ public class Client {
         loadPublicKey(pubKeyPath);
         loadPrivateKey(keyStorePath, keyStorePasswd, entryPasswd, alias);
 
-        //System.out.println("Starting new client" );
         _nServers = nServers;
         _nFaults = nFaults;
         _quorum = (nServers + nFaults) / 2;
@@ -110,14 +103,10 @@ public class Client {
         _serverCommunications = new ConcurrentHashMap<>();
         List<PublicKey> serversPubKeys = loadServersGroupPublicKeys();
 
-        //System.out.println("after loading server keys" );
-
         _communication = new Communication();
 
-
-        //startServerCommunication(0);
         startServersGroupCommunication(serversPubKeys);
-        //System.out.println("Started servers group communication" );
+
         _atomicRegister1N = new AtomicRegister1N(this);
         _regularRegisterNN  = new RegularRegisterNN(this);
     }
@@ -198,12 +187,8 @@ public class Client {
         }
 
         try {
-            //_serverPubKey = KeyPairUtil.loadPublicKey(path);
             serverPubKey = KeyPairUtil.loadPublicKey(path);
-            // TODO: change this
-            // _serverPubKey = serverPubKey;
 
-            //_serverPubKeys.put(serverPubKey, serverIndex);
         } catch (Exception e) {
             System.out.println("Error: Not possible to initialize client because it was not possible to load server's public key.\n" + e);
             System.exit(-1);
@@ -460,7 +445,7 @@ public class Client {
     }
 
     public void deliverPost(StatusCode sc) {
-        //System.out.println("deliverPost");
+
         resetResponses();
         postDelivered = true;
         postDeliveredSC = sc;
@@ -470,7 +455,7 @@ public class Client {
     }
 
     public void deliverPostGeneral(StatusCode sc) {
-        //System.out.println("deliverPostGeneral");
+
         resetResponses();
         postGeneralDelivered = true;
         postGeneralDeliveredSC = sc;  
@@ -479,7 +464,7 @@ public class Client {
     }
 
     public void deliverRead(StatusCode sc, List<VerifiableAnnouncement> vas) {
-        //System.out.println("dleiver reaea");
+
         resetResponses();
         readDelivered = true;
         readDeliveredSC = sc;
@@ -493,13 +478,13 @@ public class Client {
     }
 
     public void deliverReadGeneral(StatusCode sc, List<VerifiableAnnouncement> vas) {
-        //System.out.println("deliver read general");
+
         List<Announcement> announcements = new ArrayList<Announcement>();
         for (VerifiableAnnouncement va : vas) {
             if(verifySignature(va, va.getAnnouncement().getClientPublicKey()))
                 announcements.add(va.getAnnouncement());
         }
-        //System.out.println("status read general: " + sc);
+
         resetResponses();
         readGeneralDelivered = true;
         readGeneralDeliveredSC = sc;
@@ -509,7 +494,6 @@ public class Client {
     }
 
     public void write(Map<PublicKey, ProtocolMessage> pms, boolean general) {
-        //System.out.println("WRITE op");
 
         for (Map.Entry<PublicKey, ProtocolMessage> pm : pms.entrySet()) {
             Thread thread = new Thread(){
@@ -517,19 +501,17 @@ public class Client {
                     VerifiableProtocolMessage response = requestServer(pm.getValue(), _serverCommunications.get(pm.getKey()));
                     StatusCode sc = verifyReceivedMessage(response);
                     if (sc.equals(StatusCode.OK)) {
-                        //System.out.println("Received [" + response.getProtocolMessage().getCommand() + "]: " + sc);
-                        //TODO CHECK HOW MANY SERVERS NEED TO CALL WRITE RETURN
+
                         RegisterMessage registerMessage = new RegisterMessage(response.getProtocolMessage().getAtomicRegisterMessages());
                         _responses.put(pm.getKey(), response);
                         if (general) {
-                            //System.out.println("Received response to POSTGENERAL");
                             _regularRegisterNN.writeReturn(registerMessage);
                         }
                         else {
                             _atomicRegister1N.writeReturn(registerMessage.getRid());
                         }
                     } else {
-                        //System.out.println("Verify status code was not ok: " + sc);
+
                         if (response == null) {
                             ProtocolMessage pmNoConsensus = new ProtocolMessage(StatusCode.NO_CONSENSUS);
                             pmNoConsensus.setAtomicRegisterMessages(new RegisterMessage(0, 0, new ArrayList<>()).getBytes());
@@ -576,8 +558,7 @@ public class Client {
         //System.out.println("READ op");
         Map<PublicKey, VerifiableProtocolMessage> responses = new ConcurrentHashMap<>();
         for (Map.Entry<PublicKey, ProtocolMessage> pm : pms.entrySet()) {
-            /*String opUuid = UUIDGenerator.generateUUID();
-            pm.getValue().setOpUuid(opUuid);*/
+
             Thread thread = new Thread(){
                 public void run() {
                     VerifiableProtocolMessage response = requestServer(pm.getValue(), _serverCommunications.get(pm.getKey()));
@@ -585,7 +566,7 @@ public class Client {
                     if (verifyReceivedMessage(response) == StatusCode.OK) {
   
                        System.out.flush();
-                        //TODO CHECK HOW MANY SERVERS NEED TO CALL WRITE RETURN
+
                         if (general && pm.getValue().getCommand().equals("READGENERAL")) {
                             _responses.put(pm.getKey(), response);
                             _regularRegisterNN.readReturn(response.getProtocolMessage(), new ArrayList<>(_responses.values()));
@@ -607,7 +588,7 @@ public class Client {
                             deliverRead(StatusCode.USER_NOT_REGISTERED, new ArrayList<VerifiableAnnouncement>());
                         }
                         else if (responses.size() == _nServers) {
-                            //System.out.println("DELIVERING READ WITHOUT CONSENSUS");
+
                             if (general)
                                 deliverReadGeneral(StatusCode.NO_CONSENSUS, new ArrayList<VerifiableAnnouncement>());
                             else
@@ -620,7 +601,6 @@ public class Client {
             thread.start();
         }
     }
-
 
     /**
      * Makes a request to the Server, receiving a response as a VerifiableProtocolMessage
@@ -663,7 +643,7 @@ public class Client {
             if (rvpm == null) {
                 return null;
             }
-            //rsc = getStatusCodeFromVPM(rvpm);
+
             PublicKey serverPubKey = getServerPublicKeyFromVPM(rvpm);
 
             if (verifySignature(rvpm, serverPubKey)) {
@@ -698,31 +678,17 @@ public class Client {
         return rvpm;
     }
 
-    public void reset(CommunicationServer cs) {
-        try{
-        _communication.close(cs.getClientSocket());
-        _serverCommunications.put(_serverPubKey, createServerCommunication(cs.getPort()));
-        refreshToken(cs);
-
-        }
-        catch(Exception e) {
-            System.out.println("(INFO) Error reseting connection with server");
-            System.out.println(e);
-        }
-    }
-
     public List<StatusCode> registerServersGroup() {
         ProtocolMessage pm = new ProtocolMessage("REGISTER", _pubKey);
         Map<PublicKey, VerifiableProtocolMessage> vpms = requestServersGroupRegister(pm);
 
-        // TODO; decide between list or hashmap
         List<StatusCode> rscs = new ArrayList<>();
         for(Map.Entry<PublicKey, VerifiableProtocolMessage> vpm : vpms.entrySet()) {
             CommunicationServer serverCommunication = _serverCommunications.get(vpm.getKey());
 
             if (vpm.getValue() == null) {
                 rscs.add(StatusCode.NO_RESPONSE);
-                // TODO: assume that if a client can't register with one of the servers, client shuts down
+
                 System.out.println("Could not register: could not receive a response");
                 System.out.flush();
                 closeGroupCommunication();
@@ -771,37 +737,32 @@ public class Client {
             return new ArrayList<StatusCode>(Arrays.asList(StatusCode.INVALID_MESSAGE_LENGTH));
         }
 
-        int refreshCounter = 0;
-        StatusCode rsc;
-
         List<StatusCode> rscs = new ArrayList<>();
 
-        // TODO: fix this -> loop!
-        //while (refreshCounter < MAX_REFRESH) {
-            Announcement a = new Announcement(message, references);
-            String announcementID = UUIDGenerator.generateUUID();
-            a.setAnnouncementID(announcementID);
-            a.setPublicKey(_pubKey);
+        Announcement a = new Announcement(message, references);
+        String announcementID = UUIDGenerator.generateUUID();
+        a.setAnnouncementID(announcementID);
+        a.setPublicKey(_pubKey);
 
-            _atomicRegister1N.write();
-            int rid = _atomicRegister1N.getRid();
-            int wts = _atomicRegister1N.getWts();
+        _atomicRegister1N.write();
+        int rid = _atomicRegister1N.getRid();
+        int wts = _atomicRegister1N.getWts();
 
-            
-            VerifiableAnnouncement va = createVerifiableAnnouncement(a);
 
-            List<VerifiableAnnouncement> values = new ArrayList<VerifiableAnnouncement>(Arrays.asList(va));
+        VerifiableAnnouncement va = createVerifiableAnnouncement(a);
 
-            RegisterMessage arm = new RegisterMessage(rid, wts, values);
- 
-            Map<PublicKey, ProtocolMessage> pms = new ConcurrentHashMap<>();
-            for (Map.Entry<PublicKey, CommunicationServer> entry : _serverCommunications.entrySet()) {
-                ProtocolMessage p = new ProtocolMessage("POST", _pubKey, a, entry.getValue().getToken());
-                p.setAtomicRegisterMessages(arm.getBytes());
-                pms.put(entry.getKey(), p);
-            }
+        List<VerifiableAnnouncement> values = new ArrayList<VerifiableAnnouncement>(Arrays.asList(va));
 
-            write(pms, false);
+        RegisterMessage arm = new RegisterMessage(rid, wts, values);
+
+        Map<PublicKey, ProtocolMessage> pms = new ConcurrentHashMap<>();
+        for (Map.Entry<PublicKey, CommunicationServer> entry : _serverCommunications.entrySet()) {
+            ProtocolMessage p = new ProtocolMessage("POST", _pubKey, a, entry.getValue().getToken());
+            p.setAtomicRegisterMessages(arm.getBytes());
+            pms.put(entry.getKey(), p);
+        }
+
+        write(pms, false);
 
         return rscs;
     }
@@ -819,9 +780,6 @@ public class Client {
             System.out.println("Maximum message length to post announcement is 255.");
             return new ArrayList<StatusCode>(Arrays.asList(StatusCode.INVALID_MESSAGE_LENGTH));
         }
-
-        int refreshCounter = 0;
-        StatusCode rsc;
 
         List<StatusCode> rscs = new ArrayList<>();
 
@@ -851,16 +809,13 @@ public class Client {
     }
 
     public List<AbstractMap.SimpleEntry<StatusCode, List<Announcement>>> read(PublicKey user, int number) {
-        // TODO: see best way to verify if all servers responses have consensus
+
         List<AbstractMap.SimpleEntry<StatusCode, List<Announcement>>> announcementsPerServer = new ArrayList<>();
         if (user == null) {
             System.out.println("Invalid user.");
             announcementsPerServer.add(new AbstractMap.SimpleEntry<>(StatusCode.NULL_FIELD, new ArrayList<>()));
         }
         _readingUserPubKey = user;
-
-        List<Announcement> announcements = null;
-        StatusCode rsc = null;
 
         RegisterMessage arm = _atomicRegister1N.read();
 
@@ -877,11 +832,8 @@ public class Client {
     }
 
     public List<AbstractMap.SimpleEntry<StatusCode, List<Announcement>>> readGeneral(int number) {
-        // TODO: see best way to verify if all servers responses have consensus
-        List<AbstractMap.SimpleEntry<StatusCode, List<Announcement>>> announcementsPerServer = new ArrayList<>();
 
-        List<Announcement> announcements = null;
-        StatusCode rsc = null;
+        List<AbstractMap.SimpleEntry<StatusCode, List<Announcement>>> announcementsPerServer = new ArrayList<>();
 
         RegisterMessage arm = _regularRegisterNN.read();
 

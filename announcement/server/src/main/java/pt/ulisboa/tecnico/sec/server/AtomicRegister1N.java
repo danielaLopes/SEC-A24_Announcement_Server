@@ -9,7 +9,6 @@ public class AtomicRegister1N {
     private Object _lock = new Object();
 
     private Server _server;
-    private int _nServers;
     private AtomicInteger _ts = new AtomicInteger(0);
     private List<VerifiableAnnouncement> _values = new ArrayList<>();
 
@@ -17,7 +16,6 @@ public class AtomicRegister1N {
         _server = server;
     }
 
-    public int getTimeStamp() { return _ts.get(); }
     public List<VerifiableAnnouncement> getValues() { return _values; }
 
     public RegisterMessage acknowledge(RegisterMessage arm) {

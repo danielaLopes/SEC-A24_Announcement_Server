@@ -28,8 +28,6 @@ public class ClientUI {
      */
     public void start() {
 
-        boolean repeat = false;
-        //do {
             String option = promptGeneralMenu();
             if (!option.equals("\n")) {
                 switch (option) {
@@ -51,14 +49,11 @@ public class ClientUI {
                     // Exit and close communication
                     case "0":
                         closeCommunication();
-                        // System.exit(0);
                         break;
                     default:
-                        repeat = true;
                         break;
                 }
            }
-        //} while(repeat == true);
     }
 
     /**

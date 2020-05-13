@@ -41,7 +41,6 @@ public class ClientMessageHandler extends Thread {
                 switch (command) {
                     // Register a Client
                     case "REGISTER":
-                        // Thread.sleep(10000);
                         registerUser(vpm);
                         break;
                     // Post to Client's Board

@@ -35,7 +35,7 @@ public class ServerThread extends Thread {
     }
 
     public void sendServerMessage(ServerMessage sm) {
-        // TODO: sometimes sm is null
+
         System.out.println("--> Sending broadcast to server: " + _otherPort + " == Message: " + sm.getCommand());
         System.out.flush();
         VerifiableServerMessage vsm = _server.createVerifiableServerMessage(sm);
@@ -47,8 +47,8 @@ public class ServerThread extends Thread {
         }
     }
 
-    public void receiveMessage() throws IOException {
-        // TODO: put timeout
+    public void receiveMessage() {
+
         while(true) {
             try {
                 VerifiableServerMessage vsm = (VerifiableServerMessage) _communication.receiveMessage(_ois);
@@ -57,7 +57,8 @@ public class ServerThread extends Thread {
                     public void run() {
                         if (_server.verifyServerSignature(vsm).equals(StatusCode.OK)) {
                             StatusCode sc = verifyServerMessage(vsm);
-                            if (sc.equals(StatusCode.OK)) {
+                            StatusCode clientMsgSc = verifyClientMessage(vsm.getServerMessage().getClientMessage());
+                            if (sc.equals(StatusCode.OK) && clientMsgSc.equals(StatusCode.OK)) {
                                 ServerMessage sm = vsm.getServerMessage();
                                 System.out.println("<-- Received broadcast from server: " + _otherPort + " == Message: " + sm.getCommand());
                                 System.out.flush();
@@ -109,7 +110,7 @@ public class ServerThread extends Thread {
     public void handleServerBroadcast(ServerMessage sm) {
 
         VerifiableProtocolMessage vpm = sm.getClientMessage();
-        verifyClientMessage(vpm);
+
         PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
         if (_server.verifySignature(vpm).equals(StatusCode.OK)) {
             if (_server._serverBroadcasts.containsKey(clientPubKey)) {
@@ -198,32 +199,16 @@ public class ServerThread extends Thread {
         return StatusCode.OK;
     }
 
-    // TODO: finish
     public StatusCode verifyClientMessage(VerifiableProtocolMessage vpm) {
         ProtocolMessage pm = vpm.getProtocolMessage();
-        // TODO: verify client signature ?????
-        if (pm.getCommand() == null) {
+
+        if (pm == null || pm.getCommand() == null)
             return StatusCode.NULL_FIELD;
-        }
-        if (pm.getCommand().equals("POST")) {
-            //_server.verifyPost();
-        }
-        else if (pm.getCommand().equals("READ")) {
 
-        }
-        else if (pm.getCommand().equals("POSTGENERAL")) {
-
-        }
-        else if (pm.getCommand().equals("READGENERAL")) {
-
-        }
-        else {
-            return StatusCode.INVALID_COMMAND;
-        }
         return StatusCode.OK;
     }
 
-    public Server getServer() {return _server; }
+    public Server getServer() { return _server; }
 
     public void addServerMessageToQueue(PublicKey clientPubKey, ServerMessage sm) {
         _serverMessageQueue.put(clientPubKey, sm);

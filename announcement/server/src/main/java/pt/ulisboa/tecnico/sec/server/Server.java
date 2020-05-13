@@ -72,22 +72,7 @@ public class Server extends Thread {
         return _regularRegisterNN;
     }
 
-    public PublicKey getUserUUID(String uuid) {
-        for (User u : _users.values()) {
-            if (u.getdbTableName().equals(uuid)) {
-                return u.getPublicKey();
-            }
-        }
-        return null;
-    }
-
     public PublicKey getServerPubKey() { return _pubKey; }
-
-    public void resetDatabase() {
-    }
-
-    public void printDataStructures() {
-    }
 
     public void retrieveDataStructures() {
         DBStructure dbs = _db.retrieveStructure();
@@ -457,15 +442,6 @@ public class Server extends Thread {
         if (references == null)
             return StatusCode.NULL_FIELD;
 
-            
-        for (ConcurrentHashMap.Entry<String, AnnouncementLocation> am: _announcementMapper.entrySet()) {
-            System.out.print("referencia que tenho: " + am.getKey());
-        }
-
-        for (String reference : references) {
-            System.out.print("referencia que mandei: " + reference);
-        }
-
         for (String reference : references) {
             if (!_announcementMapper.containsKey(reference)) {
                 return StatusCode.INVALID_REFERENCE;
@@ -606,17 +582,13 @@ public class Server extends Thread {
         return null;
     }
 
-    public void printStatusCodeDescription(StatusCode sc) {
-        System.out.println("==============   " + sc.getDescription() + "   ==============");
-    }
-
     /**
      * Registers the user and associated public key in the system before first use.
      * Makes necessary initializations to enable first use of DPAS
      * @param vpm
-     * @return ProtocolMessage
+     * @param cmh
+     * @return VerifiableProtocolMessage
      */
-
     public VerifiableProtocolMessage registerUser(VerifiableProtocolMessage vpm, ClientMessageHandler cmh) {
         System.out.println("register");
         StatusCode sc;
@@ -681,6 +653,7 @@ public class Server extends Thread {
      * Posts an announcement of up to 255 characters to the user's PostOperation Board.
      * Can refer to previous announcements.
      * @param vpm
+     * @param cmh
      */
     public void post(VerifiableProtocolMessage vpm, ClientMessageHandler cmh) {
         StatusCode sc;
@@ -810,7 +783,7 @@ public class Server extends Thread {
      * (from the user's PostOperation Board).
      * If number == 0, all announcements should be returned.
      * @param vpm
-     * @return a list of announcements
+     * @param cmh
      */
     public void read(VerifiableProtocolMessage vpm, ClientMessageHandler cmh) {
         StatusCode sc;
@@ -861,7 +834,7 @@ public class Server extends Thread {
      * Obtains the most recent number announcements on the General Board.
      * If number == 0, all announcements should be returned.
      * @param vpm
-     * @return a list of announcements
+     * @param cmh
      */
     public void readGeneral(VerifiableProtocolMessage vpm, ClientMessageHandler cmh) {
         StatusCode sc;
@@ -899,7 +872,6 @@ public class Server extends Thread {
         serverBroadcast(clientPubKey, sm, vpm);
     }
 
-    // // does not make changes to the system, so it does not need to taken into account in _operations
     public VerifiableProtocolMessage invalidCommand(VerifiableProtocolMessage vpm) {
         // TODO: make something in client to support this
 
