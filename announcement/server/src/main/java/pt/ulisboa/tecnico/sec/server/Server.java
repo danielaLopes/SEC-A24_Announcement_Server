@@ -598,7 +598,7 @@ public class Server extends Thread {
      */
 
     public VerifiableProtocolMessage registerUser(VerifiableProtocolMessage vpm, ClientMessageHandler cmh) {
-
+        System.out.println("register");
         StatusCode sc;
 
         VerifiableProtocolMessage response;

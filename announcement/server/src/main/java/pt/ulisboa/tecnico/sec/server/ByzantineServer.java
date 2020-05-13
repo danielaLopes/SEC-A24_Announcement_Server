@@ -1,12 +1,8 @@
 package pt.ulisboa.tecnico.sec.server;
 
 import pt.ulisboa.tecnico.sec.communication_lib.*;
-import pt.ulisboa.tecnico.sec.crypto_lib.ProtocolMessageConverter;
-import pt.ulisboa.tecnico.sec.database_lib.Database;
 
 import java.security.PublicKey;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Does not perform broadcast with other servers, only answers to client and updates locally
@@ -20,8 +16,14 @@ public class ByzantineServer extends Server {
     }
 
     @Override
-    public void post(VerifiableProtocolMessage vpm, ClientMessageHandler cmh) {
+    public VerifiableProtocolMessage registerUser(VerifiableProtocolMessage vpm, ClientMessageHandler cmh) {
+        super.registerUser(vpm, cmh);
+        return null;
+    }
 
+    @Override
+    public void post(VerifiableProtocolMessage vpm, ClientMessageHandler cmh) {
+        System.out.println("------------------BYZANTINE POST--------------------");
         PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
         String token = vpm.getProtocolMessage().getToken();
         User user = _users.get(clientPubKey);
@@ -37,7 +39,7 @@ public class ByzantineServer extends Server {
 
     @Override
     public void postGeneral(VerifiableProtocolMessage vpm, ClientMessageHandler cmh) {
-
+        System.out.println("---------------BYZANTINE POSTGENERAL-----------------");
         PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
         String token = vpm.getProtocolMessage().getToken();
         User user = _users.get(clientPubKey);
@@ -52,7 +54,7 @@ public class ByzantineServer extends Server {
 
     @Override
     public void read(VerifiableProtocolMessage vpm, ClientMessageHandler cmh) {
-
+        System.out.println("------------------BYZANTINE READ--------------------");
         PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
         String token = vpm.getProtocolMessage().getToken();
         User user = _users.get(clientPubKey);
@@ -73,7 +75,7 @@ public class ByzantineServer extends Server {
 
     @Override
     public void readGeneral(VerifiableProtocolMessage vpm, ClientMessageHandler cmh) {
-
+        System.out.println("---------------BYZANTINE READGENERAL-----------------");
         PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
         String token = vpm.getProtocolMessage().getToken();
         User user = _users.get(clientPubKey);

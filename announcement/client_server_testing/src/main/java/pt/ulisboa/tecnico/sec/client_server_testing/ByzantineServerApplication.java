@@ -13,7 +13,7 @@ public class ByzantineServerApplication {
 
     public final static int N_SERVERS = 4;
     public final static int N_FAULTS = 1;
-    public final static int SERVER_BYZANTINE_PORT = 8004;
+    public final static int SERVER_BYZANTINE_PORT = 9004;
 
     public static void main(String[] args) {
 
