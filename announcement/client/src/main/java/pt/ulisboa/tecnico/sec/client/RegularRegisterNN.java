@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import pt.ulisboa.tecnico.sec.communication_lib.*;
@@ -15,7 +16,7 @@ public class RegularRegisterNN {
     private int _rid;
     private int _wts;
     private AtomicInteger _acks;
-    private HashMap<PublicKey, AtomicValue> _readList = new HashMap<>();
+    private ConcurrentHashMap<PublicKey, AtomicValue> _readList = new ConcurrentHashMap<>();
     private final int _quorum;
 
     private Client _client;
@@ -125,7 +126,7 @@ public class RegularRegisterNN {
         return _acks.get();
     }
 
-    public HashMap<PublicKey, AtomicValue> getReadList() {
+    public ConcurrentHashMap<PublicKey, AtomicValue> getReadList() {
         return _readList;
     }
 

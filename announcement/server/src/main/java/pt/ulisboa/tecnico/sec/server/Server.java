@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.net.ssl.SSLEngineResult.Status;
+
 public class Server extends Thread {
 
     private ServerSocket _serverSocket;
@@ -694,27 +696,28 @@ public class Server extends Thread {
         String token = vpm.getProtocolMessage().getToken();
         //System.out.println("post token: " + token);
 
-        // verifications
         sc = verifyPost(token, vpm, message, references, clientPubKey);
-        if (sc.equals(StatusCode.NULL_FIELD) || sc.equals(StatusCode.USER_NOT_REGISTERED)) {
-            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
-                "POST", sc, _pubKey)));
-                return;
-        }
+
         User user = _users.get(clientPubKey);
         user.setRandomToken();
         _db.updateUserToken(user.getdbTableName(), user.getToken());
         String newToken = user.getToken();
         //System.out.println("post newtoken: " + newToken);
         
+        if (sc.equals(StatusCode.NULL_FIELD) || sc.equals(StatusCode.USER_NOT_REGISTERED)) {
+            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
+                "POST", sc, _pubKey)));
+                return;
+        }
+                
         if (sc.equals(StatusCode.INVALID_TOKEN)) {
             cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
-                "POST", sc, _pubKey, newToken, token)));
+                "POST", sc, _pubKey)));
             return;
         }
         if (!sc.equals(StatusCode.OK)) {
             cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
-                    "POST", sc, _pubKey, newToken, token)));
+                    "POST", sc, _pubKey)));
             // TODO: should this be anything ????
             if (!sc.equals(StatusCode.NULL_FIELD)) {
                 // _db.insertOperation(opUuid, operation);
@@ -766,7 +769,6 @@ public class Server extends Thread {
             }
             return;
         }
-
         RegisterMessage registerMessage = new RegisterMessage(vpm.getProtocolMessage().getAtomicRegisterMessages());
         RegisterMessage arm = _users.get(clientPubKey).getAtomicRegister1N().acknowledge(registerMessage);
 
@@ -801,16 +803,20 @@ public class Server extends Thread {
         List<String> references = vpm.getProtocolMessage().getPostAnnouncement().getReferences();
         String token = vpm.getProtocolMessage().getToken();
 
-        // verifications
         sc = verifyPost(token, vpm, message, references, clientPubKey);
-        if (sc.equals(StatusCode.NULL_FIELD) || sc.equals(StatusCode.USER_NOT_REGISTERED)) {
-            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage("POSTGENERAL", sc, _pubKey)));
-            return;
-        }
+
         User user = _users.get(clientPubKey);
         user.setRandomToken();
         _db.updateUserToken(user.getdbTableName(), user.getToken());
         String newToken = user.getToken();
+        
+
+        // verifications
+        
+        if (sc.equals(StatusCode.NULL_FIELD) || sc.equals(StatusCode.USER_NOT_REGISTERED)) {
+            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage("POSTGENERAL", sc, _pubKey, newToken, token)));
+            return;
+        }
         
         if (sc.equals(StatusCode.INVALID_TOKEN)) {
             cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
@@ -856,28 +862,31 @@ public class Server extends Thread {
         StatusCode sc;
 
         PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
-        int number = vpm.getProtocolMessage().getReadNumberAnnouncements();
         PublicKey toReadPublicKey = vpm.getProtocolMessage().getToReadPublicKey();
         String token = vpm.getProtocolMessage().getToken();
 
+        sc = verifyRead(token, vpm, clientPubKey);
+
+        User user = _users.get(clientPubKey);
+        user.setRandomToken();
+        _db.updateUserToken(user.getdbTableName(), user.getToken());
+        String newToken = user.getToken();
+
         // verifications
         if (toReadPublicKey == null) { cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
-                "READ", StatusCode.NULL_FIELD, _pubKey)));
+                "READ", StatusCode.NULL_FIELD, _pubKey, newToken, token)));
                 return; }
-        sc = verifyUserRegistered(toReadPublicKey);
-        if (sc.equals(StatusCode.USER_NOT_REGISTERED)) {
+
+        if (verifyUserRegistered(toReadPublicKey).equals(StatusCode.USER_NOT_REGISTERED)) {
             cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
-                "READ", sc, _pubKey)));
+                "READ", StatusCode.USER_NOT_REGISTERED, _pubKey, newToken, token)));
             return;    
         }
-        sc = verifyRead(token, vpm, clientPubKey);
+        
         if (sc.equals(StatusCode.NULL_FIELD)) {
-            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage("READ", sc, _pubKey)));
+            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage("READ", sc, _pubKey, newToken, token)));
             return; 
         }
-        
-        User user = _users.get(clientPubKey);
-        String newToken = user.getToken();
         
         if (sc.equals(StatusCode.INVALID_TOKEN)) {
             cmh.sendMessage(createVerifiableMessage(new ProtocolMessage(
@@ -893,20 +902,6 @@ public class Server extends Thread {
             return;
         }
 
-        /*RegisterMessage registerMessage = new RegisterMessage(vpm.getProtocolMessage().getAtomicRegisterMessages());
-        RegisterMessage arm = _users.get(clientPubKey).getAtomicRegister1N().value(registerMessage, number);
-
-        byte[] b = ProtocolMessageConverter.objToByteArray(_users.get(clientPubKey).getAtomicRegister1N());
-        _db.updateUserAtomicRegister1N(_users.get(clientPubKey).getdbTableName(), b);
-
-        ProtocolMessage p = new ProtocolMessage("VALUE", sc, _pubKey, newToken, token);
-        p.setAtomicRegisterMessages(arm.getBytes());
-        VerifiableProtocolMessage response = createVerifiableMessage(p);
-        registerMessage = new RegisterMessage(response.getProtocolMessage().getAtomicRegisterMessages());
-        System.out.println("Sending " + registerMessage.getValues().size() + " announcements.");
-        cmh.sendMessage(response);
-        return;*/
-
         ServerMessage sm = new ServerMessage(_pubKey, "SERVER_READ", vpm);
         //System.out.println("sm" + sm);
         serverBroadcast(clientPubKey, sm, vpm);
@@ -921,28 +916,26 @@ public class Server extends Thread {
     public void readGeneral(VerifiableProtocolMessage vpm, ClientMessageHandler cmh) {
         StatusCode sc;
 
-        VerifiableProtocolMessage response;
-
         PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
         String token = vpm.getProtocolMessage().getToken();
 
-
-        // verifications
         sc = verifyRead(token, vpm, clientPubKey);
-        if (sc.equals(StatusCode.USER_NOT_REGISTERED)) {
-            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage("READGENERAL", sc, _pubKey))); 
-            return;       
-        }
-        if (sc.equals(StatusCode.NULL_FIELD)) {
-            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage("READGENERAL", sc, _pubKey)));
-            return;
-        }
 
         User user = _users.get(clientPubKey);
         user.setRandomToken();
         _db.updateUserToken(user.getdbTableName(), user.getToken());
         String newToken = user.getToken();
-        
+
+
+        // verifications
+        if (sc.equals(StatusCode.USER_NOT_REGISTERED)) {
+            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage("READGENERAL", sc, _pubKey, newToken, token))); 
+            return;       
+        }
+        if (sc.equals(StatusCode.NULL_FIELD)) {
+            cmh.sendMessage(createVerifiableMessage(new ProtocolMessage("READGENERAL", sc, _pubKey, newToken, token)));
+            return;
+        }        
 
         if (!sc.equals(StatusCode.OK)) {
             cmh.sendMessage(createVerifiableMessage(new ProtocolMessage("READGENERAL", sc, _pubKey, newToken, token)));   
@@ -951,16 +944,6 @@ public class Server extends Thread {
             }
             return;
         }
-
-        /*RegisterMessage arm = _regularRegisterNN.value(vpm.getProtocolMessage());
-
-        byte[] b = ProtocolMessageConverter.objToByteArray(_regularRegisterNN);
-        // TODO: uncomment this
-        //_db.updateRegularRegisterNNTable(b);
-        
-        ProtocolMessage p = new ProtocolMessage("VALUEGENERAL", sc, _pubKey, newToken, token);
-        p.setAtomicRegisterMessages(arm.getBytes());
-        cmh.sendMessage(createVerifiableMessage(p));*/
 
         ServerMessage sm = new ServerMessage(_pubKey, "SERVER_READGENERAL", vpm);
         //System.out.println("sm" + sm);

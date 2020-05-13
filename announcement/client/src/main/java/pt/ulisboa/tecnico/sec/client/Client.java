@@ -25,6 +25,17 @@ import javax.lang.model.element.AnnotationMirror;
 
 public class Client {
 
+    // testing purposes only
+    public boolean postDelivered = false;
+    public boolean postGeneralDelivered = false;
+    public boolean readDelivered = false;
+    public boolean readGeneralDelivered = false;
+
+    public StatusCode postDeliveredSC;
+    public StatusCode postGeneralDeliveredSC;
+    public StatusCode readDeliveredSC;
+    public StatusCode readGeneralDeliveredSC;
+
     protected PublicKey _pubKey;
     private PrivateKey _privateKey;
 
@@ -40,7 +51,7 @@ public class Client {
     protected final int _quorum;
 
     // maps server public keys to the corresponding serverIndex to access for _oos,_ois or _clientSockets
-    private Map<PublicKey, CommunicationServer> _serverCommunications;
+    private ConcurrentHashMap<PublicKey, CommunicationServer> _serverCommunications;
     // TODO: change this
     private PublicKey _serverPubKey;
 
@@ -76,7 +87,7 @@ public class Client {
         _nFaults = nFaults;
         _quorum = (nServers + nFaults) / 2;
 
-        _serverCommunications = new HashMap<>();
+        _serverCommunications = new ConcurrentHashMap<>();
         List<PublicKey> serversPubKeys = loadServersGroupPublicKeys();
 
         _usersPubKeys = new ArrayList<>();
@@ -104,7 +115,7 @@ public class Client {
         _nFaults = nFaults;
         _quorum = (nServers + nFaults) / 2;
 
-        _serverCommunications = new HashMap<>();
+        _serverCommunications = new ConcurrentHashMap<>();
         List<PublicKey> serversPubKeys = loadServersGroupPublicKeys();
 
         System.out.println("after loading server keys" );
@@ -285,34 +296,12 @@ public class Client {
 
                 _serverCommunications.put(serverPubKey, createServerCommunication(port));
             }
-            //System.out.println("before registerServersGroup");
             registerServersGroup();
-            //System.out.println("after registerServersGroup");
         }
         catch(IOException e) {
             System.out.println("Error starting client socket. Make sure the server is running.");
         }
     }
-
-    /**
-     * Starts the communication with the server for future operations.
-     */
-    /*public void startServerCommunication(int serverIndex) {
-        try {
-            Socket clientSocket = new Socket("localhost", _startingServerPort + serverIndex);
-            clientSocket.setSoTimeout(TIMEOUT);
-            _clientSockets.add(clientSocket);
-
-
-            _oos.add(new ObjectOutputStream(clientSocket.getOutputStream()));
-            _ois.add(new ObjectInputStream(clientSocket.getInputStream()));
-
-            register();
-        }
-        catch(IOException e) {
-            System.out.println("Error starting client socket. Make sure the server is running.");
-        }
-    }*/
 
     /**
      * Closes the communication with the group of active servers.
@@ -478,7 +467,7 @@ public class Client {
     }
 
     public void deliverPost(StatusCode sc) {
-        System.out.println("deliverPost");
+        //System.out.println("deliverPost");
         resetResponses();
         if (_clientUI != null)
             _clientUI.deliverPost(sc);
@@ -488,13 +477,16 @@ public class Client {
     public void deliverPostGeneral(StatusCode sc) {
         System.out.println("deliverPostGeneral");
         resetResponses();
+        postGeneralDelivered = true;
+        System.out.println(postGeneralDelivered);
+        postGeneralDeliveredSC = sc;  
         if (_clientUI != null)
             _clientUI.deliverPostGeneral(sc);  
     }
 
     public void deliverRead(StatusCode sc, List<VerifiableAnnouncement> vas) {
+        //System.out.println("dleiver reaea");
         resetResponses();
-        System.out.println(vas.size());
         List<Announcement> announcements = new ArrayList<Announcement>();
         for (VerifiableAnnouncement va : vas) {
             if(verifySignature(va, va.getAnnouncement().getClientPublicKey()))
@@ -505,7 +497,7 @@ public class Client {
     }
 
     public void deliverReadGeneral(StatusCode sc, List<VerifiableAnnouncement> vas) {
-        System.out.println("deliver read general");
+        //System.out.println("deliver read general");
         List<Announcement> announcements = new ArrayList<Announcement>();
         for (VerifiableAnnouncement va : vas) {
             if(verifySignature(va, va.getAnnouncement().getClientPublicKey()))
@@ -522,32 +514,24 @@ public class Client {
         //System.out.println("WRITE op");
 
         for (Map.Entry<PublicKey, ProtocolMessage> pm : pms.entrySet()) {
-            /*String opUuid = UUIDGenerator.generateUUID();
-            pm.getValue().setOpUuid(opUuid);*/
             Thread thread = new Thread(){
                 public void run() {
                     VerifiableProtocolMessage response = requestServer(pm.getValue(), _serverCommunications.get(pm.getKey()));
                     StatusCode sc = verifyReceivedMessage(response);
                     if (sc.equals(StatusCode.OK)) {
-                        System.out.println("Received [" + response.getProtocolMessage().getCommand() + "]: " + sc);
+                        //System.out.println("Received [" + response.getProtocolMessage().getCommand() + "]: " + sc);
                         //TODO CHECK HOW MANY SERVERS NEED TO CALL WRITE RETURN
                         RegisterMessage registerMessage = new RegisterMessage(response.getProtocolMessage().getAtomicRegisterMessages());
-                        //if (general && response.getProtocolMessage().getCommand().equals("POSTGENERAL")) {
                         _responses.put(pm.getKey(), response);
                         if (general) {
-                            System.out.println("Received response to POSTGENERAL");
+                            //System.out.println("Received response to POSTGENERAL");
                             _regularRegisterNN.writeReturn(registerMessage);
                         }
-                        //else if (!general && response.getProtocolMessage().getCommand().equals("POST")) {
                         else {
-                            System.out.println("Received response to POST");
                             _atomicRegister1N.writeReturn(registerMessage.getRid());
                         }
-                        //System.out.println("Did not reach any if due to pm command: " + pm.getValue().getCommand());
-                        //System.out.flush();
-                        //printStatusCode(response.getProtocolMessage().getStatusCode());
                     } else {
-                        System.out.println("Verify status code was not ok: " + sc);
+                        //System.out.println("Verify status code was not ok: " + sc);
                         if (response == null)
                             _responses.put(pm.getKey(), createVerifiableMessage(new ProtocolMessage(StatusCode.NO_CONSENSUS)));
                         else
@@ -579,6 +563,7 @@ public class Client {
     public void writeBack(RegisterMessage arm) {
         Map<PublicKey, ProtocolMessage> pms = new HashMap<>();
             for (Map.Entry<PublicKey, CommunicationServer> entry : _serverCommunications.entrySet()) {
+                refreshToken(entry.getValue());
                 ProtocolMessage p = new ProtocolMessage("WRITEBACK", _pubKey, entry.getValue().getToken());
                 p.setAtomicRegisterMessages(arm.getBytes());
                 pms.put(entry.getKey(), p);
@@ -597,12 +582,9 @@ public class Client {
                     VerifiableProtocolMessage response = requestServer(pm.getValue(), _serverCommunications.get(pm.getKey()));
 
                     if (verifyReceivedMessage(response) == StatusCode.OK) {
-
-                        System.out.println("Response pm " + response.getProtocolMessage() + " announcements");
-                        System.out.println("Received register messages" + response.getProtocolMessage().getAtomicRegisterMessages());
-                        System.out.println("Received [" + response.getProtocolMessage().getCommand() + "]");
-                        System.out.flush();
-
+  
+                       System.out.flush();
+                        //TODO CHECK HOW MANY SERVERS NEED TO CALL WRITE RETURN
                         if (general && pm.getValue().getCommand().equals("READGENERAL")) {
                             _responses.put(pm.getKey(), response);
                             _regularRegisterNN.readReturn(response.getProtocolMessage(), new ArrayList<>(_responses.values()));
@@ -702,9 +684,11 @@ public class Client {
                 serverCommunication.setAlive(false);
                 return null;
             }
-            catch (IOException | ClassNotFoundException e) {
+            catch (IOException | ClassNotFoundException | ClassCastException e) {
+                System.out.println("ola erro estupido");
+                reset(serverCommunication);
                 System.out.println(e);
-                return null;
+                //System.exit(-1);
             }
             finally {
                 System.out.flush();
@@ -712,6 +696,19 @@ public class Client {
         }
 
         return rvpm;
+    }
+
+    public void reset(CommunicationServer cs) {
+        try{
+        _communication.close(cs.getClientSocket());
+        _serverCommunications.put(_serverPubKey, createServerCommunication(cs.getPort()));
+        refreshToken(cs);
+
+        }
+        catch(Exception e) {
+            System.out.println("CARALHGO");
+            System.out.println(e);
+        }
     }
 
     public List<StatusCode> registerServersGroup() {

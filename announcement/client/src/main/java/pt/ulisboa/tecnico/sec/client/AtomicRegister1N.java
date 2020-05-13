@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -20,7 +21,7 @@ public class AtomicRegister1N {
     private AtomicValue _atomicValue;
     private AtomicInteger _rid;
     private AtomicInteger _acks;
-    private HashMap<PublicKey, AtomicValue> _readList = new HashMap<>();
+    private ConcurrentHashMap<PublicKey, AtomicValue> _readList = new ConcurrentHashMap<>();
     private AtomicBoolean _reading;
     private AtomicInteger _wts;
     private List<VerifiableAnnouncement> _readval;
@@ -63,21 +64,8 @@ public class AtomicRegister1N {
 
             synchronized (_readList) {
 
-                //print _readList before
-                /*System.out.println("Print _readList before");
-                for (AtomicValue val : _readList.values()) {
-                    System.out.println("val before " + val);
-                }
-                System.out.flush();*/
-
                 _readList.put(pm.getPublicKey(), av);
-
-                // print _readList after
-                /*System.out.println("Print _readList after");
-                for (AtomicValue val : _readList.values()) {
-                    System.out.println("val after " + val);
-                }
-                System.out.flush();*/
+                System.out.flush();
 
                 _readList.put(pm.getPublicKey(), av);
                 if (_readList.size() > _client._nServers / 2) {
@@ -119,7 +107,7 @@ public class AtomicRegister1N {
         if (r == _rid.get()) {
             _acks.incrementAndGet();
             synchronized(_lock) {
-                System.out.println(_acks.get());
+                //System.out.println(_acks.get());
                 if (_acks.get() > _client._nServers / 2) {
                     _acks.set(0);
                     if(_reading.compareAndSet(true, false)) {
@@ -148,7 +136,7 @@ public class AtomicRegister1N {
         return _acks.get();
     }
 
-    public HashMap<PublicKey, AtomicValue> getReadList() {
+    public ConcurrentHashMap<PublicKey, AtomicValue> getReadList() {
         return _readList;
     }
 
