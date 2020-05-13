@@ -13,6 +13,7 @@ public class CommunicationServer {
     private Socket _clientSocket;
     private String _token;
     private boolean _alive;
+    protected boolean _refreshToken = false;
 
     public CommunicationServer(int port, ObjectOutputStream oos, ObjectInputStream ois,
                                Socket clientSocket) {

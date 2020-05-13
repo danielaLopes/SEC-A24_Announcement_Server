@@ -636,6 +636,7 @@ public class Server extends Thread {
         user.setRandomToken();
         _db.updateUserToken(user.getdbTableName(), user.getToken());
         String token = user.getToken();
+        user.setCMH(cmh);
 
         response = createVerifiableMessage(new ProtocolMessage(
                 "REGISTER", sc, _pubKey, token));
