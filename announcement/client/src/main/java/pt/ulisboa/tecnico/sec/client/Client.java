@@ -530,8 +530,11 @@ public class Client {
                         }
                     } else {
                         //System.out.println("Verify status code was not ok: " + sc);
-                        if (response == null)
-                            _responses.put(pm.getKey(), createVerifiableMessage(new ProtocolMessage(StatusCode.NO_CONSENSUS)));
+                        if (response == null) {
+                            ProtocolMessage pmNoConsensus = new ProtocolMessage(StatusCode.NO_CONSENSUS);
+                            pmNoConsensus.setAtomicRegisterMessages(new RegisterMessage(0, 0, new ArrayList<>()).getBytes());
+                            _responses.put(pm.getKey(), createVerifiableMessage(pmNoConsensus));
+                        }
                         else
                             _responses.put(pm.getKey(), response);
                         if (_responses.size() == _nServers) {
