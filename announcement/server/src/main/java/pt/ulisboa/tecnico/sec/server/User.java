@@ -27,6 +27,10 @@ public class User {
         return _cmh;
     }
 
+    public void setCMH(ClientMessageHandler cmh) {
+        _cmh = cmh;
+    }
+
     public String getdbTableName() {
         return _dbTableName;
     }

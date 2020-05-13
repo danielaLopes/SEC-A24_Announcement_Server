@@ -451,7 +451,7 @@ public class Client {
      */
     public Map<PublicKey, VerifiableProtocolMessage> requestServersGroupRegister(ProtocolMessage pm) {
 
-        Map<PublicKey, VerifiableProtocolMessage> responses = new HashMap<>();
+        Map<PublicKey, VerifiableProtocolMessage> responses = new ConcurrentHashMap<>();
         for (Map.Entry<PublicKey, CommunicationServer> entry : _serverCommunications.entrySet()) {
             // TODO: possible attack: server sending wrong public key?????
             responses.put(entry.getKey(), requestServer(pm, entry.getValue()));
@@ -463,6 +463,8 @@ public class Client {
     public void deliverPost(StatusCode sc) {
         //System.out.println("deliverPost");
         resetResponses();
+        postDelivered = true;
+        postDeliveredSC = sc;
         if (_clientUI != null)
             _clientUI.deliverPost(sc);
         
@@ -472,7 +474,6 @@ public class Client {
         System.out.println("deliverPostGeneral");
         resetResponses();
         postGeneralDelivered = true;
-        System.out.println(postGeneralDelivered);
         postGeneralDeliveredSC = sc;  
         if (_clientUI != null)
             _clientUI.deliverPostGeneral(sc);  
@@ -556,7 +557,7 @@ public class Client {
     }
 
     public void writeBack(RegisterMessage arm) {
-        Map<PublicKey, ProtocolMessage> pms = new HashMap<>();
+        Map<PublicKey, ProtocolMessage> pms = new ConcurrentHashMap<>();
             for (Map.Entry<PublicKey, CommunicationServer> entry : _serverCommunications.entrySet()) {
                 refreshToken(entry.getValue());
                 ProtocolMessage p = new ProtocolMessage("WRITEBACK", _pubKey, entry.getValue().getToken());
@@ -666,7 +667,8 @@ public class Client {
         catch(SocketTimeoutException e) {
             System.out.println("Could not receive a response for port " + serverCommunication.getPort()
                 + ". Refreshing token...");
-            refreshToken(serverCommunication);
+            if (serverCommunication._refreshToken == false)
+                refreshToken(serverCommunication);
             return null;
         }
         catch (SocketException e) {
@@ -782,7 +784,7 @@ public class Client {
 
             RegisterMessage arm = new RegisterMessage(rid, wts, values);
  
-            Map<PublicKey, ProtocolMessage> pms = new HashMap<>();
+            Map<PublicKey, ProtocolMessage> pms = new ConcurrentHashMap<>();
             for (Map.Entry<PublicKey, CommunicationServer> entry : _serverCommunications.entrySet()) {
                 ProtocolMessage p = new ProtocolMessage("POST", _pubKey, a, entry.getValue().getToken());
                 p.setAtomicRegisterMessages(arm.getBytes());
@@ -826,7 +828,7 @@ public class Client {
 
         RegisterMessage arm = new RegisterMessage(wts, values);
 
-        Map<PublicKey, ProtocolMessage> pms = new HashMap<>();
+        Map<PublicKey, ProtocolMessage> pms = new ConcurrentHashMap<>();
         for (Map.Entry<PublicKey, CommunicationServer> entry : _serverCommunications.entrySet()) {
             ProtocolMessage p = new ProtocolMessage("POSTGENERAL", _pubKey, a, entry.getValue().getToken());
             p.setAtomicRegisterMessages(arm.getBytes());
@@ -852,7 +854,7 @@ public class Client {
 
         RegisterMessage arm = _atomicRegister1N.read();
 
-        Map<PublicKey, ProtocolMessage> pms = new HashMap<>();
+        Map<PublicKey, ProtocolMessage> pms = new ConcurrentHashMap<>();
         for (Map.Entry<PublicKey, CommunicationServer> entry : _serverCommunications.entrySet()) {
             ProtocolMessage pm = new ProtocolMessage("READ", _pubKey, entry.getValue().getToken(), number, user);
             pm.setAtomicRegisterMessages(arm.getBytes());
@@ -873,7 +875,7 @@ public class Client {
 
         RegisterMessage arm = _regularRegisterNN.read();
 
-        Map<PublicKey, ProtocolMessage> pms = new HashMap<>();
+        Map<PublicKey, ProtocolMessage> pms = new ConcurrentHashMap<>();
         for (Map.Entry<PublicKey, CommunicationServer> entry : _serverCommunications.entrySet()) {
             ProtocolMessage pm = new ProtocolMessage("READGENERAL", _pubKey, entry.getValue().getToken(), number);
             pm.setAtomicRegisterMessages(arm.getBytes());
@@ -918,11 +920,23 @@ public class Client {
         return rsc;
     }
 
-    public void refreshToken(CommunicationServer sc) {
+    public StatusCode refreshToken(CommunicationServer sc) {
+        sc._refreshToken = true;
         ProtocolMessage p = new ProtocolMessage("TOKEN", _pubKey);
         VerifiableProtocolMessage vpm = requestServer(p, sc);
         sc.setToken(getTokenFromVPM(vpm));
         System.out.println("REFRESHED TOKEN!");
+        sc._refreshToken = false;
+        return getStatusCodeFromVPM(vpm);
+    }
+
+    public List<StatusCode> refreshTokenServersGroup() {
+        List<StatusCode> statusCodes = new ArrayList<>();
+        for (Map.Entry<PublicKey, CommunicationServer> entry : _serverCommunications.entrySet()) {
+            StatusCode sc = refreshToken(entry.getValue());
+            statusCodes.add(sc);
+        }
+        return statusCodes;
     }
 
 }

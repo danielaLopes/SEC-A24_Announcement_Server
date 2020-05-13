@@ -673,6 +673,7 @@ public class Server extends Thread {
         user.setRandomToken();
         _db.updateUserToken(user.getdbTableName(), user.getToken());
         String token = user.getToken();
+        user.setCMH(cmh);
 
         System.out.println("user is already registered token: " + token);
         response = createVerifiableMessage(new ProtocolMessage(
