@@ -20,8 +20,7 @@ public class Application {
         //CTRL+C signal handler. Allows to clean databases.
         Signal.handle(new Signal("INT"), new SignalHandler() {
             public void handle(Signal sig) {
-                System.out.println("Ctrl-c: Deleting tables from database");
-                // TODO: uncomment this
+                System.out.println("(INFO) Server going down.");
                 //Database.dropDatabase();
                 System.exit(-1);
             }

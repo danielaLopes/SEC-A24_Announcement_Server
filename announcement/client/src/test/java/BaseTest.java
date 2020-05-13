@@ -59,14 +59,14 @@ class BaseTest {
         return KeyPairUtil.loadPublicKey(pubKeyPath);
     }
 
-    static public void sleep() {
+    public void sleep() {
         try {
             Thread.sleep(3000);
         } catch(Exception e) {}
     }
 
     @BeforeEach
-    static void setup() {
+    void before() {
         System.out.println("Preparing next test...");
         try {
             sleep();

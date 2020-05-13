@@ -7,67 +7,57 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class PostGeneralTest extends BaseTest {
 
-    static private Client _client1, _client2, _client3;
+    static private Client _client1, _client2;
 
-    // public PostGeneralTest() {
-    //     _client1 = new Client(PUBLICKEY_PATH1, KEYSTORE_PATH1, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH);
-    //     _client2 = new Client(PUBLICKEY_PATH2, KEYSTORE_PATH2, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH);
-    //     _client3 = new Client(PUBLICKEY_PATH3, KEYSTORE_PATH3, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, SERVER_PUBLICKEY_PATH);
-    // }
-
-    // @Test
-    // void success() {
-    //     StatusCode statusCode = _client1.postGeneral(MESSAGE, REFERENCES);
+    @Test
+    void success() {
+        _client1.postGeneral("Hello Quorum!", new ArrayList<>());
         
-    //     assertEquals(statusCode, StatusCode.OK);
-    // }
+        while (_client1.postGeneralDelivered == false) { sleep(); }
 
-    // @Test
-    // void tooManyUsers() {
-    //     StatusCode statusCode1 = _client1.postGeneral(MESSAGE, REFERENCES);
-    //     StatusCode statusCode2 = _client2.postGeneral(MESSAGE, REFERENCES);
-    //     StatusCode statusCode3 = _client3.postGeneral(MESSAGE, REFERENCES);
+        assertEquals(StatusCode.OK, _client1.postGeneralDeliveredSC);
+    }
+
+    @Test
+    void successTwoClients() {
+        _client1.postGeneral("Hello Quorum!", new ArrayList<>());
+        // sleep();
+        _client2.postGeneral("Hello Quorum!", new ArrayList<>());
         
-    //     assertEquals(statusCode1, StatusCode.OK);
-    //     assertEquals(statusCode2, StatusCode.OK);
-    //     assertEquals(statusCode3, StatusCode.OK);
-    // }
+        while (_client1.postGeneralDelivered == false ||_client2.postGeneralDelivered == false) { sleep(); }
 
-    // @Test
-    // void messageLengthIsInvalid() {
-    //     String invalidMessage = "";
-    //     for (int i = 0; i < MAX_MESSAGE_LENGTH; i++) {
-    //         invalidMessage += "A";
-    //     }
+        assertEquals(StatusCode.OK, _client1.postGeneralDeliveredSC);
+        assertEquals(StatusCode.OK, _client2.postGeneralDeliveredSC);
+    }
 
-    //     StatusCode statusCode = _client1.postGeneral(invalidMessage, REFERENCES);
-        
-    //     assertEquals(statusCode, StatusCode.INVALID_MESSAGE_LENGTH);
-    // }
+    @Test
+    void invalidMessage() {
+        List<StatusCode> sc = _client1.postGeneral(null, new ArrayList<>());
+        assertEquals(StatusCode.NULL_FIELD, sc.get(0));
+    }
 
-    // @Test
-    // void messageIsNull() {
-    //     StatusCode statusCode = _client1.postGeneral(null, REFERENCES);
-        
-    //     assertEquals(statusCode, StatusCode.NULL_FIELD);
-    // }
+    @Test
+    void invalidReferences() {
+        List<StatusCode> sc = _client1.postGeneral("Hello Quorum!", null);
+        assertEquals(StatusCode.NULL_FIELD, sc.get(0));
+    }
 
-    // @Test
-    // void referencesIsNull() {
-    //     StatusCode statusCode = _client1.postGeneral(MESSAGE, null);
-        
-    //     assertEquals(statusCode, StatusCode.NULL_FIELD);
-    // }
 
-    // @AfterAll
-    // static void closeCommunications() {
-    //     _client1.closeCommunication(0);
-    //     _client2.closeCommunication(0);
-    //     _client3.closeCommunication(0);
-    // }
+    @BeforeAll
+    static void setup() {
+        _client1 = new Client(PUBLICKEY_PATH1, KEYSTORE_PATH1, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, 4, 1);
+        _client2 = new Client(PUBLICKEY_PATH2, KEYSTORE_PATH2, KEYSTORE_PASSWD, ENTRY_PASSWD, ALIAS, 4, 1);
+    }
+
+    @AfterAll
+    static void end() {
+        _client1.closeGroupCommunication();
+        _client2.closeGroupCommunication();
+    }
 
 }

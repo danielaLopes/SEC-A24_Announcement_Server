@@ -30,6 +30,7 @@ public class RegularRegisterNN {
             if (arm.getWts() > getLastUserTimeStamp(clientPubKey)) {
                 RegisterValue rv = new RegisterValue(arm.getWts(), arm.getValues().get(0), clientPubKey);
                 _registerValues.add(rv);
+                _server.addAnnouncementMapper(arm.getValues());
             }
         }
 

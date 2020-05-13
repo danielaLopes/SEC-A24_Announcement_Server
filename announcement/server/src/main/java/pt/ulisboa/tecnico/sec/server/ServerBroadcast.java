@@ -109,13 +109,12 @@ public class ServerBroadcast {
         //System.out.println("ECHOS AFTER  " + getEchos().size());
         
         List<VerifiableProtocolMessage> echos = getEchos();
-        //System.out.println("==========ECHOS SIZE: " + echos.size() + "quorum: " +  _quorum);
+        // System.out.println("==========ECHOS SIZE: " + echos.size() + "quorum: " +  _quorum);
         System.out.flush();
         if(echos.size() > _quorum) {
             localFinalDelivery();
-            VerifiableProtocolMessage vpm = MessageComparator.compareClientMessages(echos, echos.size()/2);
-            if (vpm != null && _sentReady.compareAndSet(false, true)) {
-                ServerMessage s = new ServerMessage(_server.getPublicKey(), "FINAL", vpm, _bcb);
+            if (_sentReady.compareAndSet(false, true)) {
+                ServerMessage s = new ServerMessage(_server.getPublicKey(), "FINAL", _clientMessage, _bcb);
                 return s; 
             }
         }
@@ -123,69 +122,66 @@ public class ServerBroadcast {
     }
 
     public synchronized void localFinalDelivery() {
-        //System.out.println("------------------------localfinaldelivery");
         System.out.flush();
         ServerMessage sm = new ServerMessage(_server.getPublicKey(), "FINAL", _clientMessage, _bcb);
         VerifiableServerMessage vsm = _server.createVerifiableServerMessage(sm);
     
         //System.out.println("Updating sigma from " + sm.getPublicKey().toString().substring(0, 120));
-        //System.out.println("update sigma before " + getSigmas().size());
+        // System.out.println("update sigma before " + getSigmas().size());
         _sigmas.put(_server.getPublicKey(), vsm);
-        //System.out.println("update sigma after " + getSigmas().size());
+        // System.out.println("update sigma after " + getSigmas().size());
+
+        // System.out.println("==========SIGMAS SIZE: " + _sigmas.size() + " > _quorumF: " +  _quorum);
 
         //Amplification step
-        synchronized(_sentReady) {
-            if (_sentReady.get() == false) {
+        if (_sentReady.get() == false) {
 
-                List<VerifiableServerMessage> sigmas = getSigmas();
+            List<VerifiableServerMessage> sigmas = getSigmas();
 
-                int nReadys = 0;
-                // we have to check if we have a majority of valid sigmas with the message that the server sent us
-                for (VerifiableServerMessage sigma : sigmas) {
-                        StatusCode sc = _server.verifyServerSignature(sigma);
-                        if (sc.equals(StatusCode.OK) && sigma.getServerMessage().getClientMessage().equals(_clientMessage))
-                            nReadys++;
-                }
-                if (nReadys > _quorumF) {
-                    _sentReady.getAndSet(true);
-                    ServerMessage s = new ServerMessage(_server.getPublicKey(), "FINAL", _clientMessage, _bcb);
-                    _server.sendToAllServers(s); 
-                }
+            int nReadys = 0;
+            // we have to check if we have a majority of valid sigmas with the message that the server sent us
+            for (VerifiableServerMessage sigma : sigmas) {
+                    StatusCode sc = _server.verifyServerSignature(sigma);
+                    if (sc.equals(StatusCode.OK))
+                        nReadys++;
+            }
+            if (nReadys > _quorumF) {
+                _sentReady.getAndSet(true);
+                ServerMessage s = new ServerMessage(_server.getPublicKey(), "FINAL", _clientMessage, _bcb);
+                _server.sendToAllServers(s); 
             }
         }
         //End Amplification step
 
-        synchronized(_delivered) {
-            if (_delivered.get() == false) {
-                List<VerifiableServerMessage> sigmas = getSigmas();
+        if (_delivered.get() == false) {
+            List<VerifiableServerMessage> sigmas = getSigmas();
 
-                int nSigVerified = 0;
-                for (VerifiableServerMessage sigma : sigmas) {
+            int nSigVerified = 0;
+            for (VerifiableServerMessage sigma : sigmas) {
 
-                    // sigma can be null in case of having received echo messages but not ready
-                    // messages from the same server
-                        StatusCode sc = _server.verifyServerSignature(sigma);
-                        if (sc.equals(StatusCode.OK) && sigma.getServerMessage().getClientMessage().equals(_clientMessage)) {
-                            nSigVerified++;
-                        }
+                // sigma can be null in case of having received echo messages but not ready
+                // messages from the same server
+                    StatusCode sc = _server.verifyServerSignature(sigma);
+                    if (sc.equals(StatusCode.OK)) {
+                        nSigVerified++;
+                    }
+            }
+
+            //System.out.println("sig FUNKY " +  nSigVerified);
+            System.out.flush();
+            if (nSigVerified > _quorum2F) {
+                List<VerifiableProtocolMessage> echos = getEchos();
+
+                //System.out.println("ECHOS BEFORE COMPARATOR: " + echos.size());
+                VerifiableProtocolMessage vpmToDeliver = MessageComparator.compareClientMessages(echos, echos.size()/2);
+                if (vpmToDeliver == null) {
+                    //ystem.out.println("NON LOCAL DELIVER  FAILED");
+                    _server.deliverFailed(_clientMessage);
                 }
-
-                //System.out.println("sig FUNKY " +  nSigVerified);
-                System.out.flush();
-                if (nSigVerified > _quorum2F) {
-                    List<VerifiableProtocolMessage> echos = getEchos();
-
-                    //System.out.println("ECHOS BEFORE COMPARATOR: " + echos.size());
-                    VerifiableProtocolMessage vpmToDeliver = MessageComparator.compareClientMessages(echos, echos.size()/2);
-                    if (vpmToDeliver == null) {
-                        //ystem.out.println("NON LOCAL DELIVER  FAILED");
-                        _server.deliverFailed(_clientMessage);
-                    }
-                    else {
-                        //System.out.println("NON LOCAL DELIVER");
-                        _server.deliver(vpmToDeliver, _clientMessage);
-                        _delivered.getAndSet(true);
-                    }
+                else {
+                    //System.out.println("NON LOCAL DELIVER");
+                    _server.deliver(vpmToDeliver, _clientMessage);
+                    _delivered.getAndSet(true);
                 }
             }
         }
@@ -198,70 +194,68 @@ public class ServerBroadcast {
         
         if(!_sigmas.containsKey(sm.getPublicKey())) {
             //System.out.println("Updating sigma from " + sm.getPublicKey().toString().substring(0, 120));
-            //System.out.println("update sigma before " + getSigmas().size());
+            // System.out.println("update sigma before " + getSigmas().size());
             System.out.flush();
             _sigmas.put(sm.getPublicKey(), vsm);
-            //System.out.println("update sigma after " + getSigmas().size());
+            // System.out.println("update sigma after " + getSigmas().size());
             System.out.flush();
         }
 
         //Amplification step
-        synchronized(_sentReady) {
-            if (_sentReady.get() == false) {
+        if (_sentReady.get() == false) {
 
-                List<VerifiableServerMessage> sigmas = getSigmas();
+            List<VerifiableServerMessage> sigmas = getSigmas();
 
-                int nReadys = 0;
-                // we have to check if we have a majority of valid sigmas with the message that the server sent us
-                for (VerifiableServerMessage sigma : sigmas) {
-                        //if (_server.verifyServerSignature(sigma).equals(StatusCode.OK))
-                        StatusCode sc = _server.verifyServerSignature(sigma);
-                        if (sc.equals(StatusCode.OK) && sigma.getServerMessage().getClientMessage().equals(finalClientMsg))
-                            nReadys++;
-                }
-                if (nReadys > _quorumF) {
-                    _sentReady.getAndSet(true);
-                    ServerMessage s = new ServerMessage(_server.getPublicKey(), "FINAL", finalClientMsg, _bcb);
-                    _server.sendToAllServers(s); 
-                }
+            int nReadys = 0;
+            // we have to check if we have a majority of valid sigmas with the message that the server sent us
+            for (VerifiableServerMessage sigma : sigmas) {
+                    //if (_server.verifyServerSignature(sigma).equals(StatusCode.OK))
+                    StatusCode sc = _server.verifyServerSignature(sigma);
+                    if (sc.equals(StatusCode.OK))
+                        nReadys++;
+            }
+            if (nReadys > _quorumF) {
+                _sentReady.getAndSet(true);
+                ServerMessage s = new ServerMessage(_server.getPublicKey(), "FINAL", finalClientMsg, _bcb);
+                _server.sendToAllServers(s); 
             }
         }
         //End Amplification step
 
-        synchronized(_delivered) {
-            if (_delivered.get() == false) {
-                List<VerifiableServerMessage> sigmas = getSigmas();
+    
+        if (_delivered.get() == false) {
+            List<VerifiableServerMessage> sigmas = getSigmas();
 
-                int nSigVerified = 0;
-                for (VerifiableServerMessage sigma : sigmas) {
+            int nSigVerified = 0;
+            for (VerifiableServerMessage sigma : sigmas) {
 
-                    // sigma can be null in case of having received echo messages but not ready
-                    // messages from the same server
-                        StatusCode sc = _server.verifyServerSignature(sigma);
-                        if (sc.equals(StatusCode.OK) && sigma.getServerMessage().getClientMessage().equals(finalClientMsg)) {
-                            nSigVerified++;
-                        }
+                // sigma can be null in case of having received echo messages but not ready
+                // messages from the same server
+                    StatusCode sc = _server.verifyServerSignature(sigma);
+                    if (sc.equals(StatusCode.OK)) {
+                        nSigVerified++;
+                    }
+            }
+
+            //System.out.println("sig FUNKY " +  nSigVerified);
+            //System.out.println("quorum " + _quorum2F);
+            if (nSigVerified > _quorum2F) {
+                List<VerifiableProtocolMessage> echos = getEchos();
+
+                //System.out.println("ECHOS BEFORE COMPARATOR: " + echos.size());
+                VerifiableProtocolMessage vpmToDeliver = MessageComparator.compareClientMessages(echos, echos.size()/2);
+                if (vpmToDeliver == null) {
+                    //System.out.println("NON LOCAL DELIVER  FAILED");
+                    _server.deliverFailed(_clientMessage);
                 }
-
-                //System.out.println("sig FUNKY " +  nSigVerified);
-                //System.out.println("quorum " + _quorum2F);
-                if (nSigVerified > _quorum2F) {
-                    List<VerifiableProtocolMessage> echos = getEchos();
-
-                    //System.out.println("ECHOS BEFORE COMPARATOR: " + echos.size());
-                    VerifiableProtocolMessage vpmToDeliver = MessageComparator.compareClientMessages(echos, echos.size()/2);
-                    if (vpmToDeliver == null) {
-                        //System.out.println("NON LOCAL DELIVER  FAILED");
-                        _server.deliverFailed(_clientMessage);
-                    }
-                    else {
-                        //System.out.println("NON LOCAL DELIVER");
-                        _server.deliver(vpmToDeliver, _clientMessage);
-                        _delivered.getAndSet(true);
-                    }
+                else {
+                    //System.out.println("NON LOCAL DELIVER");
+                    _server.deliver(vpmToDeliver, _clientMessage);
+                    _delivered.getAndSet(true);
                 }
             }
         }
+        
     }
 
     public void setClientMessage(VerifiableProtocolMessage clientMessage) {

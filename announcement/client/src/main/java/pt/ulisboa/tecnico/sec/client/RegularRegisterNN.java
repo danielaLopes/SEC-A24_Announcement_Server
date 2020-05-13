@@ -46,30 +46,30 @@ public class RegularRegisterNN {
 
             synchronized(_readList) {
                 // print _readList before
-                System.out.println("Print _readList before");
+                //System.out.println("Print _readList before");
                 for (AtomicValue val : _readList.values()) {
-                    System.out.println("val before " + val);
+                    //System.out.println("val before " + val);
                 }
-                System.out.flush();
+                //System.out.flush();
 
                 _readList.put(pm.getPublicKey(), av);
 
                 // print _readList after
-                System.out.println("Print _readList after");
+                //System.out.println("Print _readList after");
                 for (AtomicValue val : _readList.values()) {
-                    System.out.println("val after " + val);
+                    //System.out.println("val after " + val);
                 }
-                System.out.flush();
+                //System.out.flush();
 
                 // TODO: readlist needs to have a quorum
                 //TODO ATUALIZAR COM VERIFIABLE ANNOUNCEMENTS
                 if (_readList.size() > _quorum) {
                     Map.Entry<StatusCode, List<VerifiableAnnouncement>> quorumMessages =
                             MessageComparator.compareServerResponses(responses, responses.size() / 2);
-                    System.out.println("quorum messages sc" + quorumMessages.getKey());
-                    System.out.println("quorum messages ann" + quorumMessages.getValue());
+                    //System.out.println("quorum messages sc" + quorumMessages.getKey());
+                    //System.out.println("quorum messages ann" + quorumMessages.getValue());
                     if (quorumMessages != null) {
-                        System.out.println("quorum messages is not null ");
+                        //System.out.println("quorum messages is not null ");
                         AtomicValue highest = highest();
                         _readList.clear();
                         // TODO: why highest then ????

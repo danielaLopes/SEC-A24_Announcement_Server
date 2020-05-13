@@ -39,7 +39,7 @@ public class Server extends Thread {
      * key it's in the General Board, otherwise it's in the respective User's
      * PostOperation Board
      */
-    private ConcurrentHashMap<String, AnnouncementLocation> _announcementMapper;
+    protected ConcurrentHashMap<String, AnnouncementLocation> _announcementMapper;
     private Communication _communication;
 
     private RegularRegisterNN _regularRegisterNN = new RegularRegisterNN(this, _nServers);
@@ -176,7 +176,7 @@ public class Server extends Thread {
             deliver(clientMessage, clientMessage);
         }
         else {
-            System.out.println("Broadcast to other servers!");
+            System.out.println("(INFO) Broadcast to other servers!");
             ServerBroadcast sb = new ServerBroadcast(this, clientMessage);
             String bcb = UUIDGenerator.generateUUID();
             sb.setBcb(bcb);
@@ -312,11 +312,11 @@ public class Server extends Thread {
         p.setAtomicRegisterMessages(arm.getBytes());
         cmh.sendMessage(createVerifiableMessage(p));
 
-        System.out.println("------------------------END POST------------------------");
+        System.out.println("------------------------END READGENERAL------------------------");
     }
 
     public void deliverFailed(VerifiableProtocolMessage clientVPM) {
-        System.out.println("(INFO) Could not deliver message to client");
+        System.out.println("(INFO) Deliver failed: could not reach consensus");
     }
 
 
@@ -436,6 +436,15 @@ public class Server extends Thread {
     public StatusCode verifyReferences(List<String> references) {
         if (references == null)
             return StatusCode.NULL_FIELD;
+
+            
+        for (ConcurrentHashMap.Entry<String, AnnouncementLocation> am: _announcementMapper.entrySet()) {
+            System.out.print("referencia que tenho: " + am.getKey());
+        }
+
+        for (String reference : references) {
+            System.out.print("referencia que mandei: " + reference);
+        }
 
         for (String reference : references) {
             if (!_announcementMapper.containsKey(reference)) {
@@ -578,7 +587,7 @@ public class Server extends Thread {
     }
 
     public void printStatusCodeDescription(StatusCode sc) {
-        System.out.println("======" + sc.getDescription() + "======");
+        System.out.println("==============   " + sc.getDescription() + "   ==============");
     }
 
     /**
@@ -616,7 +625,7 @@ public class Server extends Thread {
         if (sc.equals(StatusCode.USER_NOT_REGISTERED)) {
             String i = UUIDGenerator.generateUUID();
             String uuid = "T" + i;
-            AtomicRegister1N ar = new AtomicRegister1N();
+            AtomicRegister1N ar = new AtomicRegister1N(this);
             User user = new User(clientPubKey, uuid, ar, cmh);
             user.setRandomToken();
             _db.updateUserToken(user.getdbTableName(), user.getToken());
@@ -684,8 +693,7 @@ public class Server extends Thread {
                     "POST", sc, _pubKey)));
             return;
         }
-
-        
+                
         ServerMessage sm = new ServerMessage(_pubKey, "SERVER_POST", vpm);
         serverBroadcast(clientPubKey, sm, vpm);
         return;
@@ -729,6 +737,9 @@ public class Server extends Thread {
         ProtocolMessage p = new ProtocolMessage("ACK", sc, _pubKey, newToken, token);
         p.setAtomicRegisterMessages(arm.getBytes());
         cmh.sendMessage(createVerifiableMessage(p));
+
+        System.out.println("------------------------END WRITEBACK------------------------");
+
         return;
 
     }
@@ -925,8 +936,13 @@ public class Server extends Thread {
         response = createVerifiableMessage(new ProtocolMessage(
                 "TOKEN", StatusCode.OK, _pubKey, newToken));
 
-        
         return response;
+    }
+  
+    public void addAnnouncementMapper(List<VerifiableAnnouncement> announcements) {
+        for (VerifiableAnnouncement va: announcements) {
+            _announcementMapper.put(va.getAnnouncement().getAnnouncementID(), new AnnouncementLocation(va.getAnnouncement().getClientPublicKey(), 0));
+        }
     }
 
     public PublicKey getPublicKey() { return _pubKey; }
