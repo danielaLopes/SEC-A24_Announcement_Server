@@ -105,12 +105,14 @@ public class ServerThread extends Thread {
 
     public void handleServerBroadcast(ServerMessage sm) {
         System.out.println("handleServerBroadcast");
+
         VerifiableProtocolMessage vpm = sm.getClientMessage();
         verifyClientMessage(vpm);
         PublicKey clientPubKey = vpm.getProtocolMessage().getPublicKey();
         if (_server.verifySignature(vpm).equals(StatusCode.OK)) {
             if (_server._serverBroadcasts.containsKey(clientPubKey)) {
                 ServerBroadcast sb = _server._serverBroadcasts.get(clientPubKey);
+                sb.localEcho();
                 ServerMessage smToEcho = sb.echo(sm);
                 if (smToEcho != null)
                     sendServerMessage(smToEcho);
@@ -142,7 +144,6 @@ public class ServerThread extends Thread {
             _server.sendToAllServers(s);
             //sb.localReady();
         }
-        sb.localReady();
     }
 
     public void handleFinal(VerifiableServerMessage vsm) {
