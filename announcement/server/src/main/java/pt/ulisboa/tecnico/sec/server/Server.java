@@ -39,7 +39,7 @@ public class Server extends Thread {
      * key it's in the General Board, otherwise it's in the respective User's
      * PostOperation Board
      */
-    private ConcurrentHashMap<String, AnnouncementLocation> _announcementMapper;
+    protected ConcurrentHashMap<String, AnnouncementLocation> _announcementMapper;
     private Communication _communication;
 
     private RegularRegisterNN _regularRegisterNN = new RegularRegisterNN(this, _nServers);
@@ -436,6 +436,15 @@ public class Server extends Thread {
         if (references == null)
             return StatusCode.NULL_FIELD;
 
+            
+        for (ConcurrentHashMap.Entry<String, AnnouncementLocation> am: _announcementMapper.entrySet()) {
+            System.out.print("referencia que tenho: " + am.getKey());
+        }
+
+        for (String reference : references) {
+            System.out.print("referencia que mandei: " + reference);
+        }
+
         for (String reference : references) {
             if (!_announcementMapper.containsKey(reference)) {
                 return StatusCode.INVALID_REFERENCE;
@@ -574,7 +583,7 @@ public class Server extends Thread {
     }
 
     public void printStatusCodeDescription(StatusCode sc) {
-        System.out.println("======" + sc.getDescription() + "======");
+        System.out.println("==============   " + sc.getDescription() + "   ==============");
     }
 
     /**
@@ -612,7 +621,7 @@ public class Server extends Thread {
         if (sc.equals(StatusCode.USER_NOT_REGISTERED)) {
             String i = UUIDGenerator.generateUUID();
             String uuid = "T" + i;
-            AtomicRegister1N ar = new AtomicRegister1N();
+            AtomicRegister1N ar = new AtomicRegister1N(this);
             User user = new User(clientPubKey, uuid, ar, cmh);
             user.setRandomToken();
             _db.updateUserToken(user.getdbTableName(), user.getToken());
@@ -681,8 +690,7 @@ public class Server extends Thread {
                     "POST", sc, _pubKey)));
             return;
         }
-
-        
+                
         ServerMessage sm = new ServerMessage(_pubKey, "SERVER_POST", vpm);
         serverBroadcast(clientPubKey, sm, vpm);
         return;
@@ -926,6 +934,12 @@ public class Server extends Thread {
                 "TOKEN", StatusCode.OK, _pubKey, newToken));
 
         return response;
+    }
+  
+    public void addAnnouncementMapper(List<VerifiableAnnouncement> announcements) {
+        for (VerifiableAnnouncement va: announcements) {
+            _announcementMapper.put(va.getAnnouncement().getAnnouncementID(), new AnnouncementLocation(va.getAnnouncement().getClientPublicKey(), 0));
+        }
     }
 
     public PublicKey getPublicKey() { return _pubKey; }

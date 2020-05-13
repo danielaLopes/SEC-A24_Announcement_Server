@@ -81,7 +81,7 @@ public class ClientMessageHandler extends Thread {
                 }
             }
             catch (IOException | ClassNotFoundException e) {
-                System.out.println("Client disconnected.");
+                System.out.println("(INFO) Client at port: " + _socket.getLocalPort() + " has disconnected.");
                 _running = false;
                 closeCommunication();
                 return;
@@ -91,7 +91,7 @@ public class ClientMessageHandler extends Thread {
 
     public void sendMessage(VerifiableProtocolMessage vpm) {
         try {   
-            System.out.println("==> Sending [" + vpm.getProtocolMessage().getCommand() + "]to client port: " + _socket.getLocalPort());
+            System.out.println("==> Sending [" + vpm.getProtocolMessage().getCommand() + "] to client port: " + _socket.getLocalPort());
             _communication.sendMessage(vpm, _oos);
         }
         catch (IOException e) {

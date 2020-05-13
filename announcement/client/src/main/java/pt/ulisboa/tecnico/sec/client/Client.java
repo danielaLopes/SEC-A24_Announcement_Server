@@ -21,8 +21,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import javax.lang.model.element.AnnotationMirror;
-
 public class Client {
 
     // testing purposes only
@@ -104,7 +102,7 @@ public class Client {
         loadPublicKey(pubKeyPath);
         loadPrivateKey(keyStorePath, keyStorePasswd, entryPasswd, alias);
 
-        System.out.println("Starting new client" );
+        //System.out.println("Starting new client" );
         _nServers = nServers;
         _nFaults = nFaults;
         _quorum = (nServers + nFaults) / 2;
@@ -112,14 +110,14 @@ public class Client {
         _serverCommunications = new ConcurrentHashMap<>();
         List<PublicKey> serversPubKeys = loadServersGroupPublicKeys();
 
-        System.out.println("after loading server keys" );
+        //System.out.println("after loading server keys" );
 
         _communication = new Communication();
 
 
         //startServerCommunication(0);
         startServersGroupCommunication(serversPubKeys);
-        System.out.println("Started servers group communication" );
+        //System.out.println("Started servers group communication" );
         _atomicRegister1N = new AtomicRegister1N(this);
         _regularRegisterNN  = new RegularRegisterNN(this);
     }
@@ -286,14 +284,14 @@ public class Client {
             int serverIndex = 0;
             for (PublicKey serverPubKey : serverPublicKeys) {
                 int port = _startingServerPort + serverIndex++;
-                System.out.println("Connecting with server at port " + port);
+                System.out.println("(INFO) Trying connection with server at port " + port);
 
                 _serverCommunications.put(serverPubKey, createServerCommunication(port));
             }
             registerServersGroup();
         }
         catch(IOException e) {
-            System.out.println("Error starting client socket. Make sure the server is running.");
+            System.out.println("(INFO) Error starting client socket. Make sure the server is running.");
         }
     }
 
@@ -325,10 +323,10 @@ public class Client {
      * Prints a status code. Can be mostly used to analyze the responses
      * given by the server.
      */
-    public void printStatusCode(StatusCode sc) {
+    public void printStatusCode(String command, StatusCode sc) {
         if (sc == null) return;
 
-        System.out.println("Status Code: ====== " + sc + ": " + sc.getDescription() + " ======");
+        System.out.println("====== [" + command + "] Status Code: " + sc + "======");
     }
 
     /**
@@ -471,7 +469,7 @@ public class Client {
     }
 
     public void deliverPostGeneral(StatusCode sc) {
-        System.out.println("deliverPostGeneral");
+        //System.out.println("deliverPostGeneral");
         resetResponses();
         postGeneralDelivered = true;
         postGeneralDeliveredSC = sc;  
@@ -515,7 +513,6 @@ public class Client {
         for (Map.Entry<PublicKey, ProtocolMessage> pm : pms.entrySet()) {
             Thread thread = new Thread(){
                 public void run() {
-                    System.out.println("write requestServer");
                     VerifiableProtocolMessage response = requestServer(pm.getValue(), _serverCommunications.get(pm.getKey()));
                     StatusCode sc = verifyReceivedMessage(response);
                     if (sc.equals(StatusCode.OK)) {
@@ -538,7 +535,7 @@ public class Client {
                             _responses.put(pm.getKey(), response);
                         if (_responses.size() == _nServers) {
                             StatusCode finalSc = verifyStatusConsensus();
-                            System.out.println("DELIVERING WRITE WITHOUT CONSENSUS");
+                            //System.out.println("DELIVERING WRITE WITHOUT CONSENSUS");
                             if (general)
                                 deliverPostGeneral(finalSc);
                             else
@@ -599,7 +596,10 @@ public class Client {
                             responses.put(pm.getKey(), createVerifiableMessage(new ProtocolMessage(StatusCode.NO_CONSENSUS)));
                         else
                             responses.put(pm.getKey(), response);
-                        if (responses.size() == _nServers) {
+                        if (responses.size() == _nServers && responses.get(pm.getKey()).getProtocolMessage().getStatusCode().equals(StatusCode.USER_NOT_REGISTERED)) {
+                            deliverRead(StatusCode.USER_NOT_REGISTERED, new ArrayList<VerifiableAnnouncement>());
+                        }
+                        else if (responses.size() == _nServers) {
                             //System.out.println("DELIVERING READ WITHOUT CONSENSUS");
                             if (general)
                                 deliverReadGeneral(StatusCode.NO_CONSENSUS, new ArrayList<VerifiableAnnouncement>());
@@ -621,7 +621,7 @@ public class Client {
      * @return the server's response
      */
     public VerifiableProtocolMessage requestServer(ProtocolMessage pm, CommunicationServer serverCommunication) {
-        System.out.println("requestServer");
+        //System.out.println("requestServer");
         if (pm == null) return null;
 
         try {
@@ -647,10 +647,10 @@ public class Client {
         
         try {
             synchronized(serverCommunication.getObjInStream()) {
-                System.out.println("A enviar para " + serverCommunication.getPort());
+                System.out.println("==> Sending [" + pm.getCommand() + "] to server port: " + serverCommunication.getPort());
                 _communication.sendMessage(vpm, serverCommunication.getObjOutStream());
                 rvpm = (VerifiableProtocolMessage) _communication.receiveMessage(serverCommunication.getObjInStream());
-                System.out.println("Recebi de " + serverCommunication.getPort() + vpm.getProtocolMessage().getCommand());
+                System.out.println("<== Received [" + vpm.getProtocolMessage().getCommand() + "] from server port: "  + serverCommunication.getPort());
             }
 
             if (rvpm == null) {
@@ -669,14 +669,13 @@ public class Client {
 
         }
         catch(SocketTimeoutException e) {
-            System.out.println("Could not receive a response for port " + serverCommunication.getPort()
-                + ". Refreshing token...");
+            System.out.println("(INFO) Could not receive a response from server port: " + serverCommunication.getPort());
             if (serverCommunication._refreshToken == false)
                 refreshToken(serverCommunication);
             return null;
         }
         catch (SocketException e) {
-            System.out.println("A server is dead!");
+            System.out.println("(INFO) Server at port: " + serverCommunication.getPort() + " is dead!");
             serverCommunication.setAlive(false);
             return null;
         }
@@ -699,7 +698,7 @@ public class Client {
 
         }
         catch(Exception e) {
-            System.out.println("CARALHGO");
+            System.out.println("(INFO) Error reseting connection with server");
             System.out.println(e);
         }
     }
@@ -743,7 +742,6 @@ public class Client {
             System.out.println("Could not register: could not receive a response");
         }
         else {
-            System.out.println("register received token: " + getTokenFromVPM(vpm));
             cs.setToken(getTokenFromVPM(vpm));
             return StatusCode.OK;
         }
@@ -901,6 +899,8 @@ public class Client {
     }
 
     public boolean invalidToken(String token, PublicKey serverPubKey) {
+        if(_serverCommunications.get(serverPubKey).getToken() == null)
+            return false;
         return !token.equals(_serverCommunications.get(serverPubKey).getToken());
     }
 
@@ -913,7 +913,11 @@ public class Client {
             rsc = getStatusCodeFromVPM(vpm);
             PublicKey serverPubKey = getServerPublicKeyFromVPM(vpm);
 
-            if (invalidToken(getOldTokenFromVPM(vpm), serverPubKey)) {
+            if (getOldTokenFromVPM(vpm) == null) {
+                rsc = StatusCode.INVALID_TOKEN;
+            }
+
+            else if (invalidToken(getOldTokenFromVPM(vpm), serverPubKey)) {
                 rsc = StatusCode.INVALID_TOKEN;
             }
             else {
@@ -925,11 +929,11 @@ public class Client {
     }
 
     public StatusCode refreshToken(CommunicationServer sc) {
+        System.out.println("(INFO) Refreshing token!");
         sc._refreshToken = true;
         ProtocolMessage p = new ProtocolMessage("TOKEN", _pubKey);
         VerifiableProtocolMessage vpm = requestServer(p, sc);
         sc.setToken(getTokenFromVPM(vpm));
-        System.out.println("REFRESHED TOKEN!");
         sc._refreshToken = false;
         return getStatusCodeFromVPM(vpm);
     }

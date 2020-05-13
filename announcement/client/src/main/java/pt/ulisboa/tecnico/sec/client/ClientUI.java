@@ -111,40 +111,38 @@ public class ClientUI {
     }
 
     public void deliverPost(StatusCode sc) {
-        System.out.print("POST: ");
         if (sc.equals(StatusCode.NO_CONSENSUS))
-            System.out.println("NO QUORUM: Could not post announcement in user board.");
+            System.out.println("(INFO) No quorum: Could not post announcement in user board.");
         else
-            _client.printStatusCode(sc);
+            _client.printStatusCode("POST", sc);
         start();
     }
 
     public void deliverPostGeneral(StatusCode sc) {
-        System.out.print("POSTGENERAL: ");
         if (sc.equals(StatusCode.NO_CONSENSUS))
-            System.out.println("NO QUORUM: Could not post announcement in general board.");
+            System.out.println("(INFO) No quorum: Could not post announcement in general board.");
         else
-            _client.printStatusCode(sc);
+            _client.printStatusCode("POSTGENERAL", sc);
         start();
     }
 
     public void deliverRead(StatusCode sc, List<Announcement> announcements) {
-        System.out.print("READ: ");
         if (sc.equals(StatusCode.NO_CONSENSUS))
-            System.out.println("NO QUORUM: Could not read announcements from user board.");
+            System.out.println("(INFO) No quorum: Could not read announcements from user board.");
+        else if (sc.equals(StatusCode.USER_NOT_REGISTERED))
+            System.out.println("(INFO) User is still not registered. No announcements to display.");
         else
-            _client.printStatusCode(sc);
+            _client.printStatusCode("READ", sc);
         if(sc == StatusCode.OK)
             printAnnouncements(announcements, "USER");
         start();
     }
 
     public void deliverReadGeneral(StatusCode sc, List<Announcement> announcements) {
-        System.out.print("READGENERAL: ");
         if (sc.equals(StatusCode.NO_CONSENSUS))
-            System.out.println("NO QUORUM: Could not read announcements from general board.");
+            System.out.println("(INFO) No quorum: Could not read announcements from general board.");
         else
-            _client.printStatusCode(sc);
+            _client.printStatusCode("READGENERAL",sc);
         if(sc == StatusCode.OK)
             printAnnouncements(announcements, "USER");
         start();
@@ -192,9 +190,8 @@ public class ClientUI {
      * @param board where the announcements were posted
      */
     public void printAnnouncements(List<Announcement> announcements, String board) {
-        System.out.println("size of announcements to print " + announcements.size());
         if (announcements.size() == 0)
-            System.out.println("\nTHERE ARE NO ANNOUNCEMENTS TO DISPLAY");
+            System.out.println("\n-------------- THERE ARE NO ANNOUNCEMENTS TO DISPLAY --------------");
         else {
             System.out.println("\n-------------- ANNOUNCEMENTS FROM " + board + " --------------");
             for (Announcement a: announcements){

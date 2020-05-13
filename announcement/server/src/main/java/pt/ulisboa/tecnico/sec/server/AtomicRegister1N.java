@@ -13,6 +13,10 @@ public class AtomicRegister1N {
     private AtomicInteger _ts = new AtomicInteger(0);
     private List<VerifiableAnnouncement> _values = new ArrayList<>();
 
+    public AtomicRegister1N(Server server) {
+        _server = server;
+    }
+
     public int getTimeStamp() { return _ts.get(); }
     public List<VerifiableAnnouncement> getValues() { return _values; }
 
@@ -21,6 +25,7 @@ public class AtomicRegister1N {
             if (arm.getWts() > _ts.get()) {
                 _ts.set(arm.getWts());
                 _values.addAll(arm.getValues());
+                _server.addAnnouncementMapper(arm.getValues());
             }
         }
         return new RegisterMessage(arm.getRid());
