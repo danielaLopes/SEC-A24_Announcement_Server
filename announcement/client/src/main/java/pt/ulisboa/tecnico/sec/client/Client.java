@@ -515,7 +515,7 @@ public class Client {
         for (Map.Entry<PublicKey, ProtocolMessage> pm : pms.entrySet()) {
             Thread thread = new Thread(){
                 public void run() {
-                    System.out.println("write requestServer");
+                    // System.out.println("write requestServer");
                     VerifiableProtocolMessage response = requestServer(pm.getValue(), _serverCommunications.get(pm.getKey()));
                     StatusCode sc = verifyReceivedMessage(response);
                     if (sc.equals(StatusCode.OK)) {
@@ -538,7 +538,7 @@ public class Client {
                             _responses.put(pm.getKey(), response);
                         if (_responses.size() == _nServers) {
                             StatusCode finalSc = verifyStatusConsensus();
-                            System.out.println("DELIVERING WRITE WITHOUT CONSENSUS");
+                            // System.out.println("DELIVERING WRITE WITHOUT CONSENSUS");
                             if (general)
                                 deliverPostGeneral(finalSc);
                             else
@@ -621,7 +621,7 @@ public class Client {
      * @return the server's response
      */
     public VerifiableProtocolMessage requestServer(ProtocolMessage pm, CommunicationServer serverCommunication) {
-        System.out.println("requestServer");
+        // System.out.println("requestServer");
         if (pm == null) return null;
 
         try {
@@ -671,8 +671,7 @@ public class Client {
         catch(SocketTimeoutException e) {
             System.out.println("Could not receive a response for port " + serverCommunication.getPort()
                 + ". Refreshing token...");
-            closeCommunication(serverCommunication);
-            serverCommunication.setAlive(false);
+            if (serverCommunication._refreshToken == false) refreshToken(serverCommunication);
             return null;
         }
         catch (SocketException e) {
