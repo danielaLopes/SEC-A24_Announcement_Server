@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # SEC-A24_Announcement_Server
 
 ## Developing Environment
@@ -52,8 +53,13 @@ Inside project root directory (announcement/):
         ```
 
 2. Build project:
+    * Without running tests
     ```
     mvn clean install -DskipTests
+    ```
+    * Without compilling tests
+    ```
+    mvn clean install -Dmaven.test.skip=true 
     ```
 
 
@@ -66,9 +72,10 @@ Inside project root directory (announcement/):
     - Example 3 servers:
         ```
         cd server/
-        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="8001 password password alias src/main/resources/crypto/public1.key src/main/resources/crypto/server_keystore.jks"
-        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="8002 password password alias src/main/resources/crypto/public2.key src/main/resources/crypto/server2_keystore2.jks"
-        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="8003 password password alias src/main/resources/crypto/public3.key src/main/resources/crypto/server3_keystore3.jks"
+        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="4 1 9001 password password alias src/main/resources/crypto/public1.key src/main/resources/crypto/server_keystore.jks"
+        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="4 1 9002 password password alias src/main/resources/crypto/public2.key src/main/resources/crypto/server2_keystore2.jks"
+        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="4 1 9003 password password alias src/main/resources/crypto/public3.key src/main/resources/crypto/server3_keystore3.jks"
+        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="4 1 9004 password password alias src/main/resources/crypto/public4.key src/main/resources/crypto/server4_keystore4.jks"
         ```
 4. Run client:
     - General:
@@ -78,9 +85,9 @@ Inside project root directory (announcement/):
         ```
     - 3 clients:
         ```
-        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="src/main/resources/crypto/public1.key src/main/resources/crypto/client1_keystore.jks password password alias 3 2 src/main/resources/crypto/public2.key src/main/resources/crypto/public3.key"
-        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="src/main/resources/crypto/public2.key src/main/resources/crypto/client2_keystore.jks password password alias 3 2 src/main/resources/crypto/public1.key src/main/resources/crypto/public3.key"
-        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="src/main/resources/crypto/public3.key src/main/resources/crypto/client3_keystore.jks password password alias 3 2 src/main/resources/crypto/public1.key src/main/resources/crypto/public2.key"
+        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="src/main/resources/crypto/public1.key src/main/resources/crypto/client1_keystore.jks password password alias 4 1 2 src/main/resources/crypto/public2.key src/main/resources/crypto/public3.key"
+        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="src/main/resources/crypto/public2.key src/main/resources/crypto/client2_keystore.jks password password alias 4 1 2 src/main/resources/crypto/public1.key src/main/resources/crypto/public3.key"
+        mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client.Application" -Dexec.args="src/main/resources/crypto/public3.key src/main/resources/crypto/client3_keystore.jks password password alias 4 1 2 src/main/resources/crypto/public1.key src/main/resources/crypto/public2.key"
         ```
 
 ## Interacting with the Client UI
@@ -89,6 +96,18 @@ Inside project root directory (announcement/):
 * When posting an announcement, the announcements referenced must be in the format: id1,id2,id3,...
 
 ## Tests Structure
+
+### Byzantine Client
+    ```
+    cd client_server_communication/
+    mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client_server_testing.ByzantineClientApplication"
+    ```
+    
+### Byzantine Server
+    ```
+    cd client_server_communication/
+    mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client_server_testing.ByzantineServerApplication"
+    ```
 
 ### Requirements to run tests:
 - server/src/main/resources/crypto/public.key

@@ -9,6 +9,11 @@ public class ProtocolMessage implements Serializable {
     private PublicKey _publicKey;
     private StatusCode _statusCode;
 
+    //private String _opUuid;
+
+    private byte[] _registerMessage;
+
+    //TODO Eliminar
     private List<Announcement> _announcements;
     private Announcement _postAnnouncement;
     // Post response
@@ -54,6 +59,7 @@ public class ProtocolMessage implements Serializable {
         _oldToken = oldToken;
     }
 
+    // Post Operation Client -> Server
     public ProtocolMessage(String command, PublicKey publicKey, Announcement announcement, String token) {
         _command = command;
         _publicKey = publicKey;
@@ -98,7 +104,7 @@ public class ProtocolMessage implements Serializable {
         _publicKey = publicKey;
     }
 
-    //Read Operation Client -> Server
+    // Read Operation Client -> Server
     public ProtocolMessage(String command, PublicKey publicKey, String token, int numberAnnouncements, PublicKey toReadPublicKey) {
         _token = token;
         _command = command;
@@ -107,7 +113,7 @@ public class ProtocolMessage implements Serializable {
         _toReadPublicKey = toReadPublicKey;
     }
 
-    //ReadGeneral Operation Client -> Server
+    // ReadGeneral Operation Client -> Server
     public ProtocolMessage(String command, PublicKey publicKey, String token, int numberAnnouncements) {
         _token = token;
         _command = command;
@@ -115,7 +121,7 @@ public class ProtocolMessage implements Serializable {
         _numberAnnouncements = numberAnnouncements;
     }
 
-    //Read Operations Server -> Client
+    // Read Operations Server -> Client
     public ProtocolMessage(String command, StatusCode statusCode, PublicKey publicKey,
                            List<Announcement> announcements, String token, String oldToken) {
         _command = command;
@@ -126,7 +132,10 @@ public class ProtocolMessage implements Serializable {
         _announcements = announcements;
     }
 
+
+    public void setAtomicRegisterMessages(byte[] a) { _registerMessage = a; }
     // Read Response
+    public byte[] getAtomicRegisterMessages() { return _registerMessage; }
 
     public String getCommand() { return _command; }
 
@@ -135,6 +144,10 @@ public class ProtocolMessage implements Serializable {
     public PublicKey getToReadPublicKey() { return _toReadPublicKey; }
 
     public StatusCode getStatusCode() { return _statusCode; }
+
+    /*public String getOpUuid() { return _opUuid; }
+
+    public void setOpUuid(String opUuid) { _opUuid = opUuid; }*/
 
     public String getToken() { return _token; }
 
@@ -146,4 +159,5 @@ public class ProtocolMessage implements Serializable {
 
     public int getReadNumberAnnouncements() { return _numberAnnouncements; }
 
+    public void setToken(String token) { _token = token; }
 }

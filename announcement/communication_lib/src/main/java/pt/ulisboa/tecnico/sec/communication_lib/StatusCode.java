@@ -13,7 +13,9 @@ public enum StatusCode {
     NULL_FIELD(9, "Null fields are not allowed."),
     INVALID_COMMAND(10, "Requested command is not supported."),
     NO_RESPONSE(11, "Could not receive a response."),
-    DUPLICATE_REFERENCE(12, "An announcement cannot reference the same announcement more than once.");
+    DUPLICATE_REFERENCE(12, "An announcement cannot reference the same announcement more than once."),
+    INVALID_ANNOUNCEMENT_PUBLIC_KEY(13, "Announcement public key does not match public key of received message"),
+    NO_CONSENSUS(14, "Failed to reach a consensus.");
 
     private final int code;
     private final String description;

@@ -15,4 +15,58 @@ public class VerifiableProtocolMessage implements Serializable{
     public byte[] getSignedProtocolMessage() { return _signedpm; }
 
     public void setProtocolMessage(ProtocolMessage pm) { _pm = pm; }
+
+    public boolean equalResponses(VerifiableProtocolMessage vpm) {
+
+        if (this.getProtocolMessage().getCommand().equals("POST") ||
+                this.getProtocolMessage().getCommand().equals("POSTGENERAL")) {
+            // TODO: Add announcement Uuid
+            /*return this.getProtocolMessage().getPostAnnouncement().getAnnouncementID().equals(
+                    vpm.getProtocolMessage().getPostAnnouncement().getAnnouncementID());*/
+            return true;
+        }
+        else if (this.getProtocolMessage().getCommand().equals("READ") ||
+                    this.getProtocolMessage().getCommand().equals("READGENERAL")) {
+            return this.getProtocolMessage().getReadNumberAnnouncements() ==
+                    vpm.getProtocolMessage().getReadNumberAnnouncements() &&
+                    this.getProtocolMessage().getToReadPublicKey().equals(
+                            vpm.getProtocolMessage().getToReadPublicKey()
+                    );
+        }
+        return false;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+
+        if (o == this) {
+            return true;
+        }
+
+        if (!(o instanceof VerifiableProtocolMessage)) {
+            return false;
+        }
+
+        VerifiableProtocolMessage vpm = (VerifiableProtocolMessage) o;
+
+        if (this.getProtocolMessage().getCommand().equals("POST") ||
+                this.getProtocolMessage().getCommand().equals("POSTGENERAL")) {
+            // TODO: Add announcement Uuid
+            return this.getProtocolMessage().getPostAnnouncement().equals(
+                    vpm.getProtocolMessage().getPostAnnouncement());
+        }
+        else if (this.getProtocolMessage().getCommand().equals("READ")) {
+            return this.getProtocolMessage().getReadNumberAnnouncements() ==
+                    vpm.getProtocolMessage().getReadNumberAnnouncements() &&
+                    this.getProtocolMessage().getToReadPublicKey().equals(
+                            vpm.getProtocolMessage().getToReadPublicKey()
+                    );
+        }
+        else if (this.getProtocolMessage().getCommand().equals("READGENERAL")) {
+            return this.getProtocolMessage().getReadNumberAnnouncements() ==
+                    vpm.getProtocolMessage().getReadNumberAnnouncements();
+        }
+
+        return false;
+    }
 }

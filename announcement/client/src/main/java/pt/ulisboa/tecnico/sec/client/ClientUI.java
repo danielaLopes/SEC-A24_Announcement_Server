@@ -1,13 +1,14 @@
 package pt.ulisboa.tecnico.sec.client;
 
-import pt.ulisboa.tecnico.sec.communication_lib.*;
-
+import java.security.PublicKey;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-
 import java.util.regex.Pattern;
+
+import pt.ulisboa.tecnico.sec.communication_lib.Announcement;
+import pt.ulisboa.tecnico.sec.communication_lib.StatusCode;
 
 public class ClientUI {
 
@@ -16,9 +17,9 @@ public class ClientUI {
 
     public ClientUI(String pubKeyPath, String keyStorePath,
                     String keyStorePasswd, String entryPasswd, String alias,
-                    int nServers, List<String> otherUsersPubKeyPaths) {
+                    int nServers, int nFaults, List<String> otherUsersPubKeyPaths) {
         _client = new Client(pubKeyPath, keyStorePath, keyStorePasswd, entryPasswd,
-                alias, nServers, otherUsersPubKeyPaths);
+                alias, nServers, nFaults, otherUsersPubKeyPaths, this);
         _scanner = new Scanner(System.in);
     }
 
@@ -26,10 +27,10 @@ public class ClientUI {
      * Starts Client UI for better interaction.
      */
     public void start() {
-        String option = "1";
 
-        while (!option.equals("0")) {
-            option = promptGeneralMenu();
+        boolean repeat = false;
+        //do {
+            String option = promptGeneralMenu();
             if (!option.equals("\n")) {
                 switch (option) {
                     case "1":
@@ -50,12 +51,14 @@ public class ClientUI {
                     // Exit and close communication
                     case "0":
                         closeCommunication();
+                        // System.exit(0);
                         break;
                     default:
+                        repeat = true;
                         break;
                 }
-            }
-        }
+           }
+        //} while(repeat == true);
     }
 
     /**
@@ -87,17 +90,9 @@ public class ClientUI {
         List<String> references = parseReferences(referencesIn);
 
         //StatusCode statusCode = _client.post(message, references);
-        List<StatusCode> statusCodes = _client.postServersGroup(message, references);
-        for (int i = 0; i < _client._nServers; i++) {
-            if (statusCodes.get(i) == StatusCode.OK) {
-                System.out.println("Posted announcement in server " + (i + 1) + ".");
-            }
-            else {
-                System.out.println("Could not post announcement in server " + (i + 1) + ".");
-            }
-            _client.printStatusCode(statusCodes.get(i));
-        }
+        _client.post(message, references);
     }
+    
 
     /**
      * Prompts the user for the message and reference(s) needed to post
@@ -112,15 +107,47 @@ public class ClientUI {
         }
         List<String> references = parseReferences(referencesIn);
 
-        List<StatusCode> statusCodes = _client.postGeneralServersGroup(message, references);
-        for (int i = 0; i < _client._nServers; i++) {
-            if (statusCodes.get(i) == StatusCode.OK) {
-                System.out.println("Posted announcement " + (i + 1) + ".");
-            } else {
-                System.out.println("Could not post announcement " + (i + 1) + ".");
-            }
-            _client.printStatusCode(statusCodes.get(i));
-        }
+        _client.postGeneral(message, references);
+    }
+
+    public void deliverPost(StatusCode sc) {
+        System.out.print("POST: ");
+        if (sc.equals(StatusCode.NO_CONSENSUS))
+            System.out.println("NO QUORUM: Could not post announcement in user board.");
+        else
+            _client.printStatusCode(sc);
+        start();
+    }
+
+    public void deliverPostGeneral(StatusCode sc) {
+        System.out.print("POSTGENERAL: ");
+        if (sc.equals(StatusCode.NO_CONSENSUS))
+            System.out.println("NO QUORUM: Could not post announcement in general board.");
+        else
+            _client.printStatusCode(sc);
+        start();
+    }
+
+    public void deliverRead(StatusCode sc, List<Announcement> announcements) {
+        System.out.print("READ: ");
+        if (sc.equals(StatusCode.NO_CONSENSUS))
+            System.out.println("NO QUORUM: Could not read announcements from user board.");
+        else
+            _client.printStatusCode(sc);
+        if(sc == StatusCode.OK)
+            printAnnouncements(announcements, "USER");
+        start();
+    }
+
+    public void deliverReadGeneral(StatusCode sc, List<Announcement> announcements) {
+        System.out.print("READGENERAL: ");
+        if (sc.equals(StatusCode.NO_CONSENSUS))
+            System.out.println("NO QUORUM: Could not read announcements from general board.");
+        else
+            _client.printStatusCode(sc);
+        if(sc == StatusCode.OK)
+            printAnnouncements(announcements, "USER");
+        start();
     }
 
     /**
@@ -130,15 +157,15 @@ public class ClientUI {
     public void read() {
         int user = promptUser();
         int number = promptNumber();
-        //AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client.read(user, number);
-        List<AbstractMap.SimpleEntry<StatusCode, List<Announcement>>> responses = _client.readServersGroup(user, number);
-        for (AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response : responses) {
-            if (response.getKey() == StatusCode.OK) {
-                printAnnouncements(response.getValue(), "USER");
-            } else {
-                System.out.println("Could not read announcements.");
-            }
+
+        if (invalidUser(user)) {
+            System.out.println("Invalid user.");
+            return;
         }
+        PublicKey userToReadPB = _client._usersPubKeys.get(user);
+
+        //AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client.read(user, number);
+        _client.read(userToReadPB, number);
         
     }
 
@@ -149,15 +176,14 @@ public class ClientUI {
     public void readGeneral() {
         int number = promptNumber();
         _client.readGeneral(number);
-        //AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response = _client.readGeneral(number);
-        List<AbstractMap.SimpleEntry<StatusCode, List<Announcement>>> responses = _client.readGeneralServersGroup(number);
-        for (AbstractMap.SimpleEntry<StatusCode, List<Announcement>> response : responses) {
-            if (response.getKey() == StatusCode.OK) {
-                printAnnouncements(response.getValue(), "GENERAL");
-            } else {
-                System.out.println("Could not read announcements.");
-            }
     }
+
+    /**
+     * Verifies if a user exists within _usersPubKeys.
+     * @param user
+     */
+    public boolean invalidUser(int user) {
+        return user < 0 || user >= _client._usersPubKeys.size();
     }
 
     /**
@@ -166,16 +192,18 @@ public class ClientUI {
      * @param board where the announcements were posted
      */
     public void printAnnouncements(List<Announcement> announcements, String board) {
+        System.out.println("size of announcements to print " + announcements.size());
         if (announcements.size() == 0)
             System.out.println("\nTHERE ARE NO ANNOUNCEMENTS TO DISPLAY");
         else {
             System.out.println("\n-------------- ANNOUNCEMENTS FROM " + board + " --------------");
             for (Announcement a: announcements){
                 System.out.println("\n---------------- BEGIN ANNOUNCEMENT ----------------");
-                System.out.println("*** From: " + a.getClientPublicKey());
+                System.out.println("*** From: " + a.getClientPublicKey().toString().substring(0, 120) + "...");
                 System.out.println("*** Message: " + a.getAnnouncement());
                 System.out.println("*** ID: " + a.getAnnouncementID());
                 System.out.println("\n------------------END ANNOUNCEMENT------------------");
+                System.out.flush();
             }
         }
     }
@@ -184,15 +212,22 @@ public class ClientUI {
      * Prompts the user for an action.
      */
     public String promptGeneralMenu() {
-        System.out.println();
-        System.out.println(Message.WELCOME);
-        System.out.println("1 - " + Message.POST);
-        System.out.println("2 - " + Message.POST_GENERAL);
-        System.out.println("3 - " + Message.READ);
-        System.out.println("4 - " + Message.READ_GENERAL);
-        System.out.println("0 - " + Message.EXIT);
+        try{
+            System.out.println();
+            System.out.println(Message.WELCOME);
+            System.out.println("1 - " + Message.POST);
+            System.out.println("2 - " + Message.POST_GENERAL);
+            System.out.println("3 - " + Message.READ);
+            System.out.println("4 - " + Message.READ_GENERAL);
+            System.out.println("0 - " + Message.EXIT);
 
-        return _scanner.nextLine();
+            String cmd = _scanner.nextLine();
+            return cmd;
+        }
+        catch(IndexOutOfBoundsException e) {
+            System.out.println("vai po carvalho");
+            return "";
+        }
     }
 
     /**

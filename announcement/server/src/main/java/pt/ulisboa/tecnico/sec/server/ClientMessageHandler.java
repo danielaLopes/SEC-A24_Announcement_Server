@@ -11,9 +11,10 @@ public class ClientMessageHandler extends Thread {
     private ObjectInputStream _ois;
     private ObjectOutputStream _oos;
     private Communication _communication;
+    private boolean _running = true;
 
     public ClientMessageHandler(Server server, Socket socket) throws IOException {
-        System.out.println("received new client connection");
+        System.out.println("(INFO) Received new client connection");
         _server = server;
         _socket = socket;
         _communication = new Communication();
@@ -25,12 +26,16 @@ public class ClientMessageHandler extends Thread {
     public void run() {
         String command = "";
 
-        while(!command.equals("LOGOUT")) {
+        while(!command.equals("LOGOUT") && _running) {
             try {
-                
                 VerifiableProtocolMessage vpm = (VerifiableProtocolMessage) _communication.receiveMessage(_ois);
-                //System.out.println("Received [" + vpm.getProtocolMessage().getCommand() + "] from: " + _socket);
-                //System.out.println("Received [" + vpm.getProtocolMessage().getPublicKey() + "] from: " + _socket);
+
+                if (vpm == null || vpm.getProtocolMessage() == null) continue;
+
+                System.out.println("<== Received [" + vpm.getProtocolMessage().getCommand() + "] from client port: " + _socket.getLocalPort());
+
+                if (_server._serverBroadcasts.containsKey(vpm.getProtocolMessage().getPublicKey())) continue;
+
                 command = vpm.getProtocolMessage().getCommand();
 
                 switch (command) {
@@ -41,21 +46,28 @@ public class ClientMessageHandler extends Thread {
                         break;
                     // Post to Client's Board
                     case "POST":
-                        post(vpm);
+                        System.out.println("------------------------POST------------------------");
+                        _server.post(vpm, this);
+                        break;
+                    //Writeback phase
+                    case "WRITEBACK":
+                        System.out.println("------------------------WRITEBACK------------------------");
+                        _server.writeBack(vpm, this);
                         break;
                     // Post to General Board
                     case "POSTGENERAL":
                         // Thread.sleep(10000);
-                        postGeneral(vpm);
+                        _server.postGeneral(vpm, this);
                         break;
                     // Read from specific user
                     case "READ":
-                        read(vpm);
+                        System.out.println("------------------------READ------------------------");
+                        _server.read(vpm, this);
                         break;
                     // Read from General Board
                     case "READGENERAL":
                         // Thread.sleep(10000);
-                        readGeneral(vpm);
+                        _server.readGeneral(vpm, this);
                         break;
                     // Refresh Client Token
                     case "TOKEN":
@@ -70,58 +82,31 @@ public class ClientMessageHandler extends Thread {
                         break;
                 }
             }
-            // catch (InterruptedException e) {
-            // }
             catch (IOException | ClassNotFoundException e) {
-                // System.out.println(e);
+                System.out.println("Client disconnected.");
+                _running = false;
+                closeCommunication();
+                return;
             }
+        }
+    }
+
+    public void sendMessage(VerifiableProtocolMessage vpm) {
+        try {   
+            System.out.println("==> Sending [" + vpm.getProtocolMessage().getCommand() + "]to client port: " + _socket.getLocalPort());
+            _communication.sendMessage(vpm, _oos);
+        }
+        catch (IOException e) {
+          System.out.println(e);
+          _running = false;
+          closeCommunication();
+          return;
         }
     }
 
     public void registerUser(VerifiableProtocolMessage vpm) {
         try {
-            VerifiableProtocolMessage svpm = _server.registerUser(vpm);
-            _communication.sendMessage(svpm, _oos);
-        }
-        catch (IOException e) {
-          System.out.println(e);
-        }
-    }
-
-    public void postGeneral(VerifiableProtocolMessage vpm) {
-        try {
-            VerifiableProtocolMessage svpm = _server.postGeneral(vpm);
-            _communication.sendMessage(svpm, _oos);
-        }
-        catch (IOException e) {
-          System.out.println(e);
-        }
-    }
-
-    public void post(VerifiableProtocolMessage vpm) {
-        try {
-            VerifiableProtocolMessage svpm = _server.post(vpm);
-            _communication.sendMessage(svpm, _oos);
-            System.out.println("sent message to client with status code " + svpm.getProtocolMessage().getStatusCode());
-        }
-        catch (IOException e) {
-          System.out.println(e);
-        }
-    }
-
-    public void readGeneral(VerifiableProtocolMessage vpm) {
-        try {
-            VerifiableProtocolMessage svpm = _server.readGeneral(vpm);
-            _communication.sendMessage(svpm, _oos);
-        }
-        catch (IOException e) {
-          System.out.println(e);
-        }
-    }
-
-    public void read(VerifiableProtocolMessage vpm) {
-        try {
-            VerifiableProtocolMessage svpm = _server.read(vpm);
+            VerifiableProtocolMessage svpm = _server.registerUser(vpm, this);
             _communication.sendMessage(svpm, _oos);
         }
         catch (IOException e) {

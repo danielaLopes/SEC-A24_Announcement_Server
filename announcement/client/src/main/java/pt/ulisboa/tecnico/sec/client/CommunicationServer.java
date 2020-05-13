@@ -1,33 +1,42 @@
 package pt.ulisboa.tecnico.sec.client;
 
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 public class CommunicationServer {
 
+    private int _port;
     private ObjectOutputStream _oos;
     private ObjectInputStream _ois;
     private Socket _clientSocket;
     private String _token;
+    private boolean _alive;
+    protected boolean _refreshToken = false;
 
-    public CommunicationServer(ObjectOutputStream oos, ObjectInputStream ois,
+    public CommunicationServer(int port, ObjectOutputStream oos, ObjectInputStream ois,
                                Socket clientSocket) {
 
+        _port = port;
         _oos = oos;
         _ois = ois;
         _clientSocket = clientSocket;
+        _alive = true;
     }
 
-    public CommunicationServer(ObjectOutputStream oos, ObjectInputStream ois,
+    public CommunicationServer(int port, ObjectOutputStream oos, ObjectInputStream ois,
                                Socket clientSocket, String token) {
 
+        _port = port;
         _oos = oos;
         _ois = ois;
         _clientSocket = clientSocket;
         _token = token;
+        _alive = true;
     }
 
+    protected int getPort() { return _port; }
     protected ObjectOutputStream getObjOutStream() {
         return _oos;
     }
@@ -47,4 +56,12 @@ public class CommunicationServer {
     protected void setToken(String newToken) {
         _token = newToken;
     }
+
+    protected void updateObjInStream() throws IOException {
+        _ois = new ObjectInputStream(_clientSocket.getInputStream());
+    }
+
+    protected void setAlive(boolean alive) { _alive = alive; }
+
+    protected  boolean getAlive() { return _alive; }
 }
