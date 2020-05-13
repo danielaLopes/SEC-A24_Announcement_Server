@@ -139,7 +139,9 @@ public class ByzantineClient extends Client {
                     System.out.flush();
 
                     VerifiableProtocolMessage response = requestServer(pm.getValue(), getServerCommunications().get(pm.getKey()));
-                    getServerResponses().put(pm.getKey(), response);
+                    if (response == null)
+                        getServerResponses().put(pm.getKey(), createVerifiableMessage(new ProtocolMessage(StatusCode.NO_CONSENSUS)));
+                    else getServerResponses().put(pm.getKey(), response);
 
                     System.out.println("Added new message, we now have: " + getServerResponses().size());
 

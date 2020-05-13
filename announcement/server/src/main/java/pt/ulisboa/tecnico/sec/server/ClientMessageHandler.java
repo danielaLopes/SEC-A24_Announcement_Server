@@ -47,6 +47,8 @@ public class ClientMessageHandler extends Thread {
                     // Post to Client's Board
                     case "POST":
                         System.out.println("------------------------POST------------------------");
+                        System.out.println("_SERVER: " + _server);
+                        System.out.println("this: " + this);
                         _server.post(vpm, this);
                         break;
                     //Writeback phase

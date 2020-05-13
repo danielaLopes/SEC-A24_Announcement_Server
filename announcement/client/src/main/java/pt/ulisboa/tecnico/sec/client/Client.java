@@ -453,8 +453,9 @@ public class Client {
 
         Map<PublicKey, VerifiableProtocolMessage> responses = new ConcurrentHashMap<>();
         for (Map.Entry<PublicKey, CommunicationServer> entry : _serverCommunications.entrySet()) {
-            // TODO: possible attack: server sending wrong public key?????
-            responses.put(entry.getKey(), requestServer(pm, entry.getValue()));
+            VerifiableProtocolMessage response = requestServer(pm, entry.getValue());
+            if (response != null)
+                responses.put(entry.getKey(), response);
         }
 
         return responses;
@@ -548,6 +549,7 @@ public class Client {
     }
 
     public StatusCode verifyStatusConsensus() {
+        System.out.println("verifyStatusConsensus");
         Map.Entry<StatusCode, List<VerifiableAnnouncement>> quorum =
                 MessageComparator.compareServerStatusCodes(new ArrayList<>(_responses.values()), _quorum);
 
