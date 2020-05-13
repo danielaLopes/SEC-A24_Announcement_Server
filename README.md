@@ -14,28 +14,30 @@ create database announcement;
 ```
 ## Instructions to Run Tests (by default keys are already generated for 3 clients and the server)
 Inside project root directory (announcement/):  
-``` $ mvn clean install -DskipTests```
 ``` $ mvn clean install -Dmaven.test.skip=true```
 
-### Server Tests
-Focus on the server application functionalities.  
-1. Inside project server directory (announcement/server/):  
-    - ``` $ mvn test```
-
 ### Client Tests 
-Focus on the client application functionalities and UI. Require running a server in a different window.  
+Focus on the client application functionalities and UI. Require running 4 servers in a different window (instructions  on section 3).  
 1. Inside project server directory (announcement/server/):  
-    - Start the server: ``` $ mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="password password alias src/main/resources/crypto/public.key src/main/resources/crypto/server_keystore.jks"```  
+    - Start 4 servers
 2. Inside project client directory (announcement/client/):  
     - ``` $ mvn test```
 
-### Client-Server Communication Tests (Tampering, Integrity, Dropping, Replaying)
-Focus on the possible attacks that can happen in the communication between a server and the client.
-If the server was running, shut it down (to clean the internal data structures).  
+### Client-Server Communication Tests
+Focus on the possible attacks that can happen in a situation where there are byzantine processes (client or server).
+Byzantine server:
 1. Inside project server directory (announcement/server/):  
-    - Start the server: ``` $ mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="password password alias src/main/resources/crypto/public.key src/main/resources/crypto/server_keystore.jks"```  
+    - Start 3 servers (instruction on section 3)
 2. Inside project client/server testing directory (announcement/client_server_testing/):  
-    - ``` $ mvn test```
+    - Start 1 byzantine server: ``` $ mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client_server_testing.ByzantineServerApplication"```
+3. Inside project client
+    - Start 1 client (instructions on section 4)
+
+Byzantine client:
+1. Inside project server directory (announcement/server/):  
+    - Start 4 servers (instruction on section 3)
+2. Inside project client/server testing directory (announcement/client_server_testing/):  
+    - Start 1 byzantine client: ``` $ mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client_server_testing.ByzantineClientApplication" ```
 
 ## Instructions (only needed if keys are not already generated)
 Inside project root directory (announcement/):
@@ -68,7 +70,7 @@ Inside project root directory (announcement/):
         cd server/
         mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="<port> <keyStorePassword> <entryPassword> <alias> <pubKeyPath> <keyStorePath>"
         ```
-    - Example 3 servers:
+    - Example 4 servers:
         ```
         cd server/
         mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.server.Application" -Dexec.args="4 1 9001 password password alias src/main/resources/crypto/public1.key src/main/resources/crypto/server_keystore.jks"
