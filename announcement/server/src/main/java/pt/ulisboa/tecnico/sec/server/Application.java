@@ -33,13 +33,13 @@ public class Application {
         }
 
         int nServers = Integer.parseInt(args[0]);
-        System.out.println(nServers + " servers running.");
+        System.out.println("(INFO) " + nServers + " servers running.");
 
         int nFaults = Integer.parseInt(args[1]);
-        System.out.println("Number of fults:  " + nFaults);
+        System.out.println("(INFO) Number of tolerated faults:  " + nFaults);
 
         int port = Integer.parseInt(args[2]);
-        System.out.println("Server running at port " + port);
+        System.out.println("(INFO) Server running at port " + port);
 
         Server server = new Server(false, nServers, nFaults, port, args[3].toCharArray(), args[4].toCharArray(), args[5],
                 args[6], args[7]);

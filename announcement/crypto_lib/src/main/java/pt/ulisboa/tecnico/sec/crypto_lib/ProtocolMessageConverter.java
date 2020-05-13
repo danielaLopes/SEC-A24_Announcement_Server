@@ -18,7 +18,7 @@ public class ProtocolMessageConverter {
             os.writeObject(obj);
         }
         catch(IOException e) {
-            System.out.println(e);
+            //System.out.println(e);
         }
         return out.toByteArray();
     }
