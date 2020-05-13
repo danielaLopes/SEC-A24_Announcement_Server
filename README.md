@@ -23,7 +23,7 @@ Focus on the client application functionalities and UI. Require running 4 server
 2. Inside project client directory (announcement/client/):  
     - ``` $ mvn test```
 
-### Client-Server Communication Tests
+### Client-Server Tests
 Focus on the possible attacks that can happen in a situation where there are byzantine processes (client or server).
 Byzantine server:
 1. Inside project server directory (announcement/server/):  
@@ -100,13 +100,13 @@ Inside project root directory (announcement/):
 
 ### Byzantine Client
     ```
-    cd client_server_communication/
+    cd client_server_testing/
     mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client_server_testing.ByzantineClientApplication"
     ```
     
 ### Byzantine Server
     ```
-    cd client_server_communication/
+    cd client_server_testing/
     mvn exec:java -Dexec.mainClass="pt.ulisboa.tecnico.sec.client_server_testing.ByzantineServerApplication"
     ```
 

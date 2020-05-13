@@ -160,7 +160,7 @@ public class ServerThread extends Thread {
         try {
             _socket = _communication.accept(_serverSocket);
             
-            System.out.println("Server has started communication with server in port: " + _otherPort);
+            System.out.println("(INFO) Server has started communication with server in port: " + _otherPort);
             
             _oos = new ObjectOutputStream(_socket.getOutputStream());
             _ois = new ObjectInputStream(_socket.getInputStream());
